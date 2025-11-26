@@ -1,0 +1,187 @@
+# ERRANDS MATE - COLOR SCHEME DOCUMENTATION
+
+This color scheme uses a **glassmorphism** design aesthetic with transparency, backdrop blur effects, and gradient overlays.
+
+---
+
+## PRIMARY BRAND COLORS
+Used for main branding elements, logos, and primary CTAs
+
+### Light Mode
+- Main: `text-teal-600`
+- Hover: `hover:text-teal-700`
+- Background: `bg-teal-600`
+- Background Hover: `hover:bg-teal-700`
+- Border: `border-teal-600`
+
+### Dark Mode
+- Main: `dark:text-teal-400`
+- Hover: `dark:hover:text-teal-300`
+- Background: `dark:bg-teal-400`
+- Background Hover: `dark:hover:bg-teal-300`
+- Border: `dark:border-teal-400`
+
+---
+
+## ACCENT COLORS
+Feature-specific colors for different service categories
+
+### Sky Blue (Service Providers)
+- Light: `text-sky-500`, `bg-sky-400`, `from-sky-400/30 to-sky-600/30`
+- Dark: `dark:text-sky-400`, `dark:bg-sky-500`, `dark:from-sky-500/40 dark:to-sky-700/40`
+- Badge: `bg-sky-500 dark:bg-sky-600`
+
+### Emerald Green (Home Cleaning)
+- Light: `text-emerald-500`, `bg-emerald-400`, `from-emerald-400/30 to-emerald-600/30`
+- Dark: `dark:text-emerald-400`, `dark:bg-emerald-500`, `dark:from-emerald-500/40 dark:to-emerald-700/40`
+- Badge: `bg-emerald-500 dark:bg-emerald-600`
+
+### Amber/Orange (Relocation & Essentials)
+- Light: `text-amber-500`, `bg-amber-400`, `from-amber-400/30 to-amber-600/30`
+- Dark: `dark:text-amber-400`, `dark:bg-amber-500`, `dark:from-amber-500/40 dark:to-amber-700/40`
+- Badge: `bg-amber-500 dark:bg-amber-600`
+
+### Violet/Purple (Task Support)
+- Light: `text-violet-500`, `bg-violet-400`, `from-violet-400/30 to-violet-600/30`
+- Dark: `dark:text-violet-400`, `dark:bg-violet-500`, `dark:from-violet-500/40 dark:to-violet-700/40`
+- Badge: `bg-violet-500 dark:bg-violet-600`
+
+### Rose/Pink (Pickup & Delivery)
+- Light: `text-rose-500`, `bg-rose-400`, `from-rose-400/30 to-rose-600/30`
+- Dark: `dark:text-rose-400`, `dark:bg-rose-500`, `dark:from-rose-500/40 dark:to-rose-700/40`
+- Badge: `bg-rose-500 dark:bg-rose-600`
+
+---
+
+## BACKGROUND COLORS
+
+### Main Page Background Gradient
+- Light: `bg-gradient-to-b from-blue-50 to-gray-100`
+- Dark: `dark:from-slate-900 dark:to-slate-950`
+
+### Glass-morphic Surfaces (Cards, Panels)
+- Light: `bg-white/80 backdrop-blur-xl`
+- Dark: `dark:bg-white/10 dark:backdrop-blur-xl`
+- Light Hover: `hover:bg-white/90`
+- Dark Hover: `dark:hover:bg-white/20`
+
+### Solid Surfaces
+- Light: `bg-white`
+- Dark: `dark:bg-gray-900`
+
+### Card Gradient Overlays
+- Light: `bg-gradient-to-br from-white/80 to-white/90`
+- Dark: `dark:from-white/5 dark:to-white/10`
+
+---
+
+## TEXT COLORS
+Hierarchical text colors for different emphasis levels
+
+### Primary Text
+- Light: `text-gray-900`
+- Dark: `dark:text-white`
+
+### Secondary Text
+- Light: `text-gray-700`
+- Dark: `dark:text-white/90`
+
+### Tertiary Text
+- Light: `text-gray-500`
+- Dark: `dark:text-white/60`
+
+### Muted Text
+- Light: `text-gray-500`
+- Dark: `dark:text-white/80`
+
+---
+
+## BORDER COLORS
+
+### Default Borders
+- Light: `border-gray-200`
+- Dark: `dark:border-white/10`
+
+### Subtle Borders
+- Light: `border-gray-200`
+- Dark: `dark:border-white/20`
+
+### Emphasis Borders
+- Light: `border-gray-300`
+- Dark: `dark:border-white/20`
+
+---
+
+## HIGHLIGHT/CTA COLORS
+
+### Status Indicator (Live/Active)
+- Light: `bg-teal-500`
+- Dark: `dark:bg-teal-400`
+- Animation: `animate-pulse`
+
+### Badge Backgrounds
+- Light: `bg-gray-200/80 text-gray-700`
+- Dark: `dark:bg-white/10 dark:text-white/90`
+
+### Button States (Ghost)
+- Light: `bg-white/80 hover:bg-white/90`
+- Dark: `dark:bg-white/10 dark:hover:bg-white/20`
+
+---
+
+## SHADOW EFFECTS
+
+- Small: `shadow-sm dark:shadow-md`
+- Medium: `shadow-md dark:shadow-lg`
+- Large: `shadow-lg dark:shadow-2xl`
+
+---
+
+## SPECIAL EFFECTS
+
+### Overlays (Depth)
+- Overlay: `bg-gradient-to-br from-black/5 to-transparent dark:from-black/30 dark:to-transparent`
+
+### Backdrop Blur (Glassmorphism)
+- Medium: `backdrop-blur-md`
+- Extra Large: `backdrop-blur-xl`
+- 3XL: `backdrop-blur-3xl`
+
+---
+
+## USAGE EXAMPLES
+
+### Primary Heading
+```html
+<h1 className="text-gray-900 dark:text-white">
+  Welcome to <span className="text-teal-600 dark:text-teal-400">Errands mate</span>
+</h1>
+```
+
+### Glass Card
+```html
+<div className="bg-white/80 dark:bg-white/10 backdrop-blur-xl 
+                border border-gray-200 dark:border-white/10 
+                shadow-lg dark:shadow-2xl rounded-2xl">
+  Card content
+</div>
+```
+
+### CTA Button
+```html
+<button className="bg-teal-600 dark:bg-teal-400 
+                   hover:bg-teal-700 dark:hover:bg-teal-300 
+                   text-white dark:text-gray-900
+                   px-6 py-3 rounded-lg shadow-md">
+  Get Started
+</button>
+```
+
+### Status Badge
+```html
+<div className="bg-gray-200/80 dark:bg-white/10 
+                text-gray-700 dark:text-white/90 
+                px-4 py-1.5 rounded-full backdrop-blur-md">
+  24/7 Availability
+</div>
+```
