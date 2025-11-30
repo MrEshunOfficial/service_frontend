@@ -14,10 +14,10 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
         {/* Content */}
         <main
-          className="
-          flex-1 w-full mt-1 overflow-auto
-         flex items-center justify-center
-        ">
+          className="w-full h-[91vh] mt-2 overflow-hidden
+         flex items-center justify-center border rounded
+        "
+        >
           {children}
         </main>
       </div>

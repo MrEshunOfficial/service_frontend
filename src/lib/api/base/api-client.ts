@@ -9,6 +9,13 @@ export interface APIError extends Error {
   code?: string;
 }
 
+// Add API Response wrapper type
+export interface APIResponse<T> {
+  data: T;
+  message?: string;
+  success?: boolean;
+}
+
 export abstract class APIClient {
   protected baseURL: string;
   protected defaultHeaders: HeadersInit;
@@ -106,7 +113,7 @@ export abstract class APIClient {
   }
 
   /**
-   * Make HTTP request
+   * Make HTTP request - automatically unwraps { data: ... } responses
    */
   protected async makeRequest<T>(
     endpoint: string,
@@ -127,8 +134,16 @@ export abstract class APIClient {
         await this.handleErrorResponse(response);
       }
 
-      const data = await response.json();
-      return data as T;
+      const responseData = await response.json();
+      
+      // Handle wrapped responses { data: ... } vs direct responses
+      // Check if response is an object with a 'data' property
+      if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+        return responseData.data as T;
+      }
+      
+      // Return direct response
+      return responseData as T;
     } catch (error) {
       this.handleRequestError(error);
       throw error;
@@ -162,13 +177,12 @@ export abstract class APIClient {
    * Handle request errors
    */
   protected handleRequestError(error: unknown): void {
+    // Silence noisy API errors during development
+    if (process.env.NODE_ENV === "development") {
+      return;
+    }
     if (error instanceof Error) {
-      console.error("API Request Error:", {
-        message: error.message,
-        stack: error.stack,
-      });
-    } else {
-      console.error("Unknown API Error:", error);
+      console.error("API Request Error:", error.message, error.stack);
     }
   }
 

@@ -188,11 +188,13 @@ const FeaturedCarousel = () => {
                 opacity: { duration: 0.4 },
                 scale: { duration: 0.4 },
               }}
-              className="absolute w-full h-full">
+              className="absolute w-full h-full"
+            >
               <Card className="bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white h-full overflow-hidden shadow-lg dark:shadow-2xl rounded-2xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-transparent dark:from-black/30 dark:to-transparent z-0"></div>
                 <div
-                  className={`absolute top-0 right-0 w-full h-full bg-gradient-to-br ${currentFeature.color} ${currentFeature.darkColor} opacity-70 backdrop-blur-3xl z-0`}></div>
+                  className={`absolute top-0 right-0 w-full h-full bg-gradient-to-br ${currentFeature.color} ${currentFeature.darkColor} opacity-70 backdrop-blur-3xl z-0`}
+                ></div>
 
                 <CardHeader className="pb-2 relative z-10">
                   <div className="flex justify-between items-center">
@@ -201,7 +203,8 @@ const FeaturedCarousel = () => {
                     </div>
                     {currentFeature.badge && (
                       <Badge
-                        className={`${currentFeature.badgeColor} text-white px-2 py-0.5 lg:px-3 lg:py-1`}>
+                        className={`${currentFeature.badgeColor} text-white px-2 py-0.5 lg:px-3 lg:py-1`}
+                      >
                         {currentFeature.badge}
                       </Badge>
                     )}
@@ -218,7 +221,8 @@ const FeaturedCarousel = () => {
                 <CardFooter className="flex justify-between py-2 relative z-10">
                   <Button
                     variant="ghost"
-                    className="text-gray-700 dark:text-white/90 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg text-sm lg:text-base">
+                    className="text-gray-700 dark:text-white/90 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 border border-gray-300 dark:border-white/20 rounded-lg text-sm lg:text-base"
+                  >
                     Learn More
                   </Button>
                 </CardFooter>
@@ -234,7 +238,8 @@ const FeaturedCarousel = () => {
               onClick={() => {
                 handlePrev();
                 setAutoPlay(false);
-              }}>
+              }}
+            >
               <ChevronLeft className="h-4 w-4 lg:h-5 lg:w-5" />
             </Button>
           </div>
@@ -246,7 +251,8 @@ const FeaturedCarousel = () => {
               onClick={() => {
                 handleNext();
                 setAutoPlay(false);
-              }}>
+              }}
+            >
               <ChevronRight className="h-4 w-4 lg:h-5 lg:w-5" />
             </Button>
           </div>
@@ -255,7 +261,8 @@ const FeaturedCarousel = () => {
             size="icon"
             variant="ghost"
             className="absolute top-0 right-0 rounded-full bg-white/80 dark:bg-white/10 hover:bg-white/90 dark:hover:bg-white/20 text-gray-700 dark:text-white shadow-sm dark:shadow-lg border border-gray-200 dark:border-white/20 z-20 w-6 h-6 lg:w-8 lg:h-8"
-            onClick={toggleAutoPlay}>
+            onClick={toggleAutoPlay}
+          >
             {autoPlay ? (
               <Pause className="h-3 w-3 lg:h-4 lg:w-4" />
             ) : (
@@ -294,10 +301,10 @@ const FeaturedCarousel = () => {
               </span>
             </h2>
             <p className="text-gray-700 dark:text-white/80 text-base lg:text-lg leading-relaxed font-light">
-              Errands mate bridges the gap between communities, professional and
-              essential service workers. Our platform creates economic
-              opportunities for service providers while making everyday tasks
-              seamless for clients.
+              Errands Mate connects communities with professional and essential
+              service workers. We create economic opportunities for providers
+              while making everyday tasks easier and more convenient for
+              clients.
             </p>
 
             <div className="flex flex-wrap items-center gap-2 lg:gap-4 mt-4 lg:mt-6">

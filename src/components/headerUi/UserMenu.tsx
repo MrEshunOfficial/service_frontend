@@ -79,7 +79,8 @@ const NotificationButton: React.FC<{ count?: number }> = ({ count = 0 }) => (
     variant="ghost"
     size="icon"
     className="relative rounded-full hover:bg-gray-50/80 dark:hover:bg-gray-800/50"
-    asChild>
+    asChild
+  >
     <Link href="/notifications">
       <Bell className="h-5 w-5" />
       {count > 0 && (
@@ -87,10 +88,12 @@ const NotificationButton: React.FC<{ count?: number }> = ({ count = 0 }) => (
           className="absolute -top-1 -right-1"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}>
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        >
           <Badge
             variant="destructive"
-            className="h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full bg-gradient-to-r from-red-500 to-red-600 shadow-lg">
+            className="h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full bg-gradient-to-r from-red-500 to-red-600 shadow-lg"
+          >
             {count > 99 ? "99+" : count}
           </Badge>
         </motion.div>
@@ -115,7 +118,8 @@ const StatusIndicator: React.FC<{
         "absolute w-4 h-4 rounded-full flex items-center justify-center",
         config.bg,
         className
-      )}>
+      )}
+    >
       <config.icon className="h-3 w-3 text-white" />
     </div>
   );
@@ -143,7 +147,8 @@ const UserAvatar: React.FC<{
         className={cn(
           avatarSize,
           "ring-2 ring-offset-1 ring-gray-200/50 dark:ring-gray-700/50"
-        )}>
+        )}
+      >
         <AvatarImage src={avatarUrl} alt={`${displayName} avatar`} />
         <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-medium">
           {displayName.charAt(0)?.toUpperCase()}
@@ -249,7 +254,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full hover:bg-gray-50/80 dark:hover:bg-gray-800/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0">
+            className="rounded-full hover:bg-gray-50/80 dark:hover:bg-gray-800/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-0"
+          >
             <UserAvatar
               avatarUrl={display.avatarUrl}
               displayName={display.name}
@@ -264,7 +270,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           side="bottom"
           avoidCollisions={true}
           collisionPadding={8}
-          sticky="always">
+          sticky="always"
+        >
           {/* User Info Header with Cover Image */}
           <DropdownMenuLabel className="p-0 border-b border-gray-200/50 dark:border-gray-800/50">
             <div className="relative h-32 w-full overflow-hidden">
@@ -333,7 +340,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({
             <DropdownMenuGroup>
               <DropdownMenuItem
                 onClick={onLogout}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 focus:bg-red-50 dark:focus:bg-red-950/20 focus:text-red-700 cursor-pointer">
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 focus:bg-red-50 dark:focus:bg-red-950/20 focus:text-red-700 cursor-pointer"
+              >
                 <LogOut className="h-4 w-4" />
                 <span>Sign Out</span>
               </DropdownMenuItem>

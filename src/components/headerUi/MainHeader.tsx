@@ -13,7 +13,7 @@ import { useCompleteProfile } from "@/hooks/profiles/userProfile.hook";
 import { cn } from "@/lib/utils/utils";
 import { User } from "@/types/user.types";
 import { UserMenu } from "./UserMenu";
-import { NavigationItem, baseNavigationItems } from "@/lib/utils/NavElement";
+import { NavigationItem, baseNavigationItems } from "@/helpers/NavElement";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -71,7 +71,8 @@ const NavLink: React.FC<{
         ? "text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/30 shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800/50"
         : "text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400",
       className
-    )}>
+    )}
+  >
     {icon && (
       <span className="transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
         {icon}
@@ -103,7 +104,8 @@ const NavDropdown: React.FC<{
             isActive
               ? "text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/30 shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800/50"
               : "text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50/80 dark:hover:bg-gray-800/20"
-          )}>
+          )}
+        >
           {item.icon && (
             <span className="transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
               {item.icon}
@@ -126,7 +128,8 @@ const NavDropdown: React.FC<{
                 <NavigationMenuLink key={child.title} asChild>
                   <Link
                     href={child.href}
-                    className="flex items-start p-2 rounded-xl text-sm hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition-all duration-300 group border border-transparent hover:border-gray-200/50 dark:hover:border-gray-700/50">
+                    className="flex items-start p-2 rounded-xl text-sm hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition-all duration-300 group border border-transparent hover:border-gray-200/50 dark:hover:border-gray-700/50"
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 sm:gap-3 mb-1">
                         <span className="flex items-center justify-start gap-2 font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 truncate">
@@ -140,7 +143,8 @@ const NavDropdown: React.FC<{
                         {child.badge && (
                           <Badge
                             variant="secondary"
-                            className="text-xs bg-gradient-to-r from-red-500/10 to-blue-600/10 text-blue-600 dark:text-blue-400 border-blue-200/30 dark:border-blue-800/30">
+                            className="text-xs bg-gradient-to-r from-red-500/10 to-blue-600/10 text-blue-600 dark:text-blue-400 border-blue-200/30 dark:border-blue-800/30"
+                          >
                             {child.badge}
                           </Badge>
                         )}
@@ -237,14 +241,16 @@ export const MainHeader: React.FC = () => {
       animate={{ y: 0 }}
       className={cn(
         "sticky top-0 z-40 w-full transition-all duration-300 border rounded-md p-2"
-      )}>
+      )}
+    >
       <div className="container mx-auto">
         <div className="flex items-center justify-between">
           {/* Logo and Brand */}
           <motion.div
             className="flex items-center"
             whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}>
+            whileTap={{ scale: 0.98 }}
+          >
             <ErrandMateLogo />
           </motion.div>
 
@@ -262,7 +268,8 @@ export const MainHeader: React.FC = () => {
                   key={item.title}
                   href={item.href}
                   isActive={isActive(item.href)}
-                  icon={item.icon}>
+                  icon={item.icon}
+                >
                   {item.title}
                 </NavLink>
               )
@@ -278,7 +285,8 @@ export const MainHeader: React.FC = () => {
               className="lg:hidden rounded-full"
               onClick={() => {
                 // Handle mobile search
-              }}>
+              }}
+            >
               <Search className="h-5 w-5" />
             </Button>
 
@@ -307,7 +315,8 @@ export const MainHeader: React.FC = () => {
                 </Button>
                 <Button
                   asChild
-                  className="rounded-xl bg-gradient-to-r from-red-500 to-blue-600 hover:from-red-600 hover:to-blue-700 shadow-lg">
+                  className="rounded-xl bg-gradient-to-r from-red-500 to-blue-600 hover:from-red-600 hover:to-blue-700 shadow-lg"
+                >
                   <Link href="/signup">Sign Up</Link>
                 </Button>
               </div>
@@ -318,10 +327,12 @@ export const MainHeader: React.FC = () => {
               variant="ghost"
               size="icon"
               className="xl:hidden rounded-full"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
               <motion.div
                 animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}
-                transition={{ duration: 0.2 }}>
+                transition={{ duration: 0.2 }}
+              >
                 {isMobileMenuOpen ? (
                   <X className="h-5 w-5" />
                 ) : (

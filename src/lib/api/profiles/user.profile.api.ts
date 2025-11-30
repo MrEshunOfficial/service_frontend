@@ -1,7 +1,6 @@
 // api/profiles/profile-api.client.ts
 
 import {
-  APIResponse,
   ProfileExistsResponse,
   UserProfile,
   CompleteProfile,
@@ -22,6 +21,9 @@ import { APIClient } from "../base/api-client";
 /**
  * Profile API Client
  * Handles all profile-related API requests
+ * 
+ * Note: The base APIClient automatically unwraps { data: ... } responses,
+ * so all methods return the data directly without needing to access .data
  */
 export class ProfileAPIClient extends APIClient {
   private readonly basePath = "/api/profiles";
@@ -35,10 +37,10 @@ export class ProfileAPIClient extends APIClient {
    * GET /api/profiles/exists
    */
   async checkProfileExists(): Promise<boolean> {
-    const response = await this.get<APIResponse<ProfileExistsResponse>>(
+    const response = await this.get<ProfileExistsResponse>(
       `${this.basePath}/exists`
     );
-    return response.data.exists;
+    return response.exists;
   }
 
   /**
@@ -46,11 +48,10 @@ export class ProfileAPIClient extends APIClient {
    * GET /api/profiles/me
    */
   async getMyProfile(includeDetails = false): Promise<UserProfile> {
-    const response = await this.get<APIResponse<UserProfile>>(
+    return this.get<UserProfile>(
       `${this.basePath}/me`,
       { includeDetails }
     );
-    return response.data;
   }
 
   /**
@@ -58,10 +59,9 @@ export class ProfileAPIClient extends APIClient {
    * GET /api/profiles/me/complete
    */
   async getCompleteProfile(): Promise<CompleteProfile> {
-    const response = await this.get<APIResponse<CompleteProfile>>(
+    return this.get<CompleteProfile>(
       `${this.basePath}/me/complete`
     );
-    return response.data;
   }
 
   /**
@@ -69,10 +69,9 @@ export class ProfileAPIClient extends APIClient {
    * GET /api/profiles/me/stats
    */
   async getMyProfileStats(): Promise<ProfileStats> {
-    const response = await this.get<APIResponse<ProfileStats>>(
+    return this.get<ProfileStats>(
       `${this.basePath}/me/stats`
     );
-    return response.data;
   }
 
   /**
@@ -80,11 +79,10 @@ export class ProfileAPIClient extends APIClient {
    * POST /api/profiles
    */
   async createProfile(data: CreateProfileRequest): Promise<UserProfile> {
-    const response = await this.post<APIResponse<UserProfile>>(
+    return this.post<UserProfile>(
       this.basePath,
       data
     );
-    return response.data;
   }
 
   /**
@@ -92,11 +90,10 @@ export class ProfileAPIClient extends APIClient {
    * PATCH /api/profiles/me
    */
   async updateMyProfile(updates: UpdateProfileRequest): Promise<UserProfile> {
-    const response = await this.patch<APIResponse<UserProfile>>(
+    return this.patch<UserProfile>(
       `${this.basePath}/me`,
       updates
     );
-    return response.data;
   }
 
   /**
@@ -104,7 +101,7 @@ export class ProfileAPIClient extends APIClient {
    * DELETE /api/profiles/me
    */
   async deleteMyProfile(): Promise<void> {
-    await this.delete<APIResponse<null>>(`${this.basePath}/me`);
+    await this.delete<void>(`${this.basePath}/me`);
   }
 
   /**
@@ -112,10 +109,9 @@ export class ProfileAPIClient extends APIClient {
    * POST /api/profiles/me/restore
    */
   async restoreMyProfile(): Promise<UserProfile> {
-    const response = await this.post<APIResponse<UserProfile>>(
+    return this.post<UserProfile>(
       `${this.basePath}/me/restore`
     );
-    return response.data;
   }
 
   /**
@@ -125,11 +121,10 @@ export class ProfileAPIClient extends APIClient {
   async searchProfiles(
     params: ProfileSearchParams
   ): Promise<ProfileSearchResult> {
-    const response = await this.get<APIResponse<ProfileSearchResult>>(
+    return this.get<ProfileSearchResult>(
       `${this.basePath}/search`,
       params
     );
-    return response.data;
   }
 
   /**
@@ -139,11 +134,10 @@ export class ProfileAPIClient extends APIClient {
   async getProfilesByUserIds(
     request: BatchProfilesRequest
   ): Promise<BatchProfilesResult> {
-    const response = await this.post<APIResponse<BatchProfilesResult>>(
+    return this.post<BatchProfilesResult>(
       `${this.basePath}/batch`,
       request
     );
-    return response.data;
   }
 
   /**
@@ -153,11 +147,10 @@ export class ProfileAPIClient extends APIClient {
   async getAllProfiles(
     params: PaginationParams = {}
   ): Promise<PaginatedProfilesResult> {
-    const response = await this.get<APIResponse<PaginatedProfilesResult>>(
+    return this.get<PaginatedProfilesResult>(
       this.basePath,
       params
     );
-    return response.data;
   }
 
   /**
@@ -167,11 +160,10 @@ export class ProfileAPIClient extends APIClient {
   async bulkUpdateProfiles(
     request: BulkUpdateRequest
   ): Promise<BulkUpdateResult> {
-    const response = await this.patch<APIResponse<BulkUpdateResult>>(
+    return this.patch<BulkUpdateResult>(
       `${this.basePath}/bulk`,
       request
     );
-    return response.data;
   }
 
   /**
@@ -182,11 +174,10 @@ export class ProfileAPIClient extends APIClient {
     userId: string,
     includeDetails = false
   ): Promise<UserProfile> {
-    const response = await this.get<APIResponse<UserProfile>>(
+    return this.get<UserProfile>(
       `${this.basePath}/user/${userId}`,
       { includeDetails }
     );
-    return response.data;
   }
 
   /**
@@ -197,11 +188,10 @@ export class ProfileAPIClient extends APIClient {
     profileId: string,
     includeDetails = false
   ): Promise<UserProfile> {
-    const response = await this.get<APIResponse<UserProfile>>(
+    return this.get<UserProfile>(
       `${this.basePath}/${profileId}`,
       { includeDetails }
     );
-    return response.data;
   }
 
   /**
@@ -212,11 +202,10 @@ export class ProfileAPIClient extends APIClient {
     profileId: string,
     updates: UpdateProfileRequest
   ): Promise<UserProfile> {
-    const response = await this.patch<APIResponse<UserProfile>>(
+    return this.patch<UserProfile>(
       `${this.basePath}/${profileId}`,
       updates
     );
-    return response.data;
   }
 
   /**
@@ -224,7 +213,7 @@ export class ProfileAPIClient extends APIClient {
    * DELETE /api/profiles/:userId/permanent
    */
   async permanentlyDeleteProfile(userId: string): Promise<void> {
-    await this.delete<APIResponse<null>>(
+    await this.delete<void>(
       `${this.basePath}/${userId}/permanent`
     );
   }

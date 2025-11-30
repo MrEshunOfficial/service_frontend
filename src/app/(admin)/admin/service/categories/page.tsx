@@ -1,0 +1,66 @@
+import AdminCategoryList from "@/components/services/categories/admin/AdminCategoryList";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb";
+import { Briefcase, Home, Shield } from "lucide-react";
+
+export default function page() {
+  return (
+    <main className="h-full space-y-2">
+      {/* Breadcrumb */}
+      <div className="w-full p-3 border-b">
+        <div className="max-w-7xl mx-auto">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  href="/"
+                  className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
+                >
+                  <Home className="w-4 h-4" />
+                  Home
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="text-gray-500 dark:text-white/60" />
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  href="/admin"
+                  className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
+                >
+                  <Shield className="w-4 h-4" />
+                  Admin
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="text-gray-500 dark:text-white/60" />
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  href="/admin/service"
+                  className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
+                >
+                  <Briefcase className="w-4 h-4" />
+                  Services
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="text-gray-500 dark:text-white/60" />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="text-gray-900 dark:text-white font-medium">
+                  Service Categories
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </div>
+
+      {/* Content */}
+      <section className="w-full relative overflow-hidden flex flex-col gap-2 items-center justify-center">
+        <AdminCategoryList />
+      </section>
+    </main>
+  );
+}

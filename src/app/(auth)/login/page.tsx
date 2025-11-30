@@ -9,7 +9,7 @@ export default function Page() {
       <aside className="w-1/3 overflow-y-auto flex flex-col items-center justify-center">
         <BaseAuthForm mode="login" defaultMethod="google" />
       </aside>
-      <article className="flex-1 overflow-y-auto flex items-center justify-center hide-scrollbar">
+      <article className="flex-1 flex items-center justify-center">
         <FeaturedCarousel />
       </article>
     </section>

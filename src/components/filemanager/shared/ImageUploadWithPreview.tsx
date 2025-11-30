@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useFileManagement } from "@/hooks/useFileManagement";
 import { EntityType } from "@/lib/api/file-manager/file.manager.api";
+import { toast } from "sonner";
 
 interface ImageUploadWithPreviewProps {
   type: "profile" | "category" | "service" | "cover";
@@ -113,7 +114,7 @@ export function ImageUploadWithPreview({
       // Upload file and get the returned FileRecord
       const uploadedFile = await uploadFile(file, entityId);
 
-      console.log("Upload successful, returned file:", uploadedFile);
+      toast.success("successful!");
 
       // Validate the response
       if (!uploadedFile) {
@@ -277,7 +278,8 @@ export function ImageUploadWithPreview({
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
-        onDrop={handleDrop}>
+        onDrop={handleDrop}
+      >
         {previewUrl ? (
           <div className="relative w-full h-full group">
             <Image
@@ -314,7 +316,8 @@ export function ImageUploadWithPreview({
                   type="button"
                   onClick={handleClick}
                   disabled={disabled || isProcessing}
-                  className="px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium disabled:opacity-50">
+                  className="px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium disabled:opacity-50"
+                >
                   Change
                 </button>
                 {showRemove && (
@@ -322,7 +325,8 @@ export function ImageUploadWithPreview({
                     type="button"
                     onClick={handleRemove}
                     disabled={disabled || isProcessing}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium disabled:opacity-50">
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium disabled:opacity-50"
+                  >
                     Remove
                   </button>
                 )}
@@ -344,7 +348,8 @@ export function ImageUploadWithPreview({
                   className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-3"
                   fill="none"
                   stroke="currentColor"
-                  viewBox="0 0 24 24">
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -384,7 +389,8 @@ export function ImageUploadWithPreview({
           <svg
             className="w-4 h-4 flex-shrink-0 mt-0.5"
             fill="currentColor"
-            viewBox="0 0 20 20">
+            viewBox="0 0 20 20"
+          >
             <path
               fillRule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"

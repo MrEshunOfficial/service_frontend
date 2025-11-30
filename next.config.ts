@@ -34,13 +34,7 @@ const nextConfig: NextConfig = {
       process.env.NODE_ENV === "development"
         ? "http://localhost:5000"
         : process.env.NEXT_PUBLIC_BACKEND_URL,
-  },
-  serverRuntimeConfig: {
-    httpAgentOptions: {
-      keepAlive: true,
-      timeout: 60000,
-    },
-  },
+  }
 };
 
 export default nextConfig;
