@@ -14,10 +14,9 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
         {/* Content */}
         <main
-          className="w-full h-[91vh] mt-2 overflow-hidden
-         flex items-center justify-center border rounded
-        "
-        >
+          className="w-full h-[91vh] mt-2 overflow-x-hidden
+         flex items-center justify-center border rounded hide-scrollbar
+        ">
           {children}
         </main>
       </div>

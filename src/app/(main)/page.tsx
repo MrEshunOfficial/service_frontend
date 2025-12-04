@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Search, TrendingUp, Shield } from "lucide-react";
+import { Search, TrendingUp, Shield, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
@@ -10,14 +10,18 @@ export default function HomePage() {
 
   const handlePostService = (): void => {
     if (serviceQuery.trim()) {
-      console.log("Service request:", serviceQuery);
-      alert(`Looking for: ${serviceQuery}`);
-      setServiceQuery("");
+      // Navigate to task creation page with pre-filled title
+      const encodedTitle = encodeURIComponent(serviceQuery);
+      router.push(`/task/create?title=${encodedTitle}`);
     }
   };
 
   const handleBrowseServices = (): void => {
     router.push("/services");
+  };
+
+  const handleViewMyTasks = (): void => {
+    router.push("/task");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
@@ -27,7 +31,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="w-full h-full bg-gradient-to-b from-red-50 to-white dark:from-gray-950 dark:to-gray-900 relative overflow-hidden">
+    <div className="w-full h-full bg-gradient-to-b from-red-50 to-white dark:from-gray-950 dark:to-gray-900 relative">
       {/* Blurred logo background */}
       <div className="absolute inset-0 opacity-25 dark:opacity-35 pointer-events-none">
         <img
@@ -87,6 +91,16 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+
+            {/* Quick action link */}
+            <div className="pt-6">
+              <button
+                onClick={handleViewMyTasks}
+                className="inline-flex items-center gap-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors group">
+                View my tasks
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
           </div>
 
           {/* Right content - Search card */}
@@ -104,8 +118,7 @@ export default function HomePage() {
                 <div
                   className={`relative transition-all duration-300 ${
                     isFocused ? "ring-2 ring-red-500 rounded-2xl" : ""
-                  }`}
-                >
+                  }`}>
                   <input
                     type="text"
                     value={serviceQuery}
@@ -121,27 +134,103 @@ export default function HomePage() {
                   </div>
                 </div>
 
+                {/* Helper text */}
+                <p className="text-xs text-gray-500 dark:text-gray-400 px-1">
+                  Describe your task briefly. You'll add more details on the
+                  next page.
+                </p>
+
                 {/* Action buttons */}
                 <div className="space-y-3 pt-2">
                   <button
                     onClick={handlePostService}
                     disabled={!serviceQuery.trim()}
-                    className="w-full py-4 bg-gradient-to-r from-red-500 to-blue-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:transform-none"
-                  >
-                    Post Service Request
+                    className="w-full py-4 bg-gradient-to-r from-red-500 to-blue-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:transform-none flex items-center justify-center gap-2">
+                    Create Task
+                    <ArrowRight className="w-5 h-5" />
                   </button>
-                  <span className="w-full flex items-center justify-center">
-                    or
-                  </span>
+
+                  <div className="relative flex items-center justify-center">
+                    <div className="absolute inset-x-0 h-px bg-gray-200 dark:bg-gray-700"></div>
+                    <span className="relative px-4 text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800">
+                      or
+                    </span>
+                  </div>
+
                   <button
                     onClick={handleBrowseServices}
-                    className="w-full py-4 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                  >
+                    className="w-full py-4 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
                     Browse All Services
                   </button>
                 </div>
               </div>
+
+              {/* Trust indicators */}
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-center gap-6 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center gap-1">
+                    <span className="text-green-600 dark:text-green-400">
+                      ✓
+                    </span>
+                    <span>Secure payments</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-green-600 dark:text-green-400">
+                      ✓
+                    </span>
+                    <span>24/7 support</span>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* How it works section */}
+      <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 relative z-10">
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-12">
+          How it works
+        </h2>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* Step 1 */}
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+              1
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Post Your Task
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Describe what you need help with and when you need it
+            </p>
+          </div>
+
+          {/* Step 2 */}
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+              2
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Get Matched
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Receive responses from verified providers in your area
+            </p>
+          </div>
+
+          {/* Step 3 */}
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-green-500 to-teal-500 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+              3
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Get It Done
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Choose your provider and get your task completed
+            </p>
           </div>
         </div>
       </div>
