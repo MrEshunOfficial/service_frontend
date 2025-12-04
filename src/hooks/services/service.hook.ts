@@ -98,6 +98,30 @@ export function useServiceBySlug(slug: string) {
 
   return { ...state, refetch: fetchService };
 }
+export function useServiceById(id: string) {
+  const [state, setState] = useState<UseServicesState<Service>>({
+    data: null,
+    loading: true,
+    error: null,
+  });
+
+  const fetchService = useCallback(async () => {
+    if (!id) return;
+    setState({ data: null, loading: true, error: null });
+    try {
+      const data = await serviceAPI.getServiceById(id);
+      setState({ data, loading: false, error: null });
+    } catch (err) {
+      setState({ data: null, loading: false, error: err as Error });
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchService();
+  }, [fetchService]);
+
+  return { ...state, refetch: fetchService };
+}
 
 /**
  * Hook to search services

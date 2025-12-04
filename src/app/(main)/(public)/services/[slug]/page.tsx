@@ -1,4 +1,4 @@
-// File: app/services/[slug]/page.js
+// File: app/services/[slug]/page.tsx
 "use client";
 
 import { useState, useMemo } from "react";
@@ -13,74 +13,198 @@ import {
   Heart,
   CheckCircle,
   Navigation,
+  Clock,
+  Award,
+  AlertCircle,
 } from "lucide-react";
 import { useServiceBySlug } from "@/hooks/services/service.hook";
+import {
+  useCurrentLocation,
+  useProviderUtils,
+  useNearestProviders,
+} from "@/hooks/profiles/useprovider.profile.hook";
+import { ProviderProfile } from "@/types/provider.types";
+import { toast } from "sonner";
+import Image from "next/image";
+
+// Avatar component with fallback
+const ProviderAvatar = ({
+  provider,
+  size = "small",
+}: {
+  provider: {
+    name: string;
+    providerData: ProviderProfile;
+  };
+  size?: "small" | "medium" | "large";
+}) => {
+  const [imageError, setImageError] = useState(false);
+  const profilePicture = provider.providerData?.profile?.profilePictureId;
+
+  const sizeClasses = {
+    small: "w-12 h-12 text-base",
+    medium: "w-16 h-16 text-xl",
+    large: "w-20 h-20 text-2xl",
+  };
+
+  const dimensions = {
+    small: 48,
+    medium: 64,
+    large: 80,
+  };
+
+  // Show image if available and no error
+  if (profilePicture?.url && !imageError) {
+    return (
+      <div
+        className={`${sizeClasses[size]} rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0 relative`}
+      >
+        <Image
+          src={profilePicture.url}
+          alt={provider.name}
+          width={dimensions[size]}
+          height={dimensions[size]}
+          className="object-cover"
+          onError={() => setImageError(true)}
+          priority={size === "large"}
+        />
+      </div>
+    );
+  }
+
+  // Fallback to gradient with initials
+  return (
+    <div
+      className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0`}
+    >
+      {provider.name.charAt(0).toUpperCase()}
+    </div>
+  );
+};
 
 export default function ServiceDetailsPage() {
   const router = useRouter();
   const { slug } = useParams();
+
+  // Fetch service details
   const {
     data: service,
-    loading,
-    error,
-    refetch,
+    loading: serviceLoading,
+    error: serviceError,
+    refetch: refetchService,
   } = useServiceBySlug(slug as string);
 
-  const [selectedProvider, setSelectedProvider] = useState(null);
+  // Get current location
+  const {
+    data: userLocation,
+    loading: locationLoading,
+    error: locationError,
+  } = useCurrentLocation();
+
+  // Search for providers offering this service near user
+  const {
+    providers,
+    loading: providersLoading,
+    error: providersError,
+    refetch: refetchProviders,
+  } = useNearestProviders({
+    latitude: userLocation?.latitude || 0,
+    longitude: userLocation?.longitude || 0,
+    serviceId: service?._id,
+    limit: 20,
+    maxDistance: 50, // 50km radius
+  });
+
+  console.log(providers);
+
+  const [selectedProvider, setSelectedProvider] = useState<{
+    id: string;
+    name: string;
+    avatar: null;
+    rating: number;
+    totalReviews: number;
+    distance: number;
+    distanceFormatted: string;
+    location: string;
+    locationFull: string;
+    responseTime: string;
+    completedJobs: number;
+    verified: boolean;
+    price: number;
+    availability: string;
+    isAvailableNow: boolean;
+    workingHours?: any;
+    isAlwaysAvailable: boolean;
+    requiresDeposit: boolean;
+    depositPercentage?: number;
+    contactInfo: any;
+    landmark?: string;
+    providerData: ProviderProfile;
+  } | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [sortBy, setSortBy] = useState("distance");
 
-  // Mock providers data - replace with actual API call
-  const providers = useMemo(
-    () => [
-      {
-        id: "1",
-        name: "John's Professional Services",
-        avatar: null,
-        rating: 4.8,
-        totalReviews: 127,
-        distance: 2.3,
-        location: "Accra Central",
-        responseTime: "< 1 hour",
-        completedJobs: 342,
-        verified: true,
-        price: service?.servicePricing?.serviceBasePrice || 0,
-        availability: "Available Now",
-      },
-      {
-        id: "2",
-        name: "Premium Solutions Ltd",
-        avatar: null,
-        rating: 4.9,
-        totalReviews: 89,
-        distance: 5.1,
-        location: "East Legon",
-        responseTime: "< 2 hours",
-        completedJobs: 234,
-        verified: true,
-        price: (service?.servicePricing?.serviceBasePrice || 0) * 1.15,
-        availability: "Available Today",
-      },
-      {
-        id: "3",
-        name: "Quick Fix Services",
-        avatar: null,
-        rating: 4.6,
-        totalReviews: 156,
-        distance: 8.7,
-        location: "Tema",
-        responseTime: "< 3 hours",
-        completedJobs: 198,
-        verified: false,
-        price: (service?.servicePricing?.serviceBasePrice || 0) * 0.9,
-        availability: "Available Tomorrow",
-      },
-    ],
-    [service]
-  );
+  // Provider utility functions
+  const { isProviderActive, isProviderAvailableNow, getWorkingHoursForDay } =
+    useProviderUtils();
 
+  // Filter and calculate provider data
+  const enrichedProviders = useMemo(() => {
+    if (!providers || !userLocation) return [];
+
+    return providers
+      .filter((result) => isProviderActive(result.provider))
+      .map((result) => {
+        const provider = result.provider;
+        const isAvailableNow = isProviderAvailableNow(provider);
+
+        return {
+          id: provider._id,
+          name: provider.businessName || "Service Provider",
+          avatar: null,
+          rating: 0,
+          totalReviews: 0,
+          distance: result.distanceKm,
+          distanceFormatted: result.distanceFormatted,
+          location:
+            provider.locationData.city ||
+            provider.locationData.region ||
+            "Ghana",
+          locationFull: [
+            provider.locationData.locality,
+            provider.locationData.city,
+            provider.locationData.region,
+          ]
+            .filter(Boolean)
+            .join(", "),
+          responseTime: "< 1 hour",
+          completedJobs: 0,
+          verified: provider.isCompanyTrained,
+          price: service?.servicePricing?.serviceBasePrice || 0,
+          availability: isAvailableNow ? "Available Now" : "closed",
+          isAvailableNow,
+          workingHours: provider.workingHours,
+          isAlwaysAvailable: provider.isAlwaysAvailable,
+          requiresDeposit: provider.requireInitialDeposit,
+          depositPercentage: provider.percentageDeposit,
+          contactInfo: provider.providerContactInfo,
+          landmark: provider.locationData.nearbyLandmark,
+          providerData: provider,
+        };
+      });
+  }, [
+    providers,
+    userLocation,
+    service,
+    isProviderActive,
+    isProviderAvailableNow,
+  ]);
+
+  // Sort providers
   const sortedProviders = useMemo(() => {
-    const sorted = [...providers];
+    if (!enrichedProviders.length) return [];
+
+    const sorted = [...enrichedProviders];
     switch (sortBy) {
       case "distance":
         return sorted.sort((a, b) => a.distance - b.distance);
@@ -90,35 +214,45 @@ export default function ServiceDetailsPage() {
         return sorted.sort((a, b) => a.price - b.price);
       case "price-high":
         return sorted.sort((a, b) => b.price - a.price);
+      case "availability":
+        return sorted.sort((a, b) => {
+          if (a.isAvailableNow && !b.isAvailableNow) return -1;
+          if (!a.isAvailableNow && b.isAvailableNow) return 1;
+          return a.distance - b.distance;
+        });
       default:
         return sorted;
     }
-  }, [providers, sortBy]);
+  }, [enrichedProviders, sortBy]);
 
   const handleShare = async () => {
+    if (!service) return;
+
     const url = window.location.href;
     const shareText = `Check out this service: ${service.title}\n\n${service.description}\n\n${url}`;
 
     if (navigator.share) {
       try {
         await navigator.share({ title: service.title, text: shareText, url });
-      } catch (error) {
+      } catch (error: any) {
         if (error.name !== "AbortError") {
           await navigator.clipboard.writeText(shareText);
-          alert("✓ Link copied to clipboard!");
+          toast.success("✓ Link copied to clipboard!");
         }
       }
     } else {
       await navigator.clipboard.writeText(shareText);
-      alert("✓ Link copied to clipboard!");
+      toast.success("✓ Link copied to clipboard!");
     }
   };
 
-  const handleRequestProvider = (provider) => {
+  const handleRequestProvider = (provider: (typeof enrichedProviders)[0]) => {
+    if (!service) return;
     router.push(`/providers/${provider.id}?service=${service._id}`);
   };
 
-  if (loading) {
+  // Loading state
+  if (serviceLoading || locationLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center py-20 bg-gray-50 dark:bg-gray-950">
         <div className="text-center">
@@ -131,7 +265,8 @@ export default function ServiceDetailsPage() {
     );
   }
 
-  if (error || !service) {
+  // Error state
+  if (serviceError || !service) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <div className="text-center p-8">
@@ -140,7 +275,7 @@ export default function ServiceDetailsPage() {
           </p>
           <button
             className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-md"
-            onClick={refetch}
+            onClick={refetchService}
           >
             Try Again
           </button>
@@ -152,37 +287,85 @@ export default function ServiceDetailsPage() {
   return (
     <div className="h-full w-full flex items-start justify-start bg-gray-50 dark:bg-gray-950 p-2 gap-2">
       <aside className="w-80 flex flex-col gap-2">
-        <>
-          {/* Header */}
-          <div className="p-3 border-b border-gray-200 dark:border-gray-800">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              Available Providers
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {providers.length} providers nearby
-            </p>
+        {/* Header */}
+        <div className="p-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-md">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            Available Providers
+          </h2>
 
-            {/* Sort Options */}
-            <div className="mt-4">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                Sort by:
-              </label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="distance">Nearest First</option>
-                <option value="rating">Highest Rated</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-              </select>
+          {/* Location error */}
+          {locationError && (
+            <div className="mb-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                  Enable location to see nearby providers
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Providers List */}
-          <div className="overflow-y-auto max-h-[calc(100vh-8rem)]">
-            {sortedProviders.map((provider) => (
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {providersLoading
+              ? "Searching..."
+              : providersError
+              ? "Unable to load providers"
+              : `${sortedProviders.length} providers found`}
+          </p>
+
+          {/* Sort Options */}
+          <div className="mt-4">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+              Sort by:
+            </label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="distance">Nearest First</option>
+              <option value="availability">Available First</option>
+              <option value="rating">Highest Rated</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Providers List */}
+        <div className="overflow-y-auto max-h-[calc(100vh-8rem)] bg-white dark:bg-gray-900 rounded-md">
+          {providersLoading ? (
+            <div className="p-8 text-center">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Finding providers...
+              </p>
+            </div>
+          ) : providersError ? (
+            <div className="p-8 text-center">
+              <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
+              <p className="text-sm text-red-600 dark:text-red-400 mb-3">
+                Failed to load providers
+              </p>
+              <button
+                onClick={refetchProviders}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                Retry
+              </button>
+            </div>
+          ) : sortedProviders.length === 0 ? (
+            <div className="p-8 text-center">
+              <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                No providers found nearby
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500">
+                Try expanding your search area
+              </p>
+            </div>
+          ) : (
+            sortedProviders.map((provider) => (
               <div
                 key={provider.id}
                 className={`p-4 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${
@@ -194,9 +377,7 @@ export default function ServiceDetailsPage() {
               >
                 <div className="flex items-start gap-3">
                   {/* Avatar */}
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-                    {provider.name.charAt(0)}
-                  </div>
+                  <ProviderAvatar provider={provider} />
 
                   <div className="flex-1 min-w-0">
                     {/* Name and Verified Badge */}
@@ -209,31 +390,72 @@ export default function ServiceDetailsPage() {
                       )}
                     </div>
 
-                    {/* Rating */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {provider.rating}
+                    {/* Rating - placeholder for now */}
+                    {provider.totalReviews > 0 && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {provider.rating}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          ({provider.totalReviews} reviews)
                         </span>
                       </div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        ({provider.totalReviews} reviews)
-                      </span>
-                    </div>
+                    )}
 
                     {/* Location and Distance */}
                     <div className="flex items-center gap-2 mb-2">
                       <MapPin className="w-3.5 h-3.5 text-gray-400" />
                       <span className="text-xs text-gray-600 dark:text-gray-400">
-                        {provider.location} • {provider.distance} km away
+                        {provider.location} • {provider.distanceFormatted}
                       </span>
                     </div>
+
+                    {/* Landmark if available */}
+                    {provider.landmark && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <Navigation className="w-3.5 h-3.5 text-gray-400" />
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                          Near {provider.landmark}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Working Hours Info */}
+                    {!provider.isAlwaysAvailable && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="w-3.5 h-3.5 text-gray-400" />
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                          {getWorkingHoursForDay(
+                            provider.providerData,
+                            new Date()
+                              .toLocaleDateString("en-US", {
+                                weekday: "long",
+                              })
+                              .toLowerCase()
+                          )}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Deposit Required */}
+                    {provider.requiresDeposit && provider.depositPercentage && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <DollarSign className="w-3.5 h-3.5 text-orange-500" />
+                        <span className="text-xs text-orange-600 dark:text-orange-400">
+                          {provider.depositPercentage}% deposit required
+                        </span>
+                      </div>
+                    )}
 
                     {/* Price and Availability */}
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center gap-1">
-                        <DollarSign className="w-4 h-4 text-green-600" />
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          From
+                        </span>
                         <span className="font-bold text-gray-900 dark:text-gray-100">
                           {new Intl.NumberFormat("en-US", {
                             style: "currency",
@@ -241,7 +463,13 @@ export default function ServiceDetailsPage() {
                           }).format(provider.price)}
                         </span>
                       </div>
-                      <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${
+                          provider.isAvailableNow
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                            : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                        }`}
+                      >
                         {provider.availability}
                       </span>
                     </div>
@@ -252,21 +480,126 @@ export default function ServiceDetailsPage() {
                         e.stopPropagation();
                         handleRequestProvider(provider);
                       }}
-                      className="w-full mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
+                      className="w-full mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!provider.isAvailableNow}
                     >
-                      Request Provider
+                      {provider.isAvailableNow
+                        ? "Request Provider"
+                        : "View Profile"}
                     </button>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </>
+            ))
+          )}
+        </div>
       </aside>
+
       <section className="flex-1 overflow-y-auto max-h-[calc(100vh-7vh)]">
-        <header className="w-full h-27 mb-2 border rounded p-2">
-          display the data of the nearest providers
+        <header className="w-full h-24 mb-3 border rounded-md p-4 bg-white dark:bg-gray-900">
+          {sortedProviders.length > 0 ? (
+            <div className="flex items-center gap-4 h-full">
+              {/* Avatar */}
+              <ProviderAvatar provider={sortedProviders[0]} />
+
+              {/* Provider Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">
+                    Nearest Provider
+                  </span>
+                  {sortedProviders[0].verified && (
+                    <CheckCircle className="w-4 h-4 text-blue-600" />
+                  )}
+                </div>
+
+                <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 truncate mb-1">
+                  {sortedProviders[0].name}
+                </h3>
+
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                    <MapPin className="w-4 h-4" />
+                    <span className="font-medium">
+                      {sortedProviders[0].distanceFormatted}
+                    </span>
+                  </div>
+
+                  {sortedProviders[0].isAvailableNow && (
+                    <span className="flex items-center gap-1.5 text-green-600 dark:text-green-400">
+                      <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse"></div>
+                      Available Now
+                    </span>
+                  )}
+
+                  <span className="text-gray-600 dark:text-gray-400">
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: service?.servicePricing?.currency || "USD",
+                      minimumFractionDigits: 0,
+                    }).format(sortedProviders[0].price)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={() => handleRequestProvider(sortedProviders[0])}
+                className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold shadow-md flex items-center gap-2 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!sortedProviders[0].isAvailableNow}
+              >
+                <Navigation className="w-4 h-4" />
+                {sortedProviders[0].isAvailableNow
+                  ? "Request Now"
+                  : "View Profile"}
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+              <div className="text-center">
+                <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                <p className="text-sm">
+                  {providersLoading
+                    ? "Finding nearest provider..."
+                    : "No providers available nearby"}
+                </p>
+              </div>
+            </div>
+          )}
         </header>
+        {/* Selected Provider Header */}
+        {selectedProvider && (
+          <header className="w-full mb-2 border rounded p-4 bg-white dark:bg-gray-900">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
+                {selectedProvider.name.charAt(0)}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    {selectedProvider.name}
+                  </h2>
+                  {selectedProvider.verified && (
+                    <Award className="w-5 h-5 text-blue-600" />
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {selectedProvider.locationFull}
+                </p>
+                <div className="flex items-center gap-4 mt-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedProvider.distanceFormatted} away
+                  </span>
+                  {selectedProvider.isAlwaysAvailable && (
+                    <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                      24/7 Available
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </header>
+        )}
         <div className="bg-white dark:bg-gray-900 rounded-md shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
           {/* Hero Section: Cover Image + Pricing Sidebar */}
           <div className="flex">

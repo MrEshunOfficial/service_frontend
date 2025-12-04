@@ -15,6 +15,7 @@ import {
   Settings,
   Sparkles,
   ToolCaseIcon,
+  ToolCase,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/auth/useAuth";
@@ -40,6 +41,13 @@ const navigationItems: NavigationItem[] = [
     roles: ["admin", "super_admin"],
     separator: false,
     description: "Overview & insights",
+  },
+  {
+    href: "/admin/services",
+    label: "Services",
+    icon: ToolCase,
+    roles: ["admin", "super_admin"],
+    description: "Service management",
   },
   {
     href: "/admin/service/categories",

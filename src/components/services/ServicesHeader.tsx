@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Search, Filter, X, ChevronRight, Edit, ImageIcon } from "lucide-react";
+import {
+  Search,
+  Filter,
+  X,
+  ChevronRight,
+  Image as ImageIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -41,8 +47,9 @@ export default function ServicesHeader({
   toggleTag,
 }: ServicesHeaderProps) {
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [categorySearchQuery, setCategorySearchQuery] = useState("");
 
-  const getActiveFiltersCount = () => {
+  const getActiveFiltersCount = (): number => {
     let count = 0;
     if (selectedCategory) count++;
     if (selectedTags && selectedTags.length > 0) count += selectedTags.length;
@@ -53,6 +60,24 @@ export default function ServicesHeader({
   const totalActiveFilters = getActiveFiltersCount();
   const displayedCategories = categories?.slice(0, 2) || [];
   const hasMoreCategories = (categories?.length || 0) > 2;
+
+  // Filter categories based on search query
+  const filteredCategories = categories.filter((cat) =>
+    cat.catName.toLowerCase().includes(categorySearchQuery.toLowerCase())
+  );
+
+  const handleCategorySelect = (categoryId: string): void => {
+    if (setSelectedCategory) {
+      setSelectedCategory(categoryId);
+      setShowAllCategories(false);
+      setCategorySearchQuery("");
+    }
+  };
+
+  const handleCloseAllCategories = (): void => {
+    setShowAllCategories(false);
+    setCategorySearchQuery("");
+  };
 
   return (
     <header className="border border-gray-300 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
@@ -189,7 +214,12 @@ export default function ServicesHeader({
                     {hasMoreCategories && (
                       <Popover
                         open={showAllCategories}
-                        onOpenChange={setShowAllCategories}
+                        onOpenChange={(open) => {
+                          setShowAllCategories(open);
+                          if (!open) {
+                            setCategorySearchQuery("");
+                          }
+                        }}
                       >
                         <PopoverTrigger asChild>
                           <Button
@@ -214,51 +244,72 @@ export default function ServicesHeader({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setShowAllCategories(false)}
+                                onClick={handleCloseAllCategories}
                               >
                                 <X className="w-4 h-4" />
                               </Button>
                             </div>
-                            <div className="flex flex-col gap-2 h-[88vh] overflow-y-auto">
-                              {categories.map((cat) => (
-                                <Button
-                                  key={cat._id}
-                                  variant={
-                                    selectedCategory === cat._id
-                                      ? "default"
-                                      : "outline"
-                                  }
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedCategory(cat._id);
-                                    setShowAllCategories(false);
-                                  }}
-                                  className="text-xs w-full flex items-center justify-start gap-2 p-2"
-                                >
-                                  <div className="relative w-6 h-6 flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden cursor-pointer group">
-                                    {(() => {
-                                      const imageUrl =
-                                        cat.catCoverId?.thumbnailUrl;
-                                      return imageUrl ? (
-                                        <Image
-                                          src={imageUrl}
-                                          alt={cat.catName}
-                                          fill
-                                          className="object-cover rounded-full"
-                                          sizes="96px"
-                                        />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                          <ImageIcon className="w-8 h-8 text-gray-400 dark:text-gray-600" />
-                                        </div>
-                                      );
-                                    })()}
-                                  </div>
-                                  <span className="capitalize">
-                                    {cat.catName}
-                                  </span>
-                                </Button>
-                              ))}
+
+                            {/* Category Search */}
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                              <input
+                                type="text"
+                                placeholder="Search categories..."
+                                value={categorySearchQuery}
+                                onChange={(e) =>
+                                  setCategorySearchQuery(e.target.value)
+                                }
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all"
+                              />
+                            </div>
+
+                            {/* Category List */}
+                            <div className="flex flex-col gap-2 h-[75vh] overflow-y-auto">
+                              {filteredCategories.length > 0 ? (
+                                filteredCategories.map((cat) => (
+                                  <Button
+                                    key={cat._id}
+                                    variant={
+                                      selectedCategory === cat._id
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                    size="lg"
+                                    onClick={() =>
+                                      handleCategorySelect(cat._id)
+                                    }
+                                    className="text-xs w-full flex items-center justify-start gap-2 p-2"
+                                  >
+                                    <div className="relative w-6 h-6 flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden cursor-pointer group">
+                                      {(() => {
+                                        const imageUrl =
+                                          cat.catCoverId?.thumbnailUrl;
+                                        return imageUrl ? (
+                                          <Image
+                                            src={imageUrl}
+                                            alt={cat.catName}
+                                            fill
+                                            className="object-cover rounded-full"
+                                            sizes="96px"
+                                          />
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center">
+                                            <ImageIcon className="w-8 h-8 text-gray-400 dark:text-gray-600" />
+                                          </div>
+                                        );
+                                      })()}
+                                    </div>
+                                    <span className="capitalize">
+                                      {cat.catName}
+                                    </span>
+                                  </Button>
+                                ))
+                              ) : (
+                                <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
+                                  No categories found
+                                </div>
+                              )}
                             </div>
                           </div>
                         </PopoverContent>

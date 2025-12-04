@@ -144,15 +144,22 @@ export class AuthAPI extends APIClient {
   // SUPER ADMIN ENDPOINTS
   // ============================================
 
-  async updateUserRole(
-    userId: string,
-    data: UpdateUserRoleData
-  ): Promise<AuthResponse> {
-    return this.patch<AuthResponse>(
-      `${this.endpoint}/admin/users/${userId}/role`,
-      data
-    );
+async updateUserRole(
+  userId: string | undefined,
+  data: UpdateUserRoleData
+): Promise<AuthResponse> {
+  // Add validation
+  if (!userId || userId === 'undefined') {
+    throw new Error('Valid user ID is required for updating role');
   }
+  
+  console.log('Updating user role:', { userId, data }); // Debug log
+  
+  return this.patch<AuthResponse>(
+    `${this.endpoint}/admin/users/${userId}/role`,
+    data
+  );
+}
 
   async deleteUser(userId: string): Promise<AuthResponse> {
     return this.delete<AuthResponse>(`${this.endpoint}/admin/users/${userId}`);

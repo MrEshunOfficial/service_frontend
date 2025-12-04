@@ -18,6 +18,7 @@ import {
   MapPin,
   TrendingUp,
   Package,
+  Camera,
 } from "lucide-react";
 import {
   Card,
@@ -39,6 +40,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Service } from "@/types/service.types";
+import { ImageUploadPopover } from "../filemanager/EntityImageUpload";
 
 interface ServiceCardProps {
   service: Service;
@@ -50,6 +52,7 @@ interface ServiceCardProps {
   onReject?: (id: string) => void;
   onShare?: (id: string) => void;
   onToggleFavorite?: (id: string) => void;
+  onImageUpdate?: (serviceId: string, newImageUrl: string) => void;
   isFavorite?: boolean;
 }
 
@@ -68,6 +71,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   onView,
   onShare,
   onToggleFavorite,
+  onImageUpdate,
   isFavorite = false,
 }) => {
   const formatPrice = (price: number) => {
@@ -75,6 +79,12 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       style: "currency",
       currency: service.servicePricing?.currency || "USD",
     }).format(price);
+  };
+
+  const handleImageUploadSuccess = (url: string) => {
+    if (onImageUpdate) {
+      onImageUpdate(service._id, url);
+    }
   };
 
   const menuItems: Record<typeof variant, MenuItem[]> = {
@@ -136,23 +146,43 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
 
         {/* Top Overlay Actions */}
         <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start z-20">
-          {variant === "public" && onToggleFavorite && (
-            <Button
-              onClick={() => onToggleFavorite(service._id)}
-              variant="ghost"
-              size="icon"
-              className="bg-white/95 dark:bg-gray-900/95 hover:bg-white dark:hover:bg-gray-900 backdrop-blur-sm rounded-full h-10 w-10 shadow-lg hover:scale-110 transition-transform"
-            >
-              <Heart
-                size={20}
-                className={
-                  isFavorite
-                    ? "fill-red-500 text-red-500 animate-pulse"
-                    : "text-gray-700 dark:text-gray-300"
+          {/* Left side: Favorite (public) or Upload (user) */}
+          <div>
+            {variant === "public" && onToggleFavorite && (
+              <Button
+                onClick={() => onToggleFavorite(service._id)}
+                variant="ghost"
+                size="icon"
+                className="bg-white/95 dark:bg-gray-900/95 hover:bg-white dark:hover:bg-gray-900 backdrop-blur-sm rounded-full h-10 w-10 shadow-lg hover:scale-110 transition-transform"
+              >
+                <Heart
+                  size={20}
+                  className={
+                    isFavorite
+                      ? "fill-red-500 text-red-500 animate-pulse"
+                      : "text-gray-700 dark:text-gray-300"
+                  }
+                />
+              </Button>
+            )}
+
+            {variant === "user" && (
+              <ImageUploadPopover
+                type="service"
+                entityId={service._id}
+                currentImageUrl={service.coverImage?.url}
+                onUploadSuccess={handleImageUploadSuccess}
+                trigger={
+                  <div className="bg-white/95 dark:bg-gray-900/95 hover:bg-white dark:hover:bg-gray-900 backdrop-blur-sm rounded-full h-10 w-10 shadow-lg hover:scale-110 transition-transform flex items-center justify-center cursor-pointer">
+                    <Camera
+                      size={20}
+                      className="text-gray-700 dark:text-gray-300"
+                    />
+                  </div>
                 }
               />
-            </Button>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Category Badge at Bottom */}

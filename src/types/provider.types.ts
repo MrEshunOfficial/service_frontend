@@ -1,329 +1,273 @@
-// types/provider.types.ts
 
-import { Service } from "./service.types";
+import { UserProfile } from "@/types/profile.types";
 
-/**
- * Provider Status
- */
-export type ProviderStatus = "active" | "inactive" | "suspended" | "pending";
+// ============================================
+// Shared Type Definitions
+// ============================================
 
-/**
- * Verification Status
- */
-export type VerificationStatus = "verified" | "unverified" | "in_review";
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
 
-/**
- * Provider Location
- */
-export interface ProviderLocation {
-  address: string;
-  city: string;
-  region: string;
-  country: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
+export interface UserLocation {
+  // Core (User-provided)
+  ghanaPostGPS: string;
+  nearbyLandmark?: string;
+
+  // Auto-filled / Verified (from OpenStreetMap or Google Map)
+  region?: string;
+  city?: string;
+  district?: string;
+  locality?: string;
+  streetName?: string;
+  houseNumber?: string;
+
+  // Technical / Validation
+  gpsCoordinates?: Coordinates;
+  isAddressVerified?: boolean;
+  sourceProvider?: "openstreetmap" | "google" | "ghanapost";
+
+  // System Fields
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ContactDetails {
+  // Personal
+  primaryContact: string;
+  secondaryContact?: string;
+
+  // Business
+  businessContact?: string;
+  businessEmail?: string;
+}
+
+export enum IdType {
+  NATIONAL_ID = "national_id",
+  PASSPORT = "passport",
+  VOTERS_ID = "voters_id",
+  DRIVERS_LICENSE = "drivers_license",
+  NHIS = "nhis",
+  OTHER = "other",
+}
+
+export interface IdDetails {
+  idType: IdType;
+  idNumber: string;
+  fileImage: string[]; // Array of file/image IDs
+}
+
+export interface WorkingHours {
+  [day: string]: {
+    start: string;
+    end: string;
   };
-  postalCode?: string;
 }
 
-/**
- * Provider Availability
- */
-export interface ProviderAvailability {
-  monday?: TimeSlot[];
-  tuesday?: TimeSlot[];
-  wednesday?: TimeSlot[];
-  thursday?: TimeSlot[];
-  friday?: TimeSlot[];
-  saturday?: TimeSlot[];
-  sunday?: TimeSlot[];
-}
+// ============================================
+// Provider Profile Types
+// ============================================
 
-export interface TimeSlot {
-  start: string; // HH:MM format
-  end: string; // HH:MM format
-}
-
-/**
- * Provider Rating & Reviews
- */
-export interface ProviderRating {
-  overall: number; // Average rating
-  communication: number;
-  quality: number;
-  punctuality: number;
-  professionalism: number;
-  totalReviews: number;
-}
-
-/**
- * Provider Service Offering
- */
-export interface ProviderServiceOffering {
-  serviceId: string;
-  service?: Service;
-  customPrice?: number; // Provider's custom price for this service
-  isAvailable: boolean;
-  responseTime: string; // e.g., "30 mins", "1 hour"
-  description?: string; // Provider's custom description for this service
-  experience?: string; // Years of experience with this service
-}
-
-/**
- * Provider Certification
- */
-export interface ProviderCertification {
+export interface ProviderProfile {
   _id: string;
-  name: string;
-  issuer: string;
-  issueDate: string;
-  expiryDate?: string;
-  documentUrl?: string;
-  verified: boolean;
-}
-
-/**
- * Provider Statistics
- */
-export interface ProviderStats {
-  totalJobs: number;
-  completedJobs: number;
-  cancelledJobs: number;
-  averageResponseTime: string;
-  completionRate: number; // Percentage
-  repeatClientRate: number; // Percentage
-  onTimeRate: number; // Percentage
-}
-
-/**
- * Provider Social Links
- */
-export interface ProviderSocialLinks {
-  facebook?: string;
-  twitter?: string;
-  instagram?: string;
-  linkedin?: string;
-  website?: string;
-}
-
-/**
- * Provider Main Interface
- */
-export interface Provider {
-  _id: string;
-  userId: string; // Reference to User
+  profile: UserProfile; // User profile ID reference
+  
+  // Business & Identity Information
   businessName?: string;
-  displayName: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  avatar?: {
-    _id: string;
-    url: string;
-    thumbnailUrl: string;
-    fileName: string;
-  };
-  coverImage?: {
-    _id: string;
-    url: string;
-    fileName: string;
-  };
-  bio?: string;
-  tagline?: string;
-  location: ProviderLocation;
-  services: ProviderServiceOffering[];
-  categories: string[]; // Category IDs
-  rating: ProviderRating;
-  stats: ProviderStats;
-  certifications?: ProviderCertification[];
-  availability?: ProviderAvailability;
-  status: ProviderStatus;
-  verificationStatus: VerificationStatus;
-  verified: boolean;
-  verifiedAt?: string;
-  socialLinks?: ProviderSocialLinks;
-  joinedAt: string;
-  lastActiveAt?: string;
+  IdDetails?: IdDetails;
+  isCompanyTrained: boolean;
+
+  // Service Details
+  serviceOfferings?: string[]; // Array of service IDs
+  BusinessGalleryImages?: string[]; // Array of image IDs
+
+  // Contact & Location
+  providerContactInfo: ContactDetails;
+  locationData: UserLocation;
+
+  // Availability & Scheduling
+  isAlwaysAvailable: boolean;
+  workingHours?: WorkingHours;
+
+  // Payments & Deposits
+  requireInitialDeposit: boolean;
+  percentageDeposit?: number;
+
+  // Soft Delete
+  isDeleted?: boolean;
+  deletedAt?: string;
+  deletedBy?: string;
+
+  // Timestamps
   createdAt: string;
   updatedAt: string;
-  deletedAt?: string;
 }
 
-/**
- * Simplified Provider (for lists/cards)
- */
-export interface ProviderPreview {
-  _id: string;
-  displayName: string;
+export interface CreateProviderProfileRequest {
   businessName?: string;
-  avatar?: string;
-  location: string;
-  distance?: string;
-  rating: number;
-  reviewCount: number;
-  verified: boolean;
-  price: number;
-  responseTime: string;
-  completedJobs: number;
-  verificationStatus: VerificationStatus;
+  IdDetails?: IdDetails;
+  isCompanyTrained?: boolean;
+  serviceOfferings?: string[];
+  BusinessGalleryImages?: string[];
+  providerContactInfo: ContactDetails;
+  locationData: UserLocation;
+  isAlwaysAvailable?: boolean;
+  workingHours?: WorkingHours;
+  requireInitialDeposit?: boolean;
+  percentageDeposit?: number;
 }
 
-/**
- * Provider Filters
- */
-export interface ProviderFilters {
-  page?: number;
+export interface UpdateProviderProfileRequest {
+  businessName?: string;
+  IdDetails?: IdDetails;
+  isCompanyTrained?: boolean;
+  serviceOfferings?: string[];
+  BusinessGalleryImages?: string[];
+  providerContactInfo?: ContactDetails;
+  locationData?: UserLocation;
+  isAlwaysAvailable?: boolean;
+  workingHours?: WorkingHours;
+  requireInitialDeposit?: boolean;
+  percentageDeposit?: number;
+}
+
+export interface NearestProviderResult {
+  provider: ProviderProfile;
+  distanceKm: number;
+  distanceFormatted: string;
+}
+
+export interface FindNearestProvidersRequest {
+  latitude: number;
+  longitude: number;
+  maxDistance?: number;
   limit?: number;
   serviceId?: string;
-  categoryId?: string;
-  location?: string;
-  maxDistance?: number; // in km
-  minRating?: number;
-  verified?: boolean;
-  status?: ProviderStatus;
-  sortBy?: "distance" | "rating" | "price" | "completedJobs" | "responseTime";
-  sortOrder?: "asc" | "desc";
-  minPrice?: number;
-  maxPrice?: number;
 }
 
-/**
- * Paginated Provider Response
- */
-export interface PaginatedProvidersResponse {
-  providers: Provider[];
+export interface FindProvidersByLocationParams {
+  region: string;
+  city?: string;
+  serviceId?: string;
+  limit?: number;
+  [key: string]: string | number | boolean | undefined;
+}
+
+export interface DistanceResult {
+  distanceKm: number;
+  distanceFormatted: string;
+}
+
+export interface SearchProvidersRequest {
+  searchTerm?: string;
+  region?: string;
+  city?: string;
+  serviceIds?: string[];
+  isCompanyTrained?: boolean;
+  requireInitialDeposit?: boolean;
+  userLocation?: Coordinates;
+  maxDistance?: number;
+  limit?: number;
+  skip?: number;
+}
+
+export interface SearchProvidersResponse {
+  providers: ProviderProfile[];
   total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  count: number;
 }
 
-/**
- * Provider by Service Response
- */
-export interface ProvidersByServiceResponse {
-  providers: ProviderPreview[];
-  service: Service;
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-/**
- * Create Provider Data
- */
-export interface CreateProviderData {
-  businessName?: string;
-  displayName: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  bio?: string;
-  tagline?: string;
-  location: ProviderLocation;
-  services: Array<{
-    serviceId: string;
-    customPrice?: number;
-    description?: string;
-  }>;
-  categories: string[];
-  availability?: ProviderAvailability;
-  socialLinks?: ProviderSocialLinks;
-}
-
-/**
- * Update Provider Data
- */
-export interface UpdateProviderData {
-  businessName?: string;
-  displayName?: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  bio?: string;
-  tagline?: string;
-  location?: ProviderLocation;
-  services?: Array<{
-    serviceId: string;
-    customPrice?: number;
-    isAvailable?: boolean;
-    description?: string;
-  }>;
-  categories?: string[];
-  availability?: ProviderAvailability;
-  socialLinks?: ProviderSocialLinks;
-  status?: ProviderStatus;
-}
-
-/**
- * Provider Verification Data
- */
-export interface ProviderVerificationData {
-  documents: Array<{
-    type: "id" | "license" | "certificate" | "business_registration";
-    url: string;
-    name: string;
-  }>;
-  additionalInfo?: string;
-}
-
-/**
- * Provider Review
- */
-export interface ProviderReview {
-  _id: string;
-  providerId: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
+export interface AddServiceRequest {
   serviceId: string;
-  serviceName: string;
-  rating: {
-    overall: number;
-    communication: number;
-    quality: number;
-    punctuality: number;
-    professionalism: number;
-  };
-  comment: string;
-  images?: string[];
-  response?: {
-    text: string;
-    respondedAt: string;
-  };
-  helpful: number;
-  createdAt: string;
-  updatedAt: string;
 }
 
-/**
- * Provider Analytics
- */
-export interface ProviderAnalytics {
-  views: {
-    total: number;
-    trend: number; // Percentage change
-    byPeriod: Array<{ date: string; count: number }>;
+// ============================================
+// Location Types
+// ============================================
+
+export interface EnrichLocationRequest {
+  ghanaPostGPS: string;
+  coordinates?: Coordinates;
+  nearbyLandmark?: string;
+}
+
+export interface VerifyLocationRequest {
+  ghanaPostGPS: string;
+  coordinates: Coordinates;
+}
+
+export interface VerifyLocationResponse {
+  verified: boolean;
+  confidence: number;
+  actualLocation?: string;
+  distanceKm?: number;
+  message: string;
+}
+
+export interface GeocodeRequest {
+  address: string;
+}
+
+export interface GeocodeResponse {
+  coordinates: Coordinates;
+  displayName: string;
+}
+
+export interface ReverseGeocodeRequest {
+  latitude: number;
+  longitude: number;
+}
+
+export interface ReverseGeocodeResponse {
+  location: UserLocation;
+  coordinates: Coordinates;
+  displayName?: string;
+}
+
+export interface SearchNearbyRequest {
+  latitude: number;
+  longitude: number;
+  query: string;
+  radiusKm?: number;
+}
+
+export interface GeocodingResult {
+  displayName: string;
+  coordinates: Coordinates;
+  type?: string;
+  importance?: number;
+  osmType?: string;
+  osmId?: number;
+}
+
+export interface CalculateDistanceRequest {
+  from: Coordinates;
+  to: Coordinates;
+}
+
+export interface CalculateDistanceResponse {
+  distanceKm: number;
+  distanceFormatted: string;
+  from: Coordinates;
+  to: Coordinates;
+}
+
+export interface BatchGeocodeRequest {
+  addresses: string[];
+}
+
+export interface BatchGeocodeResponse {
+  [address: string]: {
+    success: boolean;
+    coordinates?: Coordinates;
+    displayName?: string;
+    error?: string;
   };
-  requests: {
-    total: number;
-    accepted: number;
-    declined: number;
-    pending: number;
-    trend: number;
-  };
-  revenue: {
-    total: number;
-    trend: number;
-    byPeriod: Array<{ date: string; amount: number }>;
-  };
-  topServices: Array<{
-    serviceId: string;
-    serviceName: string;
-    requestCount: number;
-    revenue: number;
-  }>;
+}
+
+export interface PlaceDetailsResponse {
+  location: UserLocation;
+  coordinates: Coordinates;
+  rawResponse?: any;
 }

@@ -1,11 +1,19 @@
+// types/user.types.ts
+
 // Updated response types based on new backend structure
 export interface User {
-  _id: string;
+  // Support both _id (MongoDB) and id (transformed response)
+  _id?: string;
+  id?: string;
   name: string;
   email: string;
-  isEmailVerified: boolean;
+  // Support both field names for email verification
+  isEmailVerified?: boolean;
+  isVerified?: boolean;
   systemRole: string;
-  authProvider: string;
+  // Support both field names for auth provider
+  authProvider?: string;
+  provider?: string;
   systemAdminName: string | null;
   isAdmin: boolean;
   isSuperAdmin: boolean;
@@ -14,6 +22,8 @@ export interface User {
     lastLogin?: string;
     lastLoggedOut?: string;
   };
+  // Support lastLogin at root level too (for backward compatibility)
+  lastLogin?: string;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -111,7 +121,6 @@ export interface GetUsersParams {
   search?: string;
   status?: string;
   role?: string;
-
   [key: string]: string | number | boolean | undefined;
 }
 

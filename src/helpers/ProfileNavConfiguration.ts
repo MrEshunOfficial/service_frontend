@@ -86,7 +86,7 @@ export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
         id: "services-create",
         label: "Create Service",
         icon: Edit,
-        href: "/services/create",
+        href: "/service-offered/create",
         roles: [UserRole.PROVIDER],
       },
     ],
@@ -178,14 +178,7 @@ export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
     icon: HelpCircle,
     href: "/help",
     roles: [UserRole.CUSTOMER, UserRole.PROVIDER],
-  },
-  {
-    id: "admin",
-    label: "Admin Console",
-    icon: Shield,
-    href: "/admin",
-    roles: [UserRole.PROVIDER],
-  },
+  }
 ];
 
 // Helper function to filter navigation by user role

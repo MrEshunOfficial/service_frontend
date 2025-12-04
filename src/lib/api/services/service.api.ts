@@ -42,7 +42,7 @@ export interface CreateServiceData {
     includeAdditionalFees: boolean;
     currency: string;
     platformCommissionRate: number;
-    providerEarnings: number;
+    providerEarnings?: number;
   };
   isPrivate?: boolean;
 }

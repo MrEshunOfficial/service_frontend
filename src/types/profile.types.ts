@@ -1,6 +1,8 @@
 // types/profile.types.ts
 
 import { UserRole } from "./base.types";
+import {File} from "@/types/file.types"
+
 
 /**
  * User role enum
@@ -19,25 +21,13 @@ export interface UserProfile {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
-  profilePictureId?: string;
+  profilePictureId?: File;
   id: string;
-}
-
-/**
- * Profile with picture details
- */
-export interface ProfilePictureDetails {
-  _id: string;
-  url: string;
-  fileName: string;
-  mimeType: string;
-  size: number;
-  uploadedAt: string;
 }
 
 export interface CompleteProfile {
   profile: UserProfile;
-  profilePicture?: ProfilePictureDetails; // Changed from pictureDetails to profilePicture
+  profilePicture?: File;
 }
 
 /**

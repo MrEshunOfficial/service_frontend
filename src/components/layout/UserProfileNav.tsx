@@ -8,8 +8,9 @@ import {
   ChevronRight,
   ChevronDown,
   LogOut,
+  Shield,
 } from "lucide-react";
-import { UserRole } from "@/types/base.types";
+import { SystemRole, UserRole } from "@/types/base.types";
 import { useAuth } from "@/hooks/auth/useAuth";
 import {
   useCompleteProfile,
@@ -19,6 +20,7 @@ import { ImageUploadPopover } from "@/components/filemanager/EntityImageUpload";
 import { NavigationLink } from "@/helpers/ProfNavigationLinksTypes";
 import { getNavigationByRole } from "@/helpers/ProfileNavConfiguration";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
+import { Button } from "../ui/button";
 
 interface UserProfileNavProps {
   onPostTask?: () => void;
@@ -50,6 +52,10 @@ export default function UserProfileNav({
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | undefined>(
     completeProfile?.profilePicture?.url
   );
+
+  const navigateToAdmin = () => {
+    router.push("/admin");
+  };
 
   // Update local state when profile picture changes
   useEffect(() => {
@@ -370,7 +376,19 @@ export default function UserProfileNav({
         {navigationLinks.map((link) => renderNavigationItem(link))}
       </ScrollArea>
 
-      {/* CTA Section - Role Based */}
+      <div className="w-full flex items-center justify-center mb-2">
+        {/* CTA Section - Role Based */}
+        {(user?.systemRole === SystemRole.ADMIN || SystemRole.SUPER_ADMIN) && (
+          <Button
+            className="w-3/4 py-3 bg-gradient-to-r from-red-500 to-blue-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            onClick={navigateToAdmin}
+          >
+            <Shield size={14} />
+            Admin Console
+          </Button>
+        )}
+      </div>
+
       <div className="p-2 border-t border-gray-200 dark:border-gray-700 space-y-3">
         <button
           onClick={handleCTAAction}

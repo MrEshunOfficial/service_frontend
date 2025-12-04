@@ -5,7 +5,9 @@ import ServiceCard from "@/components/services/ServiceCard";
 import { usePublicServices } from "@/hooks/services/service.hook";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { Service } from "@/types/service.types";
+import { toast } from "sonner";
 
 export default function ServiceList() {
   const router = useRouter();
@@ -15,10 +17,58 @@ export default function ServiceList() {
   });
 
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [imageUpdates, setImageUpdates] = useState<
+    Record<string, NonNullable<Service["coverImage"]>>
+  >({});
 
-  // ============================================
-  // UPDATED: Use ID for user/authenticated views
-  // ============================================
+  // Merge the fetched services with any local image updates
+  const displayServices = useMemo(() => {
+    return services.map((service) => {
+      if (imageUpdates[service._id] && service.coverImage) {
+        return {
+          ...service,
+          coverImage: imageUpdates[service._id],
+        };
+      }
+      return service;
+    });
+  }, [services, imageUpdates]);
+
+  const handleImageUpdate = async (serviceId: string, newImageUrl: string) => {
+    try {
+      const service = services.find((s) => s._id === serviceId);
+
+      if (!service?.coverImage) {
+        toast.error("Cannot update image: service has no cover image");
+        return;
+      }
+      const cover = service.coverImage;
+
+      setImageUpdates((prev) => ({
+        ...prev,
+        [serviceId]: {
+          ...cover,
+          url: newImageUrl,
+          thumbnailUrl: newImageUrl,
+        },
+      }));
+
+      toast.success("success!");
+      await refetch();
+    } catch (error) {
+      console.error("Error updating service cover:", error);
+      toast.error("oops! failed, please try again.");
+
+      setImageUpdates((prev) => {
+        const newUpdates = { ...prev };
+        delete newUpdates[serviceId];
+        return newUpdates;
+      });
+
+      refetch();
+    }
+  };
+
   const handleView = (id: string) => {
     // User page: always use ID-based route for viewing own services
     router.push(`/services/d1/${id}`);
@@ -26,9 +76,7 @@ export default function ServiceList() {
 
   const handleEdit = (id: string) => {
     // Edit: use ID-based route
-    router.push(`/services/${id}/edit`);
-    // OR if your edit route is different:
-    // router.push(`/services/edit/${id}`);
+    router.push(`/service-offered/edit/${id}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -43,28 +91,8 @@ export default function ServiceList() {
     }
   };
 
-  const handleApprove = async (id: string) => {
-    try {
-      // Call your approve API here
-      console.log("Approving service:", id);
-      refetch();
-    } catch (error) {
-      console.error("Error approving service:", error);
-    }
-  };
-
-  const handleReject = async (id: string) => {
-    try {
-      // Call your reject API here
-      console.log("Rejecting service:", id);
-      refetch();
-    } catch (error) {
-      console.error("Error rejecting service:", error);
-    }
-  };
-
   const fallbackToClipboard = async (
-    service: (typeof services)[0],
+    service: Service,
     url: string,
     priceText: string,
     tagsText: string
@@ -93,11 +121,8 @@ ${
     }
   };
 
-  // ============================================
-  // UPDATED: Share still uses SLUG for public URLs
-  // ============================================
   const handleShare = async (id: string) => {
-    const service = services.find((s) => s._id === id);
+    const service = displayServices.find((s) => s._id === id);
     if (!service) return;
 
     // For sharing, use slug if available (public-facing URL)
@@ -190,7 +215,7 @@ ${url}`;
     );
   }
 
-  if (services.length === 0) {
+  if (displayServices.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-950">
         <div className="text-center">
@@ -212,7 +237,7 @@ ${url}`;
       </div>
 
       <ScrollArea className="flex flex-wrap items-start justify-start gap-4 p-2 h-[77vh] overflow-y-auto">
-        {services.map((service) => (
+        {displayServices.map((service) => (
           <ServiceCard
             key={service._id}
             service={service}
@@ -220,10 +245,9 @@ ${url}`;
             onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            onApprove={handleApprove}
-            onReject={handleReject}
             onShare={handleShare}
             onToggleFavorite={handleToggleFavorite}
+            onImageUpdate={handleImageUpdate}
             isFavorite={favoriteIds.includes(service._id)}
           />
         ))}
@@ -231,23 +255,3 @@ ${url}`;
     </div>
   );
 }
-
-// ==========================================
-// ROUTING SUMMARY
-// ==========================================
-
-/*
-PUBLIC PAGE (/services):
-✓ View: /services/{slug} (SEO-friendly)
-✓ Share: /services/{slug} (SEO-friendly)
-
-USER PAGE (/user-services):
-✓ View: /services/d1/{id} (authenticated view)
-✓ Edit: /services/{id}/edit (authenticated edit)
-✓ Share: /services/{slug} (public sharing - still SEO-friendly)
-
-This ensures:
-- Public users see pretty URLs
-- Authenticated users use IDs for direct access
-- Shared links are always SEO-friendly regardless of where shared from
-*/
