@@ -115,6 +115,22 @@ export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
     ],
   },
   {
+    id: "tasks",
+    label: "Tasks",
+    icon: ToolCaseIcon,
+    href: "/tasks",
+    roles: [UserRole.CUSTOMER],
+    children: [
+      {
+        id: "my-tasks",
+        label: "My Posted Tasks",
+        icon: FileText,
+        href: "/tasks/posted",
+        roles: [UserRole.CUSTOMER],
+      },
+    ],
+  },
+  {
     id: "favorites",
     label: "Favorites",
     icon: Heart,

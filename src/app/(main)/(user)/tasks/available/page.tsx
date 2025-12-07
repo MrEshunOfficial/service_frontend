@@ -1,5 +1,13 @@
-import React from "react";
+"use client";
+import { FloatingTasksPage } from "@/components/tasks/consolidated.task";
+import { useUnmatchedTasks } from "@/hooks/useTask";
 
 export default function AvailableTask() {
-  return <div>list of task not assigned to any provider</div>;
+  const { tasks, loading, error, refetch } = useUnmatchedTasks();
+  console.log(tasks);
+  return (
+    <div className="w-full h-full p-2 flex flex-col">
+      <FloatingTasksPage />
+    </div>
+  );
 }

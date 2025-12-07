@@ -1,6 +1,9 @@
 // types/task.types.shared.ts
 // Frontend-safe types (no Mongoose dependencies)
 
+import { ProviderProfile } from "./provider.types";
+import { Service } from "./service.types";
+
 /**
  * Task Priority Levels (Urgency)
  */
@@ -61,10 +64,10 @@ export interface TaskDTO {
   expiresAt?: string;
   matchedProviders?: string[];
   hasMatches: boolean;
-  interestedProviders?: string[];
-  requestedProviderId?: string;
+  interestedProviders?: ProviderProfile[];
+  requestedProviderId?: ProviderProfile;
   requestedAt?: string;
-  assignedProviderId?: string;
+  assignedProviderId?: ProviderProfile;
   assignedAt?: string;
   completedAt?: string;
   cancelledAt?: string;
@@ -80,12 +83,12 @@ export interface TaskDTO {
  * Provider Match Result DTO
  */
 export interface ProviderMatchDTO {
-  provider: any; // Replace with ProviderProfileDTO
+  provider: ProviderProfile;
   matchScore: number;
   matchReasons: string[];
   distance?: number;
   availability: boolean;
-  relevantServices: any[]; // Replace with ServiceDTO[]
+  relevantServices: Service[]; // Replace with ServiceDTO[]
   providerRating?: number;
   completedTasksCount?: number;
   responseTime?: number;

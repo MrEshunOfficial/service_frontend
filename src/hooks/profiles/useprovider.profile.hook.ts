@@ -1,6 +1,18 @@
 // hooks/profiles/useprovider.profile.hook.ts
 
-import { AddServiceRequest, Coordinates, CreateProviderProfileRequest, DistanceResult, FindNearestProvidersRequest, FindProvidersByLocationParams, NearestProviderResult, providerAPI, ProviderProfile, SearchProvidersRequest, UpdateProviderProfileRequest } from "@/lib/api/profiles/provider.profile.api";
+import { 
+  AddServiceRequest, 
+  Coordinates, 
+  CreateProviderProfileRequest, 
+  DistanceResult, 
+  FindNearestProvidersRequest, 
+  FindProvidersByLocationParams, 
+  NearestProviderResult, 
+  providerAPI, 
+  ProviderProfile, 
+  SearchProvidersRequest, 
+  UpdateProviderProfileRequest 
+} from "@/lib/api/profiles/provider.profile.api";
 import { Service } from "@/types/service.types";
 import { useState, useEffect, useCallback, useRef } from "react";
 
@@ -9,6 +21,165 @@ interface UseProviderState<T> {
   loading: boolean;
   error: Error | null;
 }
+
+interface UseProviderProfileOptions {
+  enabled?: boolean;
+  autoLoad?: boolean;
+}
+
+// ============================================
+// QUERY HOOKS (Data Fetching)
+// ============================================
+
+/**
+ * Hook to get current user's provider profile
+ * @param options - Configuration options
+ * @param options.enabled - Whether the hook should run (default: true)
+ * @param options.autoLoad - Whether to load data automatically on mount (default: true)
+ */
+export function useMyProviderProfile(options: UseProviderProfileOptions = {}) {
+  const { enabled = true, autoLoad = true } = options;
+  
+  const [state, setState] = useState<UseProviderState<ProviderProfile>>({
+    data: null,
+    loading: enabled && autoLoad,
+    error: null,
+  });
+
+  const fetchProfile = useCallback(async () => {
+    if (!enabled) {
+      setState({ data: null, loading: false, error: null });
+      return;
+    }
+
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      const data = await providerAPI.getMyProviderProfile();
+      setState({ data, loading: false, error: null });
+    } catch (err) {
+      console.error("Error fetching provider profile:", err);
+      setState({ data: null, loading: false, error: err as Error });
+    }
+  }, [enabled]);
+
+  useEffect(() => {
+    if (enabled && autoLoad) {
+      fetchProfile();
+    }
+  }, [enabled, autoLoad, fetchProfile]);
+
+  return { ...state, refetch: fetchProfile };
+}
+
+/**
+ * Hook to check if user has a provider profile
+ */
+export function useHasProviderProfile(options: UseProviderProfileOptions = {}) {
+  const { enabled = true, autoLoad = true } = options;
+  
+  const [state, setState] = useState<UseProviderState<boolean>>({
+    data: null,
+    loading: enabled && autoLoad,
+    error: null,
+  });
+
+  const checkProfile = useCallback(async () => {
+    if (!enabled) {
+      setState({ data: null, loading: false, error: null });
+      return;
+    }
+
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      const hasProfile = await providerAPI.hasProviderProfile();
+      setState({ data: hasProfile, loading: false, error: null });
+    } catch (err) {
+      setState({ data: null, loading: false, error: err as Error });
+    }
+  }, [enabled]);
+
+  useEffect(() => {
+    if (enabled && autoLoad) {
+      checkProfile();
+    }
+  }, [enabled, autoLoad, checkProfile]);
+
+  return { ...state, refetch: checkProfile };
+}
+
+/**
+ * Hook to fetch a provider profile by ID
+ */
+export function useProviderProfile(providerId: string, options: UseProviderProfileOptions = {}) {
+  const { enabled = true, autoLoad = true } = options;
+  
+  const [state, setState] = useState<UseProviderState<ProviderProfile>>({
+    data: null,
+    loading: enabled && autoLoad && !!providerId,
+    error: null,
+  });
+
+  const fetchProfile = useCallback(async () => {
+    if (!providerId || !enabled) {
+      setState({ data: null, loading: false, error: null });
+      return;
+    }
+    
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      const data = await providerAPI.getProviderProfile(providerId);
+      setState({ data, loading: false, error: null });
+    } catch (err) {
+      setState({ data: null, loading: false, error: err as Error });
+    }
+  }, [providerId, enabled]);
+
+  useEffect(() => {
+    if (enabled && autoLoad && providerId) {
+      fetchProfile();
+    }
+  }, [enabled, autoLoad, providerId, fetchProfile]);
+
+  return { ...state, refetch: fetchProfile };
+}
+
+/**
+ * Hook to fetch a provider profile by user profile ID
+ */
+export function useProviderByProfile(profileId: string, options: UseProviderProfileOptions = {}) {
+  const { enabled = true, autoLoad = true } = options;
+  
+  const [state, setState] = useState<UseProviderState<ProviderProfile>>({
+    data: null,
+    loading: enabled && autoLoad && !!profileId,
+    error: null,
+  });
+
+  const fetchProfile = useCallback(async () => {
+    if (!profileId || !enabled) {
+      setState({ data: null, loading: false, error: null });
+      return;
+    }
+    
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      const data = await providerAPI.getProviderByProfile(profileId);
+      setState({ data, loading: false, error: null });
+    } catch (err) {
+      setState({ data: null, loading: false, error: err as Error });
+    }
+  }, [profileId, enabled]);
+
+  useEffect(() => {
+    if (enabled && autoLoad && profileId) {
+      fetchProfile();
+    }
+  }, [enabled, autoLoad, profileId, fetchProfile]);
+
+  return { ...state, refetch: fetchProfile };
+}
+
+// ... Rest of your hooks remain the same ...
 
 interface UsePaginatedProvidersState {
   providers: ProviderProfile[];
@@ -24,124 +195,6 @@ interface UseNearestProvidersState {
   error: Error | null;
 }
 
-// ============================================
-// QUERY HOOKS (Data Fetching)
-// ============================================
-
-/**
- * Hook to get current user's provider profile
- */
-export function useMyProviderProfile() {
-  const [state, setState] = useState<UseProviderState<ProviderProfile>>({
-    data: null,
-    loading: true,
-    error: null,
-  });
-
-  const fetchProfile = useCallback(async () => {
-    setState({ data: null, loading: true, error: null });
-    try {
-      const data = await providerAPI.getMyProviderProfile();
-      setState({ data, loading: false, error: null });
-    } catch (err) {
-      console.error("Error fetching provider profile:", err);
-      setState({ data: null, loading: false, error: err as Error });
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
-  return { ...state, refetch: fetchProfile };
-}
-
-/**
- * Hook to check if user has a provider profile
- */
-export function useHasProviderProfile() {
-  const [state, setState] = useState<UseProviderState<boolean>>({
-    data: null,
-    loading: true,
-    error: null,
-  });
-
-  const checkProfile = useCallback(async () => {
-    setState({ data: null, loading: true, error: null });
-    try {
-      const hasProfile = await providerAPI.hasProviderProfile();
-      setState({ data: hasProfile, loading: false, error: null });
-    } catch (err) {
-      setState({ data: null, loading: false, error: err as Error });
-    }
-  }, []);
-
-  useEffect(() => {
-    checkProfile();
-  }, [checkProfile]);
-
-  return { ...state, refetch: checkProfile };
-}
-
-/**
- * Hook to fetch a provider profile by ID
- */
-export function useProviderProfile(providerId: string) {
-  const [state, setState] = useState<UseProviderState<ProviderProfile>>({
-    data: null,
-    loading: true,
-    error: null,
-  });
-
-  const fetchProfile = useCallback(async () => {
-    if (!providerId) return;
-    setState({ data: null, loading: true, error: null });
-    try {
-      const data = await providerAPI.getProviderProfile(providerId);
-      setState({ data, loading: false, error: null });
-    } catch (err) {
-      setState({ data: null, loading: false, error: err as Error });
-    }
-  }, [providerId]);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
-  return { ...state, refetch: fetchProfile };
-}
-
-/**
- * Hook to fetch a provider profile by user profile ID
- */
-export function useProviderByProfile(profileId: string) {
-  const [state, setState] = useState<UseProviderState<ProviderProfile>>({
-    data: null,
-    loading: true,
-    error: null,
-  });
-
-  const fetchProfile = useCallback(async () => {
-    if (!profileId) return;
-    setState({ data: null, loading: true, error: null });
-    try {
-      const data = await providerAPI.getProviderByProfile(profileId);
-      setState({ data, loading: false, error: null });
-    } catch (err) {
-      setState({ data: null, loading: false, error: err as Error });
-    }
-  }, [profileId]);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
-  return { ...state, refetch: fetchProfile };
-}
-
-/**
- * Hook to find nearest providers to a location
- */
 export function useNearestProviders(request: FindNearestProvidersRequest) {
   const [state, setState] = useState<UseNearestProvidersState>({
     providers: [],
@@ -180,9 +233,6 @@ export function useNearestProviders(request: FindNearestProvidersRequest) {
   return { ...state, refetch: fetchProviders };
 }
 
-/**
- * Hook to find providers near current user location
- */
 export function useProvidersNearMe(
   options?: Omit<FindNearestProvidersRequest, "latitude" | "longitude">
 ) {
@@ -221,9 +271,6 @@ export function useProvidersNearMe(
   return { ...state, refetch: fetchProviders };
 }
 
-/**
- * Hook to find providers by location (region/city)
- */
 export function useProvidersByLocation(params: FindProvidersByLocationParams) {
   const [state, setState] = useState<UseProviderState<ProviderProfile[]>>({
     data: null,
@@ -259,9 +306,6 @@ export function useProvidersByLocation(params: FindProvidersByLocationParams) {
   return { ...state, refetch: fetchProviders };
 }
 
-/**
- * Hook to search providers with filters
- */
 export function useSearchProviders(request: SearchProvidersRequest) {
   const [state, setState] = useState<UsePaginatedProvidersState>({
     providers: [],
@@ -301,9 +345,6 @@ export function useSearchProviders(request: SearchProvidersRequest) {
   return { ...state, refetch: searchProviders };
 }
 
-/**
- * Hook to search providers near current location
- */
 export function useSearchProvidersNearMe(
   request: Omit<SearchProvidersRequest, "userLocation">
 ) {
@@ -345,9 +386,6 @@ export function useSearchProvidersNearMe(
   return { ...state, refetch: searchProviders };
 }
 
-/**
- * Hook to calculate distance to a provider
- */
 export function useDistanceToProvider(
   providerId: string,
   userLocation?: Coordinates
@@ -379,9 +417,6 @@ export function useDistanceToProvider(
   return { ...state, refetch: fetchDistance };
 }
 
-/**
- * Hook to get available private services for a provider
- */
 export function useAvailablePrivateServices(providerId: string) {
   const [state, setState] = useState<UseProviderState<Service[]>>({
     data: null,
@@ -417,9 +452,6 @@ interface MutationState<T> {
   error: Error | null;
 }
 
-/**
- * Hook to create a provider profile
- */
 export function useCreateProviderProfile() {
   const [state, setState] = useState<MutationState<ProviderProfile>>({
     data: null,
@@ -442,9 +474,6 @@ export function useCreateProviderProfile() {
   return { ...state, createProfile };
 }
 
-/**
- * Hook to update a provider profile
- */
 export function useUpdateProviderProfile() {
   const [state, setState] = useState<MutationState<ProviderProfile>>({
     data: null,
@@ -470,9 +499,6 @@ export function useUpdateProviderProfile() {
   return { ...state, updateProfile };
 }
 
-/**
- * Hook to delete a provider profile
- */
 export function useDeleteProviderProfile() {
   const [state, setState] = useState<MutationState<{ message: string }>>({
     data: null,
@@ -495,9 +521,6 @@ export function useDeleteProviderProfile() {
   return { ...state, deleteProfile };
 }
 
-/**
- * Hook to restore a provider profile
- */
 export function useRestoreProviderProfile() {
   const [state, setState] = useState<MutationState<{ message: string }>>({
     data: null,
@@ -520,9 +543,6 @@ export function useRestoreProviderProfile() {
   return { ...state, restoreProfile };
 }
 
-/**
- * Hook to add a service to provider
- */
 export function useAddServiceToProvider() {
   const [state, setState] = useState<MutationState<ProviderProfile>>({
     data: null,
@@ -545,9 +565,6 @@ export function useAddServiceToProvider() {
   return { ...state, addService };
 }
 
-/**
- * Hook to remove a service from provider
- */
 export function useRemoveServiceFromProvider() {
   const [state, setState] = useState<MutationState<ProviderProfile>>({
     data: null,
@@ -577,9 +594,6 @@ export function useRemoveServiceFromProvider() {
 // UTILITY HOOKS
 // ============================================
 
-/**
- * Hook to get current user location
- */
 export function useCurrentLocation() {
   const [state, setState] = useState<UseProviderState<Coordinates>>({
     data: null,
@@ -604,9 +618,6 @@ export function useCurrentLocation() {
   return { ...state, refetch: getLocation };
 }
 
-/**
- * Hook to get current location with address
- */
 export function useCurrentLocationWithAddress() {
   const [state, setState] = useState<UseProviderState<any>>({
     data: null,
@@ -635,9 +646,6 @@ export function useCurrentLocationWithAddress() {
 // HELPER HOOKS
 // ============================================
 
-/**
- * Hook that provides provider utility functions
- */
 export function useProviderUtils() {
   return {
     isProviderActive: providerAPI.isProviderActive.bind(providerAPI),

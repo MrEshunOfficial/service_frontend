@@ -10,6 +10,7 @@ import {
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useCompleteProfile } from "@/hooks/profiles/userProfile.hook";
+import { useMyProviderProfile } from "@/hooks/profiles/useprovider.profile.hook";
 import { UserRole } from "@/types/base.types";
 import { APIError } from "@/lib/api/base/api-client";
 import {
@@ -20,11 +21,15 @@ import {
   RefreshCw,
   UserX,
   UserPlus,
-  LucideIcon,
+  Phone,
+  Briefcase,
 } from "lucide-react";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import BusinessProfile from "@/components/profiles/provider/bussiness.profile";
+import { useRouter } from "next/navigation";
 
 // Types
 type ErrorType =
@@ -35,14 +40,14 @@ type ErrorType =
   | "generic";
 
 interface ErrorConfig {
-  icon: LucideIcon;
+  icon: React.ComponentType<{ className?: string }>;
   iconBgColor: string;
   iconColor: string;
   title: string;
   description: string;
   primaryAction: {
     label: string;
-    icon?: LucideIcon;
+    icon?: React.ComponentType<{ className?: string }>;
     onClick: () => void;
   };
   secondaryAction?: {
@@ -110,7 +115,7 @@ function PageLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
   return (
-    <div className="h-full flex flex-col ">
+    <div className="h-full flex flex-col">
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto w-full p-3 mb-3">
         <Breadcrumb>
@@ -135,31 +140,90 @@ function PageLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 w-full relative overflow-hidden flex items-center justify-center">
-        {children}
+      <div className="flex-1 w-full relative overflow-auto">
+        <div className="max-w-7xl mx-auto px-4 py-6">{children}</div>
       </div>
     </div>
   );
 }
 
+// Client Profile Placeholder Component
+function ClientProfileView() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Client Dashboard</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-center py-12">
+            <UserX className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">
+              Client Dashboard Coming Soon
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              We're working on bringing you an amazing client experience. Stay
+              tuned!
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button variant="outline" onClick={() => router.push("/search")}>
+                <Briefcase className="w-4 h-4 mr-2" />
+                Browse Services
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/bookings")}
+              >
+                View Bookings
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
+  const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const {
     completeProfile,
     loading: profileLoading,
-    error,
-    refetch,
+    error: profileError,
+    refetch: refetchProfile,
   } = useCompleteProfile({
     autoLoad: isAuthenticated,
   });
 
-  const isLoading = authLoading || (isAuthenticated && profileLoading);
+  // Only fetch provider profile if user is a provider
+  const shouldFetchProvider =
+    isAuthenticated &&
+    !profileLoading &&
+    completeProfile?.profile.role === UserRole.PROVIDER;
+
+  const {
+    data: providerProfile,
+    loading: providerLoading,
+    error: providerError,
+    refetch: refetchProvider,
+  } = useMyProviderProfile({
+    enabled: shouldFetchProvider,
+    autoLoad: shouldFetchProvider,
+  });
+
+  const isLoading =
+    authLoading ||
+    (isAuthenticated && profileLoading) ||
+    (shouldFetchProvider && providerLoading);
 
   // Helper to determine error type
   const getErrorType = (error: APIError): ErrorType => {
-    // Network errors - check multiple indicators
     if (
-      !error.status || // No status usually means network failure
+      !error.status ||
       error.message?.toLowerCase().includes("network") ||
       error.message?.toLowerCase().includes("fetch") ||
       error.message?.toLowerCase().includes("connection") ||
@@ -171,17 +235,14 @@ export default function ProfilePage() {
       return "network";
     }
 
-    // Server errors (5xx status codes)
     if (error.status && error.status >= 500 && error.status < 600) {
       return "server";
     }
 
-    // Authorization errors (401, 403)
     if (error.status === 401 || error.status === 403) {
       return "authorization";
     }
 
-    // Profile not found (404)
     if (error.status === 404) {
       return "not_found";
     }
@@ -194,11 +255,13 @@ export default function ProfilePage() {
     errorType: ErrorType,
     userName?: string
   ): ErrorConfig => {
-    const goHome = () => (window.location.href = "/");
-    const handleRetry = () => refetch();
-    const handleCreateProfile = () =>
-      (window.location.href = "/profile/create");
-    const handleLogin = () => (window.location.href = "/login");
+    const goHome = () => router.push("/");
+    const handleRetry = () => {
+      refetchProfile();
+      if (shouldFetchProvider) refetchProvider();
+    };
+    const handleCreateProfile = () => router.push("/profile/create");
+    const handleLogin = () => router.push("/login");
 
     const configs: Record<ErrorType, ErrorConfig> = {
       network: {
@@ -238,7 +301,7 @@ export default function ProfilePage() {
         iconColor: "text-yellow-600 dark:text-yellow-400",
         title: "Oops! Access Denied",
         description:
-          "It looks like you’re not logged in yet. Please log in to continue.",
+          "It looks like you're not logged in yet. Please log in to continue.",
         primaryAction: {
           label: "Log In",
           onClick: handleLogin,
@@ -292,7 +355,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <LoadingOverlay
-        message="getting profile ready, please wait..."
+        message="Getting profile ready, please wait..."
         show={true}
       />
     );
@@ -308,35 +371,24 @@ export default function ProfilePage() {
     );
   }
 
-  // Error states - Check for any error object (truthy check)
-  if (error) {
-    // Debug: log error details to help identify the issue
-    console.log("Error detected:", {
-      message: error.message,
-      code: error.code,
-      status: error.status,
-      fullError: error,
-    });
-
-    const errorType = getErrorType(error);
-    console.log("Detected error type:", errorType);
-
+  // Profile error states
+  if (profileError) {
+    const errorType = getErrorType(profileError);
     const errorConfig = getErrorConfig(errorType, user?.name);
 
     return (
       <PageLayout>
         <ErrorStateDisplay
           config={errorConfig}
-          error={{ message: error.message, code: error.code }}
+          error={{ message: profileError.message, code: profileError.code }}
         />
       </PageLayout>
     );
   }
 
-  // No profile state (when authenticated, no error, but no profile data)
+  // No user profile state
   if (!completeProfile) {
     const errorConfig = getErrorConfig("not_found", user?.name);
-
     return (
       <PageLayout>
         <ErrorStateDisplay config={errorConfig} />
@@ -344,14 +396,87 @@ export default function ProfilePage() {
     );
   }
 
-  // Success state - Profile exists
+  // Provider-specific handling
+  if (completeProfile.profile.role === UserRole.PROVIDER) {
+    // Provider error state
+    if (providerError) {
+      const errorType = getErrorType(providerError);
+
+      // If provider profile not found (404), show setup message
+      if (errorType === "not_found") {
+        return (
+          <PageLayout>
+            <div className="flex flex-col items-center justify-center space-y-4 p-8 max-w-md mx-auto text-center">
+              <div className="rounded-full bg-blue-100 dark:bg-blue-900/20 p-4">
+                <Briefcase className="w-12 h-12 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Set Up Your Business Profile
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                Complete your business profile to start offering your services
+                to clients.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => router.push("/provider/create")}
+                  className="gap-2"
+                >
+                  <Briefcase className="w-4 h-4" />
+                  Create Business Profile
+                </Button>
+                <Button variant="outline" onClick={() => router.push("/")}>
+                  Go Home
+                </Button>
+              </div>
+            </div>
+          </PageLayout>
+        );
+      }
+
+      // Other provider errors
+      const errorConfig = getErrorConfig(errorType, user?.name);
+      return (
+        <PageLayout>
+          <ErrorStateDisplay
+            config={errorConfig}
+            error={{ message: providerError.message }}
+          />
+        </PageLayout>
+      );
+    }
+
+    // No provider profile data (shouldn't happen if no error, but safety check)
+    if (!providerProfile) {
+      return (
+        <PageLayout>
+          <div className="flex items-center justify-center min-h-[400px]">
+            <LoadingOverlay message="Loading business profile..." show={true} />
+          </div>
+        </PageLayout>
+      );
+    }
+
+    // Success - Show Business Profile
+    return (
+      <PageLayout>
+        <BusinessProfile
+          provider={providerProfile}
+          variant="full"
+          mode="owner"
+          showActions={true}
+          onEdit={() => router.push("/provider/edit")}
+          onContact={() => router.push("/profile/contact")}
+          onViewServices={() => router.push("/profile/service-offered")}
+        />
+      </PageLayout>
+    );
+  }
+
+  // Client profile view
   return (
     <PageLayout>
-      {completeProfile?.profile.role === UserRole.PROVIDER ? (
-        <div className="text-muted">business profile dashboard unavailable</div>
-      ) : (
-        <div className="text-muted">client profile dashboard unavailable</div>
-      )}
+      <ClientProfileView />
     </PageLayout>
   );
 }

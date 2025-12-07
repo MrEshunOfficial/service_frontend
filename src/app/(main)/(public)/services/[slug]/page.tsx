@@ -481,7 +481,7 @@ export default function ServiceDetailsPage() {
                         handleRequestProvider(provider);
                       }}
                       className="w-full mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={!provider.isAvailableNow}
+                      // disabled={!provider.isAvailableNow}
                     >
                       {provider.isAvailableNow
                         ? "Request Provider"
@@ -517,9 +517,12 @@ export default function ServiceDetailsPage() {
                   {sortedProviders[0].name}
                 </h3>
 
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2 text-sm">
+                  <MapPin className="w-4 h-4" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedProvider?.locationFull}
+                  </p>
                   <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                    <MapPin className="w-4 h-4" />
                     <span className="font-medium">
                       {sortedProviders[0].distanceFormatted}
                     </span>
@@ -567,39 +570,6 @@ export default function ServiceDetailsPage() {
             </div>
           )}
         </header>
-        {/* Selected Provider Header */}
-        {selectedProvider && (
-          <header className="w-full mb-2 border rounded p-4 bg-white dark:bg-gray-900">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
-                {selectedProvider.name.charAt(0)}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                    {selectedProvider.name}
-                  </h2>
-                  {selectedProvider.verified && (
-                    <Award className="w-5 h-5 text-blue-600" />
-                  )}
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {selectedProvider.locationFull}
-                </p>
-                <div className="flex items-center gap-4 mt-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {selectedProvider.distanceFormatted} away
-                  </span>
-                  {selectedProvider.isAlwaysAvailable && (
-                    <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
-                      24/7 Available
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </header>
-        )}
         <div className="bg-white dark:bg-gray-900 rounded-md shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
           {/* Hero Section: Cover Image + Pricing Sidebar */}
           <div className="flex">

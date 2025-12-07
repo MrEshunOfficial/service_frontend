@@ -409,6 +409,128 @@ export function useFloatingTasks(options: UseTaskOptions = {}) {
 }
 
 /**
+ * Hook for recently posted tasks
+ * Auto-loads on mount by default
+ */
+export function useRecentTasks(options: UseTaskOptions = {}) {
+  const { autoLoad = true, onSuccess, onError } = options;
+  const [state, setState] = useState<UseTaskState<TaskDTO[]>>({
+    data: null,
+    loading: false,
+    error: null,
+  });
+  const isMountedRef = useRef(true);
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+    onErrorRef.current = onError;
+  }, [onSuccess, onError]);
+
+  const loadRecentTasks = useCallback(async () => {
+    if (!isMountedRef.current) return;
+
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const response = await taskAPI.getRecentTasks();
+      const tasks = response.tasks || [];
+      if (isMountedRef.current) {
+        setState({ data: tasks, loading: false, error: null });
+        onSuccessRef.current?.(tasks);
+      }
+      return tasks;
+    } catch (err) {
+      const error = err as APIError;
+      if (isMountedRef.current) {
+        setState((prev) => ({ ...prev, error, loading: false }));
+        onErrorRef.current?.(error);
+      }
+      throw error;
+    }
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    if (autoLoad) {
+      loadRecentTasks();
+    }
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [autoLoad, loadRecentTasks]);
+
+  return {
+    tasks: state.data,
+    loading: state.loading,
+    error: state.error,
+    loadRecentTasks,
+    refetch: loadRecentTasks,
+  };
+}
+
+/**
+ * Hook for unmatched posted tasks
+ * Auto-loads on mount by default
+ */
+export function useUnmatchedTasks(options: UseTaskOptions = {}) {
+  const { autoLoad = true, onSuccess, onError } = options;
+  const [state, setState] = useState<UseTaskState<TaskDTO[]>>({
+    data: null,
+    loading: false,
+    error: null,
+  });
+  const isMountedRef = useRef(true);
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+    onErrorRef.current = onError;
+  }, [onSuccess, onError]);
+
+  const loadUnmatchedTasks = useCallback(async () => {
+    if (!isMountedRef.current) return;
+
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const response = await taskAPI.getUnmatchedTasks();
+      const tasks = response.tasks || [];
+      if (isMountedRef.current) {
+        setState({ data: tasks, loading: false, error: null });
+        onSuccessRef.current?.(tasks);
+      }
+      return tasks;
+    } catch (err) {
+      const error = err as APIError;
+      if (isMountedRef.current) {
+        setState((prev) => ({ ...prev, error, loading: false }));
+        onErrorRef.current?.(error);
+      }
+      throw error;
+    }
+  }, []);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    if (autoLoad) {
+      loadUnmatchedTasks();
+    }
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [autoLoad, loadUnmatchedTasks]);
+
+  return {
+    tasks: state.data,
+    loading: state.loading,
+    error: state.error,
+    loadUnmatchedTasks,
+    refetch: loadUnmatchedTasks,
+  };
+}
+
+/**
  * Hook for matched tasks (provider's matched tasks)
  * Auto-loads on mount by default
  */

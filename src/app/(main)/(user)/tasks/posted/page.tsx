@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Plus,
   Search,
-  Filter,
   Clock,
   CheckCircle,
   XCircle,
@@ -18,18 +16,28 @@ import {
   FileText,
   Eye,
 } from "lucide-react";
-import { useMyTasks, useCustomerStats } from "@/hooks/useTask";
 import {
-  TaskDTO,
+  useMyTasks,
+  useCustomerStats,
+  useRequestProvider,
+} from "@/hooks/useTask";
+import {
   TaskStatus,
   TaskPriority,
   enrichTaskWithComputed,
+  TaskDTO,
 } from "@/types/task.types";
+import { InterestedProvidersPopover } from "@/components/tasks/InterestedProviders";
 
 export default function TaskListPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
+  const [selectedTaskForPopover, setSelectedTaskForPopover] =
+    useState<TaskDTO | null>(null);
+  const [requestingProviderId, setRequestingProviderId] = useState<
+    string | null
+  >(null);
 
   const {
     tasks,
@@ -38,15 +46,48 @@ export default function TaskListPage() {
     refetch: refetchTasks,
   } = useMyTasks();
 
+  console.log(tasks);
+
   const {
     stats,
     loading: statsLoading,
     refetch: refetchStats,
   } = useCustomerStats();
 
+  const { loading: requestingProvider, requestProvider } = useRequestProvider({
+    onSuccess: () => {
+      setSelectedTaskForPopover(null);
+      setRequestingProviderId(null);
+      refetchTasks();
+    },
+    onError: () => {
+      setRequestingProviderId(null);
+    },
+  });
+
   const handleRefresh = () => {
     refetchTasks();
     refetchStats();
+  };
+
+  const handleRequestProvider = async (providerId: string) => {
+    if (!selectedTaskForPopover) return;
+
+    setRequestingProviderId(providerId);
+    try {
+      await requestProvider({
+        taskId: selectedTaskForPopover._id,
+        providerId,
+        message: "I'd like to request your services for this task.",
+      });
+    } catch (error) {
+      console.error("Failed to request provider:", error);
+    }
+  };
+
+  const handleShowInterested = (task: TaskDTO, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedTaskForPopover(task);
   };
 
   // Filter and search tasks
@@ -160,7 +201,18 @@ export default function TaskListPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="w-full h-full bg-gray-50 dark:bg-gray-900">
+      {/* Interested Providers Popover */}
+      {selectedTaskForPopover && (
+        <InterestedProvidersPopover
+          task={selectedTaskForPopover}
+          onClose={() => setSelectedTaskForPopover(null)}
+          onRequestProvider={handleRequestProvider}
+          isRequesting={requestingProvider}
+          requestingProviderId={requestingProviderId}
+        />
+      )}
+
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -173,30 +225,11 @@ export default function TaskListPage() {
                 Manage and track all your task requests
               </p>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleRefresh}
-                disabled={tasksLoading || statsLoading}
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2 disabled:opacity-50">
-                <RefreshCw
-                  className={`w-4 h-4 ${
-                    tasksLoading || statsLoading ? "animate-spin" : ""
-                  }`}
-                />
-                Refresh
-              </button>
-              <button
-                onClick={() => router.push("/tasks/create")}
-                className="px-4 py-2 bg-gradient-to-r from-red-500 to-blue-600 text-white rounded-lg hover:from-red-600 hover:to-blue-700 transition-all flex items-center gap-2 font-semibold shadow-lg">
-                <Plus className="w-5 h-5" />
-                New Task
-              </button>
-            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full p-2">
         {/* Stats Cards */}
         {stats && !statsLoading && (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
@@ -268,35 +301,15 @@ export default function TaskListPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tasks..."
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 dark:text-white"
+              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
             />
-          </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) =>
-                setStatusFilter(e.target.value as TaskStatus | "all")
-              }
-              className="px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 dark:text-white">
-              <option value="all">All Status</option>
-              <option value={TaskStatus.DRAFT}>Draft</option>
-              <option value={TaskStatus.OPEN}>Open</option>
-              <option value={TaskStatus.FLOATING}>Floating</option>
-              <option value={TaskStatus.REQUESTED}>Requested</option>
-              <option value={TaskStatus.ASSIGNED}>Assigned</option>
-              <option value={TaskStatus.IN_PROGRESS}>In Progress</option>
-              <option value={TaskStatus.COMPLETED}>Completed</option>
-              <option value={TaskStatus.CANCELLED}>Cancelled</option>
-              <option value={TaskStatus.EXPIRED}>Expired</option>
-            </select>
           </div>
         </div>
 
         {/* Loading State */}
         {tasksLoading && (
           <div className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="w-12 h-12 text-red-500 animate-spin mb-4" />
+            <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
             <p className="text-gray-600 dark:text-gray-400">
               Loading your tasks...
             </p>
@@ -316,7 +329,8 @@ export default function TaskListPage() {
               </p>
               <button
                 onClick={handleRefresh}
-                className="mt-3 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium">
+                className="mt-3 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
+              >
                 Try again
               </button>
             </div>
@@ -337,14 +351,6 @@ export default function TaskListPage() {
                 ? "Try adjusting your search or filter"
                 : "Create your first task to get started"}
             </p>
-            {!searchQuery && statusFilter === "all" && (
-              <button
-                onClick={() => router.push("/tasks/create")}
-                className="px-6 py-3 bg-gradient-to-r from-red-500 to-blue-600 text-white rounded-lg hover:from-red-600 hover:to-blue-700 transition-all font-semibold shadow-lg inline-flex items-center gap-2">
-                <Plus className="w-5 h-5" />
-                Create Your First Task
-              </button>
-            )}
           </div>
         )}
 
@@ -363,19 +369,21 @@ export default function TaskListPage() {
                   <div
                     key={task._id}
                     onClick={() => router.push(`/tasks/${task._id}`)}
-                    className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all cursor-pointer group">
+                    className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg dark:hover:shadow-gray-900/50 transition-all cursor-pointer group"
+                  >
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                       {/* Left Content */}
                       <div className="flex-1 space-y-3">
                         {/* Title and Status */}
                         <div className="flex items-start gap-3">
                           <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                               {task.title}
                             </h3>
                           </div>
                           <div
-                            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${statusConfig.bg} ${statusConfig.color}`}>
+                            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${statusConfig.bg} ${statusConfig.color}`}
+                          >
                             <StatusIcon className="w-4 h-4" />
                             {statusConfig.label}
                           </div>
@@ -396,7 +404,8 @@ export default function TaskListPage() {
                           <div
                             className={`flex items-center gap-1.5 font-medium ${getPriorityColor(
                               task.schedule.urgency
-                            )}`}>
+                            )}`}
+                          >
                             <AlertCircle className="w-4 h-4" />
                             {task.schedule.urgency.toUpperCase()}
                           </div>
@@ -411,10 +420,13 @@ export default function TaskListPage() {
                             </div>
                           )}
                           {enrichedTask.interestCount > 0 && (
-                            <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => handleShowInterested(task, e)}
+                              className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
+                            >
                               <Eye className="w-3.5 h-3.5" />
                               {enrichedTask.interestCount} interested
-                            </div>
+                            </button>
                           )}
                           <div>Created {formatDate(task.createdAt)}</div>
                           {enrichedTask.daysUntilExpiry !== null &&

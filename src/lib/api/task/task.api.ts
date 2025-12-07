@@ -141,6 +141,12 @@ export class TaskAPIClient extends APIClient {
   async getFloatingTasks(): Promise<TaskListResponse> {
     return this.get<TaskListResponse>(`${this.basePath}/floating`);
   }
+  async getRecentTasks(): Promise<TaskListResponse> {
+    return this.get<TaskListResponse>(`${this.basePath}/recent`);
+  }
+  async getUnmatchedTasks(): Promise<TaskListResponse> {
+    return this.get<TaskListResponse>(`${this.basePath}/unmatched`);
+  }
 
   /**
    * Get tasks where provider was matched (Provider only)

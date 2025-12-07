@@ -9,7 +9,7 @@ export default function ProfileLayout({ children }: { children: ReactNode }) {
   // Handle post task action
   const handlePostTask = () => {
     console.log("Post task");
-    router.push("/tasks/create");
+    router.push("/");
   };
   const handleBrowseTask = () => {
     console.log("Recently posted task");
