@@ -86,8 +86,7 @@ function ErrorStateDisplay({
         <Button
           onClick={config.primaryAction.onClick}
           className="gap-2"
-          variant="default"
-        >
+          variant="default">
           {PrimaryIcon && <PrimaryIcon className="w-4 h-4" />}
           {config.primaryAction.label}
         </Button>
@@ -106,7 +105,7 @@ export default function ProviderDetailsPage() {
   const params = useParams();
   const searchParams = useSearchParams();
 
-  const providerId = params?.providerId as string;
+  const providerId = params?.id as string;
   const serviceId = searchParams?.get("service");
 
   // Use the provider profile hook
@@ -238,8 +237,8 @@ export default function ProviderDetailsPage() {
 
   const handleNavigate = () => {
     // Open Google Maps with provider location
-    if (provider?.locationData.coordinates) {
-      const { latitude, longitude } = provider.locationData.coordinates;
+    if (provider?.locationData.gpsCoordinates) {
+      const { latitude, longitude } = provider.locationData.gpsCoordinates;
       window.open(
         `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`,
         "_blank"
@@ -269,8 +268,7 @@ export default function ProviderDetailsPage() {
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href="/"
-                  className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-                >
+                  className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                   <Home className="w-4 h-4" />
                   Home
                 </BreadcrumbLink>
@@ -279,8 +277,7 @@ export default function ProviderDetailsPage() {
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href="/search"
-                  className="text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-                >
+                  className="text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                   Search
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -325,8 +322,7 @@ export default function ProviderDetailsPage() {
             <BreadcrumbItem>
               <BreadcrumbLink
                 href="/"
-                className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-              >
+                className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                 <Home className="w-4 h-4" />
                 Home
               </BreadcrumbLink>
@@ -335,8 +331,7 @@ export default function ProviderDetailsPage() {
             <BreadcrumbItem>
               <BreadcrumbLink
                 href="/search"
-                className="text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-              >
+                className="text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                 Search
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -356,8 +351,7 @@ export default function ProviderDetailsPage() {
           variant="ghost"
           size="sm"
           onClick={() => router.back()}
-          className="gap-2"
-        >
+          className="gap-2">
           <ArrowLeft className="w-4 h-4" />
           Back to Search
         </Button>
@@ -383,8 +377,7 @@ export default function ProviderDetailsPage() {
             <Button
               size="lg"
               onClick={handleBookService}
-              className="gap-2 min-w-[200px]"
-            >
+              className="gap-2 min-w-[200px]">
               <Calendar className="w-5 h-5" />
               Book Service
             </Button>
@@ -392,8 +385,7 @@ export default function ProviderDetailsPage() {
               size="lg"
               variant="outline"
               onClick={handleContact}
-              className="gap-2 min-w-[200px]"
-            >
+              className="gap-2 min-w-[200px]">
               <Phone className="w-5 h-5" />
               Contact Provider
             </Button>
