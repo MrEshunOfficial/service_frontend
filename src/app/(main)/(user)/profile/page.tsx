@@ -95,8 +95,7 @@ function ErrorStateDisplay({
         <Button
           onClick={config.primaryAction.onClick}
           className="gap-2"
-          variant="default"
-        >
+          variant="default">
           {PrimaryIcon && <PrimaryIcon className="w-4 h-4" />}
           {config.primaryAction.label}
         </Button>
@@ -123,8 +122,7 @@ function PageLayout({ children }: { children: React.ReactNode }) {
             <BreadcrumbItem>
               <BreadcrumbLink
                 href="/"
-                className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-              >
+                className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                 <Home className="w-4 h-4" />
                 Home
               </BreadcrumbLink>
@@ -175,8 +173,7 @@ function ClientProfileView() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => router.push("/bookings")}
-              >
+                onClick={() => router.push("/bookings")}>
                 View Bookings
               </Button>
             </div>
@@ -420,8 +417,7 @@ export default function ProfilePage() {
               <div className="flex gap-3">
                 <Button
                   onClick={() => router.push("/provider/create")}
-                  className="gap-2"
-                >
+                  className="gap-2">
                   <Briefcase className="w-4 h-4" />
                   Create Business Profile
                 </Button>
@@ -466,7 +462,6 @@ export default function ProfilePage() {
           mode="owner"
           showActions={true}
           onEdit={() => router.push("/provider/edit")}
-          onContact={() => router.push("/profile/contact")}
           onViewServices={() => router.push("/profile/service-offered")}
         />
       </PageLayout>

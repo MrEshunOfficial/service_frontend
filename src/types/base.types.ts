@@ -13,38 +13,30 @@ export interface SoftDeletable {
   deletedBy?: Types.ObjectId;
 }
 
-// ✅ Fixed: Added _id and fileId as optional fields
-export interface FileReference {
-  _id?: string; // MongoDB ID
-  fileId?: string; // Alternative ID field
-  url: string;
-  fileName: string;
-  fileSize?: number;
-  mimeType?: string;
-  uploadedAt?: Date;
-  extension?: string;
-  thumbnailUrl?: string;
-  uploaderId?: Types.ObjectId;
-  storageProvider?: "local" | "s3" | "cloudinary" | "gcs" | "mega";
-}
-
 export interface Coordinates {
   latitude: number;
   longitude: number;
 }
 
 export interface UserLocation {
-  ghanaPostGPS: string;
-  nearbyLandmark?: string;
-  region?: string;
-  city?: string;
-  district?: string;
-  locality?: string;
-  streetName?: string;
-  houseNumber?: string;
-  gpsCoordinates?: Coordinates;
-  isAddressVerified?: boolean;
-  sourceProvider?: "openstreetmap" | "google" | "ghanapost";
+  // Core (User-provided)
+  ghanaPostGPS: string; // e.g. "GA-123-4567"
+  nearbyLandmark?: string; // e.g. "Opposite Accra Mall"
+
+  // Auto-filled / Verified (from OpenStreetMap or googleMap)
+  region?: string; // e.g. "Greater Accra"
+  city?: string; // e.g. "Accra"
+  district?: string; // e.g. "Ayawaso West"
+  locality?: string; // e.g. "East Legon"
+  streetName?: string; // optional: useful for clarity
+  houseNumber?: string; // optional: required only for certain providers
+
+  // Technical / Validation
+  gpsCoordinates?: Coordinates; // auto-filled from lookup
+  isAddressVerified?: boolean; // true when verified via API lookup
+  sourceProvider?: "openstreetmap" | "google" | "ghanapost"; // helpful for debugging
+
+  // System Fields
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -56,10 +48,13 @@ export interface SocialMediaHandle {
 }
 
 export interface ContactDetails {
-  primaryContact: string;
-  secondaryContact?: string;
-  businessContact?: string;
-  businessEmail?: string;
+  // Personal
+  primaryContact: string; // main phone (required)
+  secondaryContact?: string; // alternate phone
+
+  // Business
+  businessContact?: string; // for providers or organizations
+  businessEmail?: string; // official company email
 }
 
 export enum idType {
@@ -74,9 +69,10 @@ export enum idType {
 export interface IdDetails {
   idType: idType;
   idNumber: string;
-  idFile: FileReference;
+  fileImage: Types.ObjectId[];
 }
 
+// Enums
 export enum UserRole {
   CUSTOMER = "customer",
   PROVIDER = "service_provider",
@@ -92,4 +88,11 @@ export enum AuthProvider {
   CREDENTIALS = "credentials",
   GOOGLE = "google",
   APPLE = "apple",
+}
+
+export enum ServiceStatus {
+  PENDING_APPROVAL = "pending-approval",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  SUSPENDED = "suspended",
 }

@@ -529,7 +529,7 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {providerData.BusinessGalleryImages.map((imageId) => (
                 <div
-                  key={imageId._id}
+                  key={imageId._id.toString()}
                   className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
                   <ImageIcon className="w-8 h-8 text-gray-400" />
                 </div>

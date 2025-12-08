@@ -1,10 +1,7 @@
 import { UserProfile } from "@/types/profile.types";
-import {
-  ContactDetails,
-  FileReference,
-  UserLocation,
-} from "./base.types";
+import { ContactDetails, UserLocation } from "./base.types";
 import { Service } from "./service.types";
+import { File } from "./file.types";
 
 export interface Coordinates {
   latitude: number;
@@ -25,11 +22,11 @@ export interface ProviderProfile {
   IdDetails?: {
     idType: string;
     idNumber: string;
-    idFile: FileReference[];
+    idFile: File[];
   };
   isCompanyTrained: boolean;
   serviceOfferings?: Service[];
-  BusinessGalleryImages?: FileReference[];
+  BusinessGalleryImages?: File[];
   providerContactInfo: ContactDetails;
   locationData: UserLocation;
   isAlwaysAvailable: boolean;
