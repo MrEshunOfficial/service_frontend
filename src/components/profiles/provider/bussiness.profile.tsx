@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProviderProfile, NearestProviderResult } from "@/types/provider.types";
+import { LocationSectionWithMap } from "./ProviderLocationWithMap";
 
 // ============================================
 // Component Props
@@ -30,7 +31,7 @@ interface BusinessProfileProps {
   showActions?: boolean;
   showDistance?: boolean;
   onEdit?: () => void;
-  onContact?: () => void;
+  handleBookService?: () => void;
   onViewServices?: () => void;
   onNavigate?: () => void;
   className?: string;
@@ -86,79 +87,14 @@ const getCurrentDaySchedule = (
   return workingHours?.[today];
 };
 
-// Helper to safely render service information
-const getServiceDisplay = (service: any): { key: string; label: string } => {
-  if (typeof service === "string") {
-    return { key: service, label: service };
-  }
-  if (typeof service === "object" && service !== null) {
-    return {
-      key: service._id || service.id || JSON.stringify(service),
-      label: service.title || service.name || service._id || "Unknown Service",
-    };
-  }
-  return { key: String(service), label: String(service) };
-};
-
 // ============================================
 // Sub Components
 // ============================================
 
-const LocationSection: React.FC<{
-  location: ProviderProfile["locationData"];
-  distance?: number;
-  distanceFormatted?: string;
-  showDistance?: boolean;
-  onNavigate?: () => void;
-}> = ({ location, distance, distanceFormatted, showDistance, onNavigate }) => (
-  <div className="space-y-2">
-    <div className="flex items-start gap-2">
-      <MapPin className="w-4 h-4 mt-1 text-teal-600 flex-shrink-0" />
-      <div className="flex-1">
-        <p className="font-medium text-sm">
-          {location.ghanaPostGPS}
-          {location.isAddressVerified && (
-            <ShieldCheck className="w-3 h-3 inline ml-1 text-green-600" />
-          )}
-        </p>
-        {location.nearbyLandmark && (
-          <p className="text-sm text-muted-foreground">
-            {location.nearbyLandmark}
-          </p>
-        )}
-        <p className="text-xs text-muted-foreground">
-          {[location.city, location.region].filter(Boolean).join(", ")}
-        </p>
-      </div>
-    </div>
-
-    {showDistance && distanceFormatted && (
-      <div className="flex items-center gap-2 pl-6">
-        <Navigation className="w-3 h-3 text-blue-600" />
-        <span className="text-sm font-medium text-blue-600">
-          {distanceFormatted} away
-        </span>
-      </div>
-    )}
-
-    {onNavigate && (
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full mt-2"
-        onClick={onNavigate}
-      >
-        <Navigation className="w-4 h-4 mr-2" />
-        Get Directions
-      </Button>
-    )}
-  </div>
-);
-
 const ContactSection: React.FC<{
   contact: ProviderProfile["providerContactInfo"];
-  onContact?: () => void;
-}> = ({ contact, onContact }) => (
+  handleBookService?: () => void;
+}> = ({ contact, handleBookService }) => (
   <div className="space-y-2">
     <div className="flex items-center gap-2">
       <Phone className="w-4 h-4 text-teal-600" />
@@ -175,17 +111,6 @@ const ContactSection: React.FC<{
         <Mail className="w-4 h-4 text-teal-600" />
         <span className="text-sm">{contact.businessEmail}</span>
       </div>
-    )}
-    {onContact && (
-      <Button
-        variant="default"
-        size="sm"
-        className="w-full mt-2"
-        onClick={onContact}
-      >
-        <Phone className="w-4 h-4 mr-2" />
-        Contact Provider
-      </Button>
     )}
   </div>
 );
@@ -232,8 +157,7 @@ const AvailabilitySection: React.FC<{
             variant="ghost"
             size="sm"
             onClick={() => setShowAllHours(!showAllHours)}
-            className="text-xs p-0 h-auto hover:bg-transparent"
-          >
+            className="text-xs p-0 h-auto hover:bg-transparent">
             {showAllHours ? "Hide" : "View"} all hours
           </Button>
 
@@ -266,9 +190,8 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
   showActions = true,
   showDistance = true,
   onEdit,
-  onContact,
+  handleBookService,
   onViewServices,
-  onNavigate,
   className = "",
 }) => {
   const providerData = getProviderData(provider);
@@ -358,7 +281,6 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
               <Badge variant="secondary">{distanceFormatted}</Badge>
             )}
           </div>
-
           <div className="flex flex-wrap gap-2 mt-3">
             {providerData.isCompanyTrained && (
               <Badge variant="outline">
@@ -373,6 +295,14 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
               </Badge>
             )}
           </div>
+          <Button
+            variant="default"
+            size="sm"
+            className="w-full mt-2"
+            onClick={handleBookService}>
+            <Phone className="w-4 h-4 mr-2" />
+            Place a request
+          </Button>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -383,10 +313,7 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
 
           <Separator />
 
-          <ContactSection
-            contact={providerData.providerContactInfo}
-            onContact={onContact}
-          />
+          <ContactSection contact={providerData.providerContactInfo} />
 
           {showActions && (
             <div className="flex gap-2 pt-2">
@@ -395,8 +322,7 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={onEdit}
-                  className="flex-1"
-                >
+                  className="flex-1">
                   Edit Profile
                 </Button>
               )}
@@ -405,8 +331,7 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
                   variant="default"
                   size="sm"
                   onClick={onViewServices}
-                  className="flex-1"
-                >
+                  className="flex-1">
                   View Services
                 </Button>
               )}
@@ -471,6 +396,15 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
                   </Badge>
                 )}
               </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-2"
+                onClick={handleBookService}>
+                <Phone className="w-4 h-4 mr-2" />
+                Place a Request
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -487,10 +421,7 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <ContactSection
-              contact={providerData.providerContactInfo}
-              onContact={onContact}
-            />
+            <ContactSection contact={providerData.providerContactInfo} />
             <Separator />
             <AvailabilitySection
               isAlwaysAvailable={providerData.isAlwaysAvailable}
@@ -499,62 +430,89 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
           </CardContent>
         </Card>
 
-        {/* Location */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Location
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <LocationSection
-              location={providerData.locationData}
-              distance={distance}
-              distanceFormatted={distanceFormatted}
-              showDistance={showDistance}
-              onNavigate={onNavigate}
-            />
-          </CardContent>
-        </Card>
+        {/* Services */}
+        {mode === "public" &&
+          providerData.serviceOfferings &&
+          providerData.serviceOfferings.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="w-5 h-5" />
+                  Services Offered
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent>
+                <div className="space-y-3">
+                  {providerData.serviceOfferings?.map((service) => (
+                    <div
+                      key={service._id}
+                      className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                      {/* Cover Image */}
+                      <div className="w-16 h-16 rounded-md bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
+                        {service.coverImage ? (
+                          <img
+                            src={service.coverImage.url}
+                            alt={service.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Briefcase className="w-6 h-6 text-gray-400" />
+                        )}
+                      </div>
+
+                      {/* Service Info */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm truncate">
+                          {service.title}
+                        </h4>
+                        {service.servicePricing && (
+                          <p className="text-sm text-teal-600 font-semibold">
+                            base price:{" "}
+                            <small>
+                              GH₵{" "}
+                              {service.servicePricing.serviceBasePrice.toFixed(
+                                2
+                              )}
+                            </small>{" "}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {onViewServices && (
+                  <Button
+                    variant="outline"
+                    className="w-full mt-4"
+                    onClick={onViewServices}>
+                    View All Services
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
       </div>
 
-      {/* Services */}
-      {mode === "public" &&
-        providerData.serviceOfferings &&
-        providerData.serviceOfferings.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="w-5 h-5" />
-                Services Offered
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {providerData.serviceOfferings.map((service) => {
-                  const { key, label } = getServiceDisplay(service);
-                  return (
-                    <Badge key={key} variant="outline">
-                      {label}
-                    </Badge>
-                  );
-                })}
-              </div>
-
-              {onViewServices && (
-                <Button
-                  variant="outline"
-                  className="w-full mt-4"
-                  onClick={onViewServices}
-                >
-                  View All Services
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        )}
+      {/* Location - Full Width */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="w-5 h-5" />
+            Location
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <LocationSectionWithMap
+            location={providerData.locationData}
+            distance={distance}
+            distanceFormatted={distanceFormatted}
+            showDistance={showDistance}
+            businessName={providerData.businessName}
+          />
+        </CardContent>
+      </Card>
 
       {/* Gallery */}
       {providerData.BusinessGalleryImages &&
@@ -571,9 +529,8 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {providerData.BusinessGalleryImages.map((imageId) => (
                 <div
-                  key={imageId}
-                  className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center"
-                >
+                  key={imageId._id}
+                  className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
                   <ImageIcon className="w-8 h-8 text-gray-400" />
                 </div>
               ))}

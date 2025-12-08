@@ -1,5 +1,15 @@
+// ============================================
+// FILE: types/provider.types.ts (UPDATED)
+// ============================================
 
 import { UserProfile } from "@/types/profile.types";
+import {
+  ContactDetails,
+  FileReference,
+  IdDetails,
+  UserLocation,
+} from "./base.types";
+import { Service } from "./service.types";
 
 // ============================================
 // Shared Type Definitions
@@ -8,54 +18,6 @@ import { UserProfile } from "@/types/profile.types";
 export interface Coordinates {
   latitude: number;
   longitude: number;
-}
-
-export interface UserLocation {
-  // Core (User-provided)
-  ghanaPostGPS: string;
-  nearbyLandmark?: string;
-
-  // Auto-filled / Verified (from OpenStreetMap or Google Map)
-  region?: string;
-  city?: string;
-  district?: string;
-  locality?: string;
-  streetName?: string;
-  houseNumber?: string;
-
-  // Technical / Validation
-  gpsCoordinates?: Coordinates;
-  isAddressVerified?: boolean;
-  sourceProvider?: "openstreetmap" | "google" | "ghanapost";
-
-  // System Fields
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-export interface ContactDetails {
-  // Personal
-  primaryContact: string;
-  secondaryContact?: string;
-
-  // Business
-  businessContact?: string;
-  businessEmail?: string;
-}
-
-export enum IdType {
-  NATIONAL_ID = "national_id",
-  PASSPORT = "passport",
-  VOTERS_ID = "voters_id",
-  DRIVERS_LICENSE = "drivers_license",
-  NHIS = "nhis",
-  OTHER = "other",
-}
-
-export interface IdDetails {
-  idType: IdType;
-  idNumber: string;
-  fileImage: string[]; // Array of file/image IDs
 }
 
 export interface WorkingHours {
@@ -71,16 +33,16 @@ export interface WorkingHours {
 
 export interface ProviderProfile {
   _id: string;
-  profile: UserProfile; // User profile ID reference
-  
+  profile: UserProfile;
+
   // Business & Identity Information
   businessName?: string;
   IdDetails?: IdDetails;
   isCompanyTrained: boolean;
 
-  // Service Details
-  serviceOfferings?: string[]; // Array of service IDs
-  BusinessGalleryImages?: string[]; // Array of image IDs
+  // Service Details - Updated to support both string IDs and full service objects
+  serviceOfferings?: Service[];
+  BusinessGalleryImages?: FileReference[];
 
   // Contact & Location
   providerContactInfo: ContactDetails;
@@ -104,26 +66,28 @@ export interface ProviderProfile {
   updatedAt: string;
 }
 
+// ✅ FIXED: Aligned with form schema - accepts string IDs
 export interface CreateProviderProfileRequest {
   businessName?: string;
   IdDetails?: IdDetails;
-  isCompanyTrained?: boolean;
-  serviceOfferings?: string[];
-  BusinessGalleryImages?: string[];
+  isCompanyTrained?: boolean; // ✅ Made optional to match form default
+  serviceOfferings: string[]; // ✅ Changed from Service[] to string[]
+  BusinessGalleryImages?: string[]; // ✅ Changed from FileReference[] to string[]
   providerContactInfo: ContactDetails;
   locationData: UserLocation;
-  isAlwaysAvailable?: boolean;
+  isAlwaysAvailable?: boolean; // ✅ Made optional to match form default
   workingHours?: WorkingHours;
-  requireInitialDeposit?: boolean;
+  requireInitialDeposit?: boolean; // ✅ Made optional to match form default
   percentageDeposit?: number;
 }
 
+// ✅ FIXED: Aligned with form schema
 export interface UpdateProviderProfileRequest {
   businessName?: string;
   IdDetails?: IdDetails;
   isCompanyTrained?: boolean;
-  serviceOfferings?: string[];
-  BusinessGalleryImages?: string[];
+  serviceOfferings?: string[]; // ✅ Changed from Service[] to string[]
+  BusinessGalleryImages?: string[]; // ✅ Changed from FileReference[] to string[]
   providerContactInfo?: ContactDetails;
   locationData?: UserLocation;
   isAlwaysAvailable?: boolean;

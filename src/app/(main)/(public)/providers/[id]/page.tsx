@@ -22,8 +22,6 @@ import {
   UserX,
   WifiOff,
   ServerCrash,
-  Phone,
-  Calendar,
   ArrowLeft,
   Search,
 } from "lucide-react";
@@ -221,13 +219,6 @@ export default function ProviderDetailsPage() {
     return configs[errorType];
   };
 
-  const handleContact = () => {
-    // TODO: Implement contact modal or phone call action
-    if (provider?.providerContactInfo.primaryContact) {
-      window.location.href = `tel:${provider.providerContactInfo.primaryContact}`;
-    }
-  };
-
   const handleBookService = () => {
     // Navigate to booking page with provider and service info
     const params = new URLSearchParams();
@@ -314,9 +305,9 @@ export default function ProviderDetailsPage() {
 
   // Success state - Display provider details
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full w-full p-2">
       {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto w-full p-3 mb-3">
+      <div className=" w-full p-3 mb-3">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -346,20 +337,20 @@ export default function ProviderDetailsPage() {
       </div>
 
       {/* Back Button */}
-      <div className="max-w-7xl mx-auto w-full px-4 mb-4">
+      <div className="w-full mb-4">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => router.back()}
           className="gap-2">
           <ArrowLeft className="w-4 h-4" />
-          Back to Search
+          Back
         </Button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 w-full relative overflow-auto">
-        <div className="max-w-7xl mx-auto px-4 pb-6">
+      <div className="flex-1 w-full min-h-screen relative overflow-auto">
+        <div className="w-full h-full">
           {/* Using BusinessProfile in public mode to display provider details to clients */}
           <BusinessProfile
             provider={provider}
@@ -367,29 +358,9 @@ export default function ProviderDetailsPage() {
             mode="public"
             showActions={true}
             showDistance={false}
-            onContact={handleContact}
             onViewServices={handleBookService}
             onNavigate={handleNavigate}
           />
-
-          {/* Booking Action Section */}
-          <div className="mt-6 flex gap-3 justify-center">
-            <Button
-              size="lg"
-              onClick={handleBookService}
-              className="gap-2 min-w-[200px]">
-              <Calendar className="w-5 h-5" />
-              Book Service
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={handleContact}
-              className="gap-2 min-w-[200px]">
-              <Phone className="w-5 h-5" />
-              Contact Provider
-            </Button>
-          </div>
         </div>
       </div>
     </div>

@@ -2,9 +2,40 @@
 
 import { Service } from "@/types/service.types";
 import { APIClient } from "../base/api-client";
-import { Coordinates, UserLocation, ContactDetails, IdDetails } from "@/types/base.types";
-import { CreateProviderProfileRequest, ProviderProfile, UpdateProviderProfileRequest, FindNearestProvidersRequest, NearestProviderResult, FindProvidersByLocationParams, DistanceResult, SearchProvidersRequest, SearchProvidersResponse, AddServiceRequest, EnrichLocationRequest, VerifyLocationRequest, VerifyLocationResponse, BatchGeocodeRequest, BatchGeocodeResponse, GeocodeRequest, GeocodeResponse, ReverseGeocodeRequest, ReverseGeocodeResponse, SearchNearbyRequest, GeocodingResult, CalculateDistanceRequest, CalculateDistanceResponse, PlaceDetailsResponse, WorkingHours, IdType } from "@/types/provider.types";
-
+import {
+  Coordinates,
+  UserLocation,
+  ContactDetails,
+  IdDetails,
+  idType,
+} from "@/types/base.types";
+import {
+  CreateProviderProfileRequest,
+  ProviderProfile,
+  UpdateProviderProfileRequest,
+  FindNearestProvidersRequest,
+  NearestProviderResult,
+  FindProvidersByLocationParams,
+  DistanceResult,
+  SearchProvidersRequest,
+  SearchProvidersResponse,
+  AddServiceRequest,
+  EnrichLocationRequest,
+  VerifyLocationRequest,
+  VerifyLocationResponse,
+  BatchGeocodeRequest,
+  BatchGeocodeResponse,
+  GeocodeRequest,
+  GeocodeResponse,
+  ReverseGeocodeRequest,
+  ReverseGeocodeResponse,
+  SearchNearbyRequest,
+  GeocodingResult,
+  CalculateDistanceRequest,
+  CalculateDistanceResponse,
+  PlaceDetailsResponse,
+  WorkingHours,
+} from "@/types/provider.types";
 
 // ============================================
 // Unified Provider & Location API Client
@@ -18,8 +49,6 @@ export class UnifiedProviderAPIClient extends APIClient {
   // ============================================
   // PROVIDER PROFILE - CRUD Operations
   // ============================================
-
-
 
   /**
    * Create a new provider profile
@@ -42,7 +71,10 @@ export class UnifiedProviderAPIClient extends APIClient {
     providerId: string,
     request: UpdateProviderProfileRequest
   ): Promise<ProviderProfile> {
-    return this.put<ProviderProfile>(`/api/provider-profiles/${providerId}`, request);
+    return this.put<ProviderProfile>(
+      `/api/provider-profiles/${providerId}`,
+      request
+    );
   }
 
   /**
@@ -50,8 +82,12 @@ export class UnifiedProviderAPIClient extends APIClient {
    * @param providerId - Provider ID
    * @returns Success message
    */
-  async deleteProviderProfile(providerId: string): Promise<{ message: string }> {
-    return this.delete<{ message: string }>(`/api/provider-profiles/${providerId}`);
+  async deleteProviderProfile(
+    providerId: string
+  ): Promise<{ message: string }> {
+    return this.delete<{ message: string }>(
+      `/api/provider-profiles/${providerId}`
+    );
   }
 
   /**
@@ -96,7 +132,9 @@ export class UnifiedProviderAPIClient extends APIClient {
    * @returns Provider profile
    */
   async getProviderByProfile(profileId: string): Promise<ProviderProfile> {
-    return this.get<ProviderProfile>(`/api/provider-profiles/by-profile/${profileId}`);
+    return this.get<ProviderProfile>(
+      `/api/provider-profiles/by-profile/${profileId}`
+    );
   }
 
   // ============================================
@@ -112,7 +150,10 @@ export class UnifiedProviderAPIClient extends APIClient {
   async findNearestProviders(
     request: FindNearestProvidersRequest
   ): Promise<NearestProviderResult[]> {
-    return this.post<NearestProviderResult[]>("/api/provider-profiles/nearest", request);
+    return this.post<NearestProviderResult[]>(
+      "/api/provider-profiles/nearest",
+      request
+    );
   }
 
   /**
@@ -124,7 +165,10 @@ export class UnifiedProviderAPIClient extends APIClient {
   async findProvidersByLocation(
     params: FindProvidersByLocationParams
   ): Promise<ProviderProfile[]> {
-    return this.get<ProviderProfile[]>("/api/provider-profiles/by-location", params);
+    return this.get<ProviderProfile[]>(
+      "/api/provider-profiles/by-location",
+      params
+    );
   }
 
   /**
@@ -153,7 +197,10 @@ export class UnifiedProviderAPIClient extends APIClient {
   async searchProviders(
     request: SearchProvidersRequest
   ): Promise<SearchProvidersResponse> {
-    return this.post<SearchProvidersResponse>("/api/provider-profiles/search", request);
+    return this.post<SearchProvidersResponse>(
+      "/api/provider-profiles/search",
+      request
+    );
   }
 
   // ============================================
@@ -215,7 +262,10 @@ export class UnifiedProviderAPIClient extends APIClient {
   async enrichLocationData(
     request: EnrichLocationRequest
   ): Promise<UserLocation> {
-    return this.post<UserLocation>("/api/provider-profiles/location/enrich", request);
+    return this.post<UserLocation>(
+      "/api/provider-profiles/location/enrich",
+      request
+    );
   }
 
   /**
@@ -227,7 +277,10 @@ export class UnifiedProviderAPIClient extends APIClient {
   async verifyLocation(
     request: VerifyLocationRequest
   ): Promise<VerifyLocationResponse> {
-    return this.post<VerifyLocationResponse>("/api/provider-profiles/location/verify", request);
+    return this.post<VerifyLocationResponse>(
+      "/api/provider-profiles/location/verify",
+      request
+    );
   }
 
   /**
@@ -256,7 +309,10 @@ export class UnifiedProviderAPIClient extends APIClient {
    * @returns Coordinates and display name
    */
   async geocodeAddress(request: GeocodeRequest): Promise<GeocodeResponse> {
-    return this.post<GeocodeResponse>("/api/provider-profiles/location/geocode", request);
+    return this.post<GeocodeResponse>(
+      "/api/provider-profiles/location/geocode",
+      request
+    );
   }
 
   /**
@@ -281,7 +337,10 @@ export class UnifiedProviderAPIClient extends APIClient {
    * @returns Array of nearby places
    */
   async searchNearby(request: SearchNearbyRequest): Promise<GeocodingResult[]> {
-    return this.post<GeocodingResult[]>("/api/provider-profiles/location/search-nearby", request);
+    return this.post<GeocodingResult[]>(
+      "/api/provider-profiles/location/search-nearby",
+      request
+    );
   }
 
   /**
@@ -385,17 +444,28 @@ export class UnifiedProviderAPIClient extends APIClient {
   isProviderAvailableNow(provider: ProviderProfile): boolean {
     if (!this.isProviderActive(provider)) return false;
     if (provider.isAlwaysAvailable) return true;
-    
+
     if (!provider.workingHours) return false;
 
     const now = new Date();
-    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayNames = [
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+    ];
     const today = dayNames[now.getDay()];
     const todayHours = provider.workingHours[today];
 
     if (!todayHours) return false;
 
-    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`;
     return currentTime >= todayHours.start && currentTime <= todayHours.end;
   }
 
@@ -404,9 +474,7 @@ export class UnifiedProviderAPIClient extends APIClient {
    * @param providers - Array of providers with distance
    * @returns Sorted array (nearest first)
    */
-  sortByDistance(
-    providers: NearestProviderResult[]
-  ): NearestProviderResult[] {
+  sortByDistance(providers: NearestProviderResult[]): NearestProviderResult[] {
     return [...providers].sort((a, b) => a.distanceKm - b.distanceKm);
   }
 
@@ -429,7 +497,7 @@ export class UnifiedProviderAPIClient extends APIClient {
     if (provider.isAlwaysAvailable) {
       return "24/7";
     }
-    
+
     if (!provider.workingHours || !provider.workingHours[day]) {
       return "Closed";
     }
@@ -596,4 +664,4 @@ export type {
   AddServiceRequest,
 };
 
-export { IdType };
+export { idType };
