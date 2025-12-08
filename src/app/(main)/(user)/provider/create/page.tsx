@@ -1,7 +1,5 @@
 // app/(provider)/provider/create/page.tsx
 "use client";
-
-import ProviderFormWrapper from "@/components/profiles/provider/form/ProviderFormWrapper";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -11,7 +9,6 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { Home } from "lucide-react";
-import React from "react";
 
 export default function CreateProviderProfilePage() {
   return (
@@ -22,7 +19,8 @@ export default function CreateProviderProfilePage() {
             <BreadcrumbItem>
               <BreadcrumbLink
                 href="/"
-                className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
+                className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
+              >
                 <Home className="w-4 h-4" />
                 Home
               </BreadcrumbLink>
@@ -31,7 +29,8 @@ export default function CreateProviderProfilePage() {
             <BreadcrumbItem>
               <BreadcrumbLink
                 href="/provider"
-                className="text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
+                className="text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
+              >
                 provider
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -45,7 +44,8 @@ export default function CreateProviderProfilePage() {
         </Breadcrumb>
       </div>
       <section className="flex-1">
-        <ProviderFormWrapper mode="create" />
+        {/* <ProviderFormWrapper mode="create" /> */}
+        form content here
       </section>
     </div>
   );

@@ -37,3 +37,4 @@ export interface ServicePricing {
   platformCommissionRate: number;
   providerEarnings: number;
 }
+

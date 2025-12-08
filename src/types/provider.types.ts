@@ -1,19 +1,10 @@
-// ============================================
-// FILE: types/provider.types.ts (UPDATED)
-// ============================================
-
 import { UserProfile } from "@/types/profile.types";
 import {
   ContactDetails,
   FileReference,
-  IdDetails,
   UserLocation,
 } from "./base.types";
 import { Service } from "./service.types";
-
-// ============================================
-// Shared Type Definitions
-// ============================================
 
 export interface Coordinates {
   latitude: number;
@@ -27,67 +18,47 @@ export interface WorkingHours {
   };
 }
 
-// ============================================
-// Provider Profile Types
-// ============================================
-
 export interface ProviderProfile {
   _id: string;
   profile: UserProfile;
-
-  // Business & Identity Information
   businessName?: string;
-  IdDetails?: IdDetails;
+  IdDetails?: {
+    idType: string;
+    idNumber: string;
+    idFile: FileReference[];
+  };
   isCompanyTrained: boolean;
-
-  // Service Details - Updated to support both string IDs and full service objects
   serviceOfferings?: Service[];
   BusinessGalleryImages?: FileReference[];
-
-  // Contact & Location
   providerContactInfo: ContactDetails;
   locationData: UserLocation;
-
-  // Availability & Scheduling
   isAlwaysAvailable: boolean;
   workingHours?: WorkingHours;
-
-  // Payments & Deposits
   requireInitialDeposit: boolean;
   percentageDeposit?: number;
-
-  // Soft Delete
   isDeleted?: boolean;
   deletedAt?: string;
   deletedBy?: string;
-
-  // Timestamps
   createdAt: string;
   updatedAt: string;
 }
 
-// ✅ FIXED: Aligned with form schema - accepts string IDs
 export interface CreateProviderProfileRequest {
   businessName?: string;
-  IdDetails?: IdDetails;
-  isCompanyTrained?: boolean; // ✅ Made optional to match form default
-  serviceOfferings: string[]; // ✅ Changed from Service[] to string[]
-  BusinessGalleryImages?: string[]; // ✅ Changed from FileReference[] to string[]
+  isCompanyTrained?: boolean;
+  serviceOfferings: string[];
   providerContactInfo: ContactDetails;
   locationData: UserLocation;
-  isAlwaysAvailable?: boolean; // ✅ Made optional to match form default
+  isAlwaysAvailable?: boolean;
   workingHours?: WorkingHours;
-  requireInitialDeposit?: boolean; // ✅ Made optional to match form default
+  requireInitialDeposit?: boolean;
   percentageDeposit?: number;
 }
 
-// ✅ FIXED: Aligned with form schema
 export interface UpdateProviderProfileRequest {
   businessName?: string;
-  IdDetails?: IdDetails;
   isCompanyTrained?: boolean;
-  serviceOfferings?: string[]; // ✅ Changed from Service[] to string[]
-  BusinessGalleryImages?: string[]; // ✅ Changed from FileReference[] to string[]
+  serviceOfferings?: string[];
   providerContactInfo?: ContactDetails;
   locationData?: UserLocation;
   isAlwaysAvailable?: boolean;
@@ -128,8 +99,8 @@ export interface SearchProvidersRequest {
   region?: string;
   city?: string;
   serviceIds?: string[];
-  isCompanyTrained?: boolean;
-  requireInitialDeposit?: boolean;
+  isCompanyTrained: boolean;
+  requireInitialDeposit: boolean;
   userLocation?: Coordinates;
   maxDistance?: number;
   limit?: number;
@@ -145,10 +116,6 @@ export interface SearchProvidersResponse {
 export interface AddServiceRequest {
   serviceId: string;
 }
-
-// ============================================
-// Location Types
-// ============================================
 
 export interface EnrichLocationRequest {
   ghanaPostGPS: string;
