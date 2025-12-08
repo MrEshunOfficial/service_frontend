@@ -11,12 +11,37 @@ import {
   Image as ImageIcon,
   Navigation,
   ShieldCheck,
+  Trash2,
+  RefreshCw,
+  Plus,
+  Edit,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { ProviderProfile, NearestProviderResult } from "@/types/provider.types";
 import { LocationSectionWithMap } from "./ProviderLocationWithMap";
 
@@ -34,6 +59,11 @@ interface BusinessProfileProps {
   handleBookService?: () => void;
   onViewServices?: () => void;
   onNavigate?: () => void;
+  onDelete?: () => Promise<void>;
+  onRestore?: () => Promise<void>;
+  onAddService?: () => void;
+  onRemoveService?: (serviceId: string) => Promise<void>;
+  onManageGallery?: () => void;
   className?: string;
 }
 
@@ -179,6 +209,200 @@ const AvailabilitySection: React.FC<{
   );
 };
 
+// Owner Actions Dialog Component
+const OwnerActionsDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAddService?: () => void;
+  onManageGallery?: () => void;
+  onEdit?: () => void;
+}> = ({ open, onOpenChange, onAddService, onManageGallery, onEdit }) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Profile Management</DialogTitle>
+        <DialogDescription>
+          Choose an action to manage your business profile
+        </DialogDescription>
+      </DialogHeader>
+      <div className="space-y-2">
+        {onEdit && (
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => {
+              onEdit();
+              onOpenChange(false);
+            }}>
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Profile Information
+          </Button>
+        )}
+        {onAddService && (
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => {
+              onAddService();
+              onOpenChange(false);
+            }}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Service
+          </Button>
+        )}
+        {onManageGallery && (
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => {
+              onManageGallery();
+              onOpenChange(false);
+            }}>
+            <ImageIcon className="w-4 h-4 mr-2" />
+            Manage Gallery
+          </Button>
+        )}
+      </div>
+    </DialogContent>
+  </Dialog>
+);
+
+// Delete Confirmation Dialog
+const DeleteConfirmationDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  loading?: boolean;
+  isDeleted?: boolean;
+}> = ({ open, onOpenChange, onConfirm, loading, isDeleted }) => (
+  <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle className="flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 text-red-500" />
+          {isDeleted ? "Profile Already Deleted" : "Delete Business Profile?"}
+        </AlertDialogTitle>
+        <AlertDialogDescription>
+          {isDeleted
+            ? "This profile has been deleted. You can restore it or permanently delete it."
+            : "This action will soft-delete your business profile. You can restore it later if needed. Are you sure you want to continue?"}
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+        <AlertDialogAction
+          onClick={onConfirm}
+          disabled={loading}
+          className="bg-red-600 hover:bg-red-700">
+          {loading ? "Deleting..." : "Delete Profile"}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+);
+
+// Restore Confirmation Dialog
+const RestoreConfirmationDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  loading?: boolean;
+}> = ({ open, onOpenChange, onConfirm, loading }) => (
+  <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle className="flex items-center gap-2">
+          <RefreshCw className="w-5 h-5 text-green-500" />
+          Restore Business Profile?
+        </AlertDialogTitle>
+        <AlertDialogDescription>
+          This will restore your business profile and make it active again. Your
+          services and information will be publicly visible.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+        <AlertDialogAction
+          onClick={onConfirm}
+          disabled={loading}
+          className="bg-green-600 hover:bg-green-700">
+          {loading ? "Restoring..." : "Restore Profile"}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+);
+
+// Service Item with Remove Action (Owner Mode)
+const ServiceItemOwner: React.FC<{
+  service: any;
+  onRemove?: (serviceId: string) => void;
+  removing?: boolean;
+}> = ({ service, onRemove, removing }) => {
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  return (
+    <>
+      <div className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+        <div className="w-16 h-16 rounded-md bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
+          {service.coverImage ? (
+            <img
+              src={service.coverImage.url}
+              alt={service.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Briefcase className="w-6 h-6 text-gray-400" />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium text-sm truncate">{service.title}</h4>
+          {service.servicePricing && (
+            <p className="text-sm text-teal-600 font-semibold">
+              GH₵ {service.servicePricing.serviceBasePrice.toFixed(2)}
+            </p>
+          )}
+        </div>
+
+        {onRemove && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowConfirm(true)}
+            disabled={removing}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50">
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        )}
+      </div>
+
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Service?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove "{service.title}" from your
+              offerings? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onRemove?.(service._id);
+                setShowConfirm(false);
+              }}
+              className="bg-red-600 hover:bg-red-700">
+              Remove Service
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
+
 // ============================================
 // Main Component
 // ============================================
@@ -192,6 +416,11 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
   onEdit,
   handleBookService,
   onViewServices,
+  onDelete,
+  onRestore,
+  onAddService,
+  onRemoveService,
+  onManageGallery,
   className = "",
 }) => {
   const providerData = getProviderData(provider);
@@ -202,10 +431,57 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
     ? provider.distanceFormatted
     : undefined;
 
+  // State for dialogs and actions
+  const [showActionsDialog, setShowActionsDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [removingServiceId, setRemovingServiceId] = useState<string | null>(null);
+
+  const isDeleted = providerData.isDeleted;
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    setActionLoading(true);
+    try {
+      await onDelete();
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error("Failed to delete profile:", error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!onRestore) return;
+    setActionLoading(true);
+    try {
+      await onRestore();
+      setShowRestoreDialog(false);
+    } catch (error) {
+      console.error("Failed to restore profile:", error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRemoveService = async (serviceId: string) => {
+    if (!onRemoveService) return;
+    setRemovingServiceId(serviceId);
+    try {
+      await onRemoveService(serviceId);
+    } catch (error) {
+      console.error("Failed to remove service:", error);
+    } finally {
+      setRemovingServiceId(null);
+    }
+  };
+
   // Compact Card Variant
   if (variant === "compact") {
     return (
-      <Card className={`hover:shadow-md transition-shadow ${className}`}>
+      <Card className={`hover:shadow-md transition-shadow ${className} ${isDeleted ? 'opacity-60' : ''}`}>
         <CardContent className="p-4">
           <div className="flex gap-3">
             <Avatar className="h-12 w-12">
@@ -234,6 +510,12 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
               </div>
 
               <div className="flex items-center gap-2 mt-2">
+                {isDeleted && (
+                  <Badge variant="destructive" className="text-xs">
+                    <XCircle className="w-3 h-3 mr-1" />
+                    Deleted
+                  </Badge>
+                )}
                 {providerData.isCompanyTrained && (
                   <Badge variant="outline" className="text-xs">
                     <ShieldCheck className="w-3 h-3 mr-1" />
@@ -257,7 +539,7 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
   // Card Variant
   if (variant === "card") {
     return (
-      <Card className={`hover:shadow-lg transition-shadow ${className}`}>
+      <Card className={`hover:shadow-lg transition-shadow ${className} ${isDeleted ? 'opacity-60 border-red-200' : ''}`}>
         <CardHeader className="pb-3">
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16">
@@ -282,6 +564,12 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
             )}
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
+            {isDeleted && (
+              <Badge variant="destructive">
+                <XCircle className="w-3 h-3 mr-1" />
+                Profile Deleted
+              </Badge>
+            )}
             {providerData.isCompanyTrained && (
               <Badge variant="outline">
                 <ShieldCheck className="w-3 h-3 mr-1" />
@@ -295,14 +583,17 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
               </Badge>
             )}
           </div>
-          <Button
-            variant="default"
-            size="sm"
-            className="w-full mt-2"
-            onClick={handleBookService}>
-            <Phone className="w-4 h-4 mr-2" />
-            Place a request
-          </Button>
+          {mode === "public" && (
+            <Button
+              variant="default"
+              size="sm"
+              className="w-full mt-2"
+              onClick={handleBookService}
+              disabled={isDeleted}>
+              <Phone className="w-4 h-4 mr-2" />
+              Place a request
+            </Button>
+          )}
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -315,25 +606,43 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
 
           <ContactSection contact={providerData.providerContactInfo} />
 
-          {showActions && (
+          {showActions && mode === "owner" && (
             <div className="flex gap-2 pt-2">
-              {mode === "owner" && onEdit && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onEdit}
-                  className="flex-1">
-                  Edit Profile
-                </Button>
-              )}
-              {mode === "public" && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={onViewServices}
-                  className="flex-1">
-                  View Services
-                </Button>
+              {isDeleted ? (
+                <>
+                  {onRestore && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => setShowRestoreDialog(true)}
+                      className="flex-1 bg-green-600 hover:bg-green-700">
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Restore
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <>
+                  {onEdit && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onEdit}
+                      className="flex-1">
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -345,6 +654,35 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
   // Full Variant
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* Deleted Profile Alert */}
+      {isDeleted && mode === "owner" && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-red-900">
+                  Profile Deleted
+                </h3>
+                <p className="text-sm text-red-700 mt-1">
+                  This business profile has been deleted and is no longer visible
+                  to the public. You can restore it to make it active again.
+                </p>
+              </div>
+              {onRestore && (
+                <Button
+                  size="sm"
+                  onClick={() => setShowRestoreDialog(true)}
+                  className="bg-green-600 hover:bg-green-700">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Restore Profile
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header Section */}
       <Card>
         <CardContent className="p-6">
@@ -369,14 +707,32 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
                   )}
                 </div>
 
-                {mode === "owner" && onEdit && (
-                  <Button variant="outline" onClick={onEdit}>
-                    Edit Profile
-                  </Button>
+                {mode === "owner" && !isDeleted && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowActionsDialog(true)}>
+                      Manage Profile
+                    </Button>
+                    {onDelete && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowDeleteDialog(true)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
 
               <div className="flex flex-wrap gap-2 mt-4">
+                {isDeleted && (
+                  <Badge variant="destructive">
+                    <XCircle className="w-3 h-3 mr-1" />
+                    Deleted Profile
+                  </Badge>
+                )}
                 {providerData.isCompanyTrained && (
                   <Badge variant="default" className="bg-teal-600">
                     <ShieldCheck className="w-3 h-3 mr-1" />
@@ -397,14 +753,17 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
                 )}
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full mt-2"
-                onClick={handleBookService}>
-                <Phone className="w-4 h-4 mr-2" />
-                Place a Request
-              </Button>
+              {mode === "public" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-2"
+                  onClick={handleBookService}
+                  disabled={isDeleted}>
+                  <Phone className="w-4 h-4 mr-2" />
+                  Place a Request
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>
@@ -431,58 +790,72 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
         </Card>
 
         {/* Services */}
-        {mode === "public" &&
-          providerData.serviceOfferings &&
+        {providerData.serviceOfferings &&
           providerData.serviceOfferings.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="w-5 h-5" />
-                  Services Offered
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-5 h-5" />
+                    Services Offered
+                  </div>
+                  {mode === "owner" && onAddService && !isDeleted && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onAddService}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Service
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
 
               <CardContent>
                 <div className="space-y-3">
-                  {providerData.serviceOfferings?.map((service) => (
-                    <div
-                      key={service._id}
-                      className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                      {/* Cover Image */}
-                      <div className="w-16 h-16 rounded-md bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
-                        {service.coverImage ? (
-                          <img
-                            src={service.coverImage.url}
-                            alt={service.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <Briefcase className="w-6 h-6 text-gray-400" />
-                        )}
-                      </div>
+                  {providerData.serviceOfferings?.map((service) =>
+                    mode === "owner" ? (
+                      <ServiceItemOwner
+                        key={service._id}
+                        service={service}
+                        onRemove={!isDeleted ? handleRemoveService : undefined}
+                        removing={removingServiceId === service._id}
+                      />
+                    ) : (
+                      <div
+                        key={service._id}
+                        className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="w-16 h-16 rounded-md bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
+                          {service.coverImage ? (
+                            <img
+                              src={service.coverImage.url}
+                              alt={service.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Briefcase className="w-6 h-6 text-gray-400" />
+                          )}
+                        </div>
 
-                      {/* Service Info */}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm truncate">
-                          {service.title}
-                        </h4>
-                        {service.servicePricing && (
-                          <p className="text-sm text-teal-600 font-semibold">
-                            base price:{" "}
-                            <small>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm truncate">
+                            {service.title}
+                          </h4>
+                          {service.servicePricing && (
+                            <p className="text-sm text-teal-600 font-semibold">
                               GH₵{" "}
                               {service.servicePricing.serviceBasePrice.toFixed(
                                 2
                               )}
-                            </small>{" "}
-                          </p>
-                        )}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
 
-                {onViewServices && (
+                {mode === "public" && onViewServices && (
                   <Button
                     variant="outline"
                     className="w-full mt-4"
@@ -490,6 +863,35 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
                     View All Services
                   </Button>
                 )}
+              </CardContent>
+            </Card>
+          )}
+
+        {/* Empty Services State (Owner Mode) */}
+        {mode === "owner" &&
+          (!providerData.serviceOfferings ||
+            providerData.serviceOfferings.length === 0) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="w-5 h-5" />
+                  Services Offered
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center text-center">
+                  <Briefcase className="w-12 h-12 text-gray-300 mb-4" />
+                  <p className="text-sm text-muted-foreground mb-4">
+                    No services added yet. Add your first service to start
+                    receiving bookings.
+                  </p>
+                  {onAddService && !isDeleted && (
+                    <Button onClick={onAddService} size="sm">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Your First Service
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           )}
@@ -519,9 +921,17 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
       providerData.BusinessGalleryImages.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ImageIcon className="w-5 h-5" />
-              Gallery
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-5 h-5" />
+                Gallery
+              </div>
+              {mode === "owner" && onManageGallery && !isDeleted && (
+                <Button variant="outline" size="sm" onClick={onManageGallery}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Manage Gallery
+                </Button>
+              )}
             </CardTitle>
           </CardHeader>
 
@@ -549,13 +959,45 @@ export const BusinessProfile: React.FC<BusinessProfileProps> = ({
           <CardContent>
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-10 flex flex-col items-center justify-center text-center">
               <ImageIcon className="w-12 h-12 text-gray-300 mb-4" />
-              <p className="text-sm text-muted-foreground">
-                No gallery images have been uploaded yet.
+              <p className="text-sm text-muted-foreground mb-4">
+                {mode === "owner"
+                  ? "No gallery images uploaded yet. Add photos to showcase your work."
+                  : "No gallery images have been uploaded yet."}
               </p>
+              {mode === "owner" && onManageGallery && !isDeleted && (
+                <Button onClick={onManageGallery} size="sm">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Gallery Images
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Dialogs */}
+      <OwnerActionsDialog
+        open={showActionsDialog}
+        onOpenChange={setShowActionsDialog}
+        onEdit={onEdit}
+        onAddService={onAddService}
+        onManageGallery={onManageGallery}
+      />
+
+      <DeleteConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleDelete}
+        loading={actionLoading}
+        isDeleted={isDeleted}
+      />
+
+      <RestoreConfirmationDialog
+        open={showRestoreDialog}
+        onOpenChange={setShowRestoreDialog}
+        onConfirm={handleRestore}
+        loading={actionLoading}
+      />
     </div>
   );
 };

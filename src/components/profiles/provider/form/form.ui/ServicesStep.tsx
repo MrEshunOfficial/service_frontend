@@ -100,7 +100,7 @@ const ServicesStep: React.FC = () => {
     sessionStorage.setItem("returnToProviderForm", "true");
 
     // Navigate to service creation
-    router.push("/services/create?returnTo=provider-form");
+    router.push("/service-offered/create?returnTo=provider-form");
   };
 
   // Check if returning from service creation

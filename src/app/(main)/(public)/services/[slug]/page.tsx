@@ -57,8 +57,7 @@ const ProviderAvatar = ({
   if (profilePicture?.url && !imageError) {
     return (
       <div
-        className={`${sizeClasses[size]} rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0 relative`}
-      >
+        className={`${sizeClasses[size]} rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0 relative`}>
         <Image
           src={profilePicture.url}
           alt={provider.name}
@@ -75,8 +74,7 @@ const ProviderAvatar = ({
   // Fallback to gradient with initials
   return (
     <div
-      className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0`}
-    >
+      className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0`}>
       {provider.name.charAt(0).toUpperCase()}
     </div>
   );
@@ -275,8 +273,7 @@ export default function ServiceDetailsPage() {
           </p>
           <button
             className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-md"
-            onClick={refetchService}
-          >
+            onClick={refetchService}>
             Try Again
           </button>
         </div>
@@ -321,8 +318,7 @@ export default function ServiceDetailsPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
+              className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="distance">Nearest First</option>
               <option value="availability">Available First</option>
               <option value="rating">Highest Rated</option>
@@ -349,8 +345,7 @@ export default function ServiceDetailsPage() {
               </p>
               <button
                 onClick={refetchProviders}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-              >
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
                 Retry
               </button>
             </div>
@@ -373,8 +368,7 @@ export default function ServiceDetailsPage() {
                     ? "bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-600"
                     : ""
                 }`}
-                onClick={() => setSelectedProvider(provider)}
-              >
+                onClick={() => setSelectedProvider(provider)}>
                 <div className="flex items-start gap-3">
                   {/* Avatar */}
                   <ProviderAvatar provider={provider} />
@@ -468,8 +462,7 @@ export default function ServiceDetailsPage() {
                           provider.isAvailableNow
                             ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
                             : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
-                        }`}
-                      >
+                        }`}>
                         {provider.availability}
                       </span>
                     </div>
@@ -481,8 +474,7 @@ export default function ServiceDetailsPage() {
                         handleRequestProvider(provider);
                       }}
                       className="w-full mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                      // disabled={!provider.isAvailableNow}
-                    >
+                      disabled={!provider.isAvailableNow}>
                       {provider.isAvailableNow
                         ? "Request Provider"
                         : "View Profile"}
@@ -549,8 +541,7 @@ export default function ServiceDetailsPage() {
               <button
                 onClick={() => handleRequestProvider(sortedProviders[0])}
                 className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold shadow-md flex items-center gap-2 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!sortedProviders[0].isAvailableNow}
-              >
+                disabled={!sortedProviders[0].isAvailableNow}>
                 <Navigation className="w-4 h-4" />
                 {sortedProviders[0].isAvailableNow
                   ? "Request Now"
@@ -591,8 +582,7 @@ export default function ServiceDetailsPage() {
               <div className="absolute top-4 right-4 flex gap-2">
                 <button
                   onClick={() => setIsFavorite(!isFavorite)}
-                  className="p-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-900 transition-colors shadow-lg"
-                >
+                  className="p-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-900 transition-colors shadow-lg">
                   <Heart
                     className={`w-5 h-5 ${
                       isFavorite
@@ -603,8 +593,7 @@ export default function ServiceDetailsPage() {
                 </button>
                 <button
                   onClick={handleShare}
-                  className="p-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-900 transition-colors shadow-lg"
-                >
+                  className="p-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-gray-900 transition-colors shadow-lg">
                   <Share2 className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                 </button>
               </div>
@@ -736,8 +725,7 @@ export default function ServiceDetailsPage() {
                   {service.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm"
-                    >
+                      className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm">
                       #{tag}
                     </span>
                   ))}
