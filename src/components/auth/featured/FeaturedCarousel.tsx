@@ -149,10 +149,10 @@ const FeaturedCarousel = () => {
   const currentFeature = features[currentIndex];
 
   return (
-    <div className="flex flex-col h-full overflow-y-scroll justify-between relative p-4 hide-scrollbar bg-gradient-to-b from-blue-50 to-gray-100 dark:from-slate-900 dark:to-slate-950 w-full">
+    <div className="flex flex-col h-full overflow-y-scroll justify-between relative p-4 hide-scrollbar w-full">
       {/* Header section */}
       <div className="text-center mb-4">
-        <div className="mb-4 lg:mb-6 flex justify-center">
+        <div className="mb-4 flex justify-center">
           <div className="bg-white/70 dark:bg-white/10 backdrop-blur-md rounded-full px-4 py-1.5 inline-flex items-center space-x-2 shadow-sm dark:shadow-md">
             <span className="h-2 w-2 rounded-full animate-pulse bg-teal-500 dark:bg-teal-400"></span>
             <span className="text-sm font-medium text-gray-800 dark:text-white/90">
@@ -160,20 +160,20 @@ const FeaturedCarousel = () => {
             </span>
           </div>
         </div>
-        <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 lg:mb-6 text-gray-900 dark:text-white">
+        <h1 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">
           Connect with{" "}
           <span className="text-teal-600 dark:text-teal-400">
             Essential Services
           </span>
         </h1>
-        <p className="text-gray-700 dark:text-white/80 text-base lg:text-lg max-w-2xl mx-auto font-light">
+        <p className="text-gray-700 dark:text-white/80 lg:text-lg max-w-2xl mx-auto font-light">
           Find reliable service providers in your community with just a few
           taps. Get help exactly when you need it.
         </p>
       </div>
 
       {/* Carousel section */}
-      <div className="flex-grow flex flex-col justify-center relative mb-4">
+      <div className="grow flex flex-col justify-center relative mb-4">
         <div className="relative h-64 sm:h-72 md:h-80 w-full max-w-3xl lg:max-w-4xl mx-auto">
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div
@@ -191,9 +191,9 @@ const FeaturedCarousel = () => {
               className="absolute w-full h-full"
             >
               <Card className="bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white h-full overflow-hidden shadow-lg dark:shadow-2xl rounded-2xl">
-                <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-transparent dark:from-black/30 dark:to-transparent z-0"></div>
+                <div className="absolute inset-0 bg-linear-to-br from-black/5 to-transparent dark:from-black/30 dark:to-transparent z-0"></div>
                 <div
-                  className={`absolute top-0 right-0 w-full h-full bg-gradient-to-br ${currentFeature.color} ${currentFeature.darkColor} opacity-70 backdrop-blur-3xl z-0`}
+                  className={`absolute top-0 right-0 w-full h-full bg-linear-to-br ${currentFeature.color} ${currentFeature.darkColor} opacity-70 backdrop-blur-3xl z-0`}
                 ></div>
 
                 <CardHeader className="pb-2 relative z-10">
@@ -291,7 +291,7 @@ const FeaturedCarousel = () => {
       </div>
 
       {/* About section */}
-      <div className="backdrop-blur-lg bg-gradient-to-br from-white/80 to-white/90 dark:from-white/5 dark:to-white/10 p-4 lg:p-6 xl:p-8 rounded-2xl border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-2xl">
+      <div className="backdrop-blur-lg bg-linear-to-br from-white/80 to-white/90 dark:from-white/5 dark:to-white/10 p-4 lg:p-6 xl:p-8 rounded-2xl border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-2xl">
         <div className="flex flex-col md:flex-row gap-6 lg:gap-8 items-center">
           <div className="flex-1">
             <h2 className="text-xl lg:text-2xl xl:text-3xl font-bold mb-3 lg:mb-4 text-gray-900 dark:text-white">
@@ -300,14 +300,14 @@ const FeaturedCarousel = () => {
                 Errands mate
               </span>
             </h2>
-            <p className="text-gray-700 dark:text-white/80 text-base lg:text-lg leading-relaxed font-light">
+            <p className="text-gray-700 dark:text-white/80 text-sm leading-relaxed font-light">
               Errands Mate connects communities with professional and essential
               service workers. We create economic opportunities for providers
               while making everyday tasks easier and more convenient for
               clients.
             </p>
 
-            <div className="flex flex-wrap items-center gap-2 lg:gap-4 mt-4 lg:mt-6">
+            <div className="flex flex-wrap items-center gap-2 lg:gap-4 mt-3">
               <Badge className="bg-gray-200/80 dark:bg-white/10 text-gray-700 dark:text-white/90 px-3 py-1 lg:px-4 lg:py-1.5 rounded-full backdrop-blur-md text-xs lg:text-sm">
                 150+ Services
               </Badge>

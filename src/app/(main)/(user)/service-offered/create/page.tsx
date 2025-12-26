@@ -14,7 +14,7 @@ export default function CreateServicePage() {
   return (
     <div className="flex flex-col h-[88vh]">
       {/* Fixed Breadcrumb Header */}
-      <div className="flex-shrink-0 w-full border-b bg-white dark:bg-gray-950 backdrop-blur-3xl z-50">
+      <div className="shrink-0 w-full border-b bg-white dark:bg-gray-950 backdrop-blur-3xl z-50">
         <div className="p-3">
           <Breadcrumb>
             <BreadcrumbList>

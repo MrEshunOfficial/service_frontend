@@ -20,10 +20,12 @@ export default function LoadingOverlay({
           <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce"></div>
           <div
             className="w-3 h-3 bg-blue-600 rounded-full animate-bounce"
-            style={{ animationDelay: "0.1s" }}></div>
+            style={{ animationDelay: "0.1s" }}
+          ></div>
           <div
             className="w-3 h-3 bg-blue-600 rounded-full animate-bounce"
-            style={{ animationDelay: "0.2s" }}></div>
+            style={{ animationDelay: "0.2s" }}
+          ></div>
         </div>
 
         {/* Message */}
@@ -34,3 +36,11 @@ export default function LoadingOverlay({
     </div>
   );
 }
+
+export const BackgroundOverlay: React.FC = () => {
+  return (
+    <div className="absolute inset-0 opacity-25 dark:opacity-35 pointer-events-none">
+      <div className="w-full h-full bg-linear-to-br from-red-100 via-pink-50 to-blue-100 dark:from-red-950 dark:via-pink-950 dark:to-blue-950 blur-3xl"></div>
+    </div>
+  );
+};

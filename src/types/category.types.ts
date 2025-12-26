@@ -100,4 +100,3 @@ export interface ImageStatusResponse {
   imageId?: string;
   imageUrl?: string;
 }
-

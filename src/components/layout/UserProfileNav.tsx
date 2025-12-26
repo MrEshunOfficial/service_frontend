@@ -54,7 +54,15 @@ export default function UserProfileNav({
   );
 
   const navigateToAdmin = () => {
-    router.push("/admin");
+    // Navigate to specific admin page based on role
+    if (user?.systemRole === SystemRole.SUPER_ADMIN) {
+      router.push("/admin/super/dashboard");
+    } else if (user?.systemRole === SystemRole.ADMIN) {
+      router.push("/admin/dashboard");
+    } else {
+      // Fallback - shouldn't happen if the button is only shown to admins
+      router.push("/admin/dashboard");
+    }
   };
 
   // Update local state when profile picture changes
@@ -108,7 +116,7 @@ export default function UserProfileNav({
 
   const handleLogout = async () => {
     try {
-      await logout();
+      router.push("/logout");
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -161,7 +169,7 @@ export default function UserProfileNav({
             depth > 0 ? "ml-3" : ""
           } ${
             isActive
-              ? "bg-gradient-to-r from-red-500 to-blue-600 text-white shadow-md"
+              ? "bg-linear-to-r from-red-500 to-blue-600 text-white shadow-md"
               : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
           } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
         >
@@ -217,7 +225,7 @@ export default function UserProfileNav({
         <button
           ref={triggerRef}
           onClick={() => setShowPopover(!showPopover)}
-          className="w-full h-48 bg-gradient-to-br from-red-400 to-blue-500 relative overflow-hidden hover:opacity-95 transition-opacity cursor-pointer"
+          className="w-full h-48 bg-linear-to-br from-red-400 to-blue-500 relative overflow-hidden hover:opacity-95 transition-opacity cursor-pointer"
         >
           {isLoading ? (
             <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
@@ -236,7 +244,7 @@ export default function UserProfileNav({
           )}
 
           {/* Minimal Overlaid User Info at Bottom */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent p-4 text-start">
+          <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/60 to-transparent p-4 text-start">
             {isLoading ? (
               <div className="space-y-2">
                 <div className="h-5 w-32 bg-white/20 rounded animate-pulse"></div>
@@ -275,7 +283,7 @@ export default function UserProfileNav({
             </button>
 
             {/* Enlarged Profile Picture with Upload */}
-            <div className="relative h-48 bg-gradient-to-br from-red-400 to-blue-500 rounded-t-xl overflow-hidden">
+            <div className="relative h-48 bg-linear-to-br from-red-400 to-blue-500 rounded-t-xl overflow-hidden">
               {currentAvatarUrl ? (
                 <img
                   src={currentAvatarUrl}
@@ -376,24 +384,25 @@ export default function UserProfileNav({
         {navigationLinks.map((link) => renderNavigationItem(link))}
       </ScrollArea>
 
-      <div className="w-full flex items-center justify-center mb-2">
-        {/* CTA Section - Role Based */}
-        {(user?.systemRole === SystemRole.ADMIN || SystemRole.SUPER_ADMIN) && (
+      {(user?.systemRole === SystemRole.ADMIN ||
+        user?.systemRole === SystemRole.SUPER_ADMIN) && (
+        <div className="w-full flex items-center justify-center mb-2">
+          {/* CTA Section - Role Based */}
           <Button
-            className="w-3/4 py-3 bg-gradient-to-r from-red-500 to-blue-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="w-3/4 py-3 bg-linear-to-r from-red-500 to-blue-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             onClick={navigateToAdmin}
           >
             <Shield size={14} />
             Admin Console
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="p-2 border-t border-gray-200 dark:border-gray-700 space-y-3">
         <button
           onClick={handleCTAAction}
           disabled={isLoading}
-          className={`w-full py-3 bg-gradient-to-r from-red-500 to-blue-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
+          className={`w-full py-3 bg-linear-to-r from-red-500 to-blue-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
             isLoading ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >

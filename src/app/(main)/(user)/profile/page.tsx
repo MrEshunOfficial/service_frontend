@@ -10,7 +10,6 @@ import {
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useCompleteProfile } from "@/hooks/profiles/userProfile.hook";
-import { useMyProviderProfile } from "@/hooks/profiles/useprovider.profile.hook";
 import { UserRole } from "@/types/base.types";
 import { APIError } from "@/lib/api/base/api-client";
 import {
@@ -21,14 +20,12 @@ import {
   RefreshCw,
   UserX,
   UserPlus,
-  Phone,
   Briefcase,
 } from "lucide-react";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import BusinessProfile from "@/components/profiles/provider/bussiness.profile";
 import { useRouter } from "next/navigation";
 
 // Types
@@ -95,7 +92,8 @@ function ErrorStateDisplay({
         <Button
           onClick={config.primaryAction.onClick}
           className="gap-2"
-          variant="default">
+          variant="default"
+        >
           {PrimaryIcon && <PrimaryIcon className="w-4 h-4" />}
           {config.primaryAction.label}
         </Button>
@@ -122,7 +120,8 @@ function PageLayout({ children }: { children: React.ReactNode }) {
             <BreadcrumbItem>
               <BreadcrumbLink
                 href="/"
-                className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
+                className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
+              >
                 <Home className="w-4 h-4" />
                 Home
               </BreadcrumbLink>
@@ -145,7 +144,47 @@ function PageLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Client Profile Placeholder Component
+// Provider Profile View
+function ProviderProfileView() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Provider Dashboard</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-center py-12">
+            <UserX className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">
+              Provider Dashboard Coming Soon
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              We're working on bringing you an amazing provider experience. Stay
+              tuned!
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button variant="outline" onClick={() => router.push("/search")}>
+                <Briefcase className="w-4 h-4 mr-2" />
+                Browse Services
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/bookings")}
+              >
+                View Bookings
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Client Profile View
 function ClientProfileView() {
   const { user } = useAuth();
   const router = useRouter();
@@ -173,7 +212,8 @@ function ClientProfileView() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => router.push("/bookings")}>
+                onClick={() => router.push("/bookings")}
+              >
                 View Bookings
               </Button>
             </div>
@@ -196,26 +236,7 @@ export default function ProfilePage() {
     autoLoad: isAuthenticated,
   });
 
-  // Only fetch provider profile if user is a provider
-  const shouldFetchProvider =
-    isAuthenticated &&
-    !profileLoading &&
-    completeProfile?.profile.role === UserRole.PROVIDER;
-
-  const {
-    data: providerProfile,
-    loading: providerLoading,
-    error: providerError,
-    refetch: refetchProvider,
-  } = useMyProviderProfile({
-    enabled: shouldFetchProvider,
-    autoLoad: shouldFetchProvider,
-  });
-
-  const isLoading =
-    authLoading ||
-    (isAuthenticated && profileLoading) ||
-    (shouldFetchProvider && providerLoading);
+  const isLoading = authLoading || (isAuthenticated && profileLoading);
 
   // Helper to determine error type
   const getErrorType = (error: APIError): ErrorType => {
@@ -253,10 +274,7 @@ export default function ProfilePage() {
     userName?: string
   ): ErrorConfig => {
     const goHome = () => router.push("/");
-    const handleRetry = () => {
-      refetchProfile();
-      if (shouldFetchProvider) refetchProvider();
-    };
+    const handleRetry = () => refetchProfile();
     const handleCreateProfile = () => router.push("/profile/create");
     const handleLogin = () => router.push("/login");
 
@@ -358,7 +376,7 @@ export default function ProfilePage() {
     );
   }
 
-  // Not authenticated state
+  // Not authenticated
   if (!isAuthenticated) {
     const errorConfig = getErrorConfig("authorization", user?.name);
     return (
@@ -368,7 +386,7 @@ export default function ProfilePage() {
     );
   }
 
-  // Profile error states
+  // Profile error
   if (profileError) {
     const errorType = getErrorType(profileError);
     const errorConfig = getErrorConfig(errorType, user?.name);
@@ -383,7 +401,7 @@ export default function ProfilePage() {
     );
   }
 
-  // No user profile state
+  // No profile data
   if (!completeProfile) {
     const errorConfig = getErrorConfig("not_found", user?.name);
     return (
@@ -393,85 +411,12 @@ export default function ProfilePage() {
     );
   }
 
-  // Provider-specific handling
-  if (completeProfile.profile.role === UserRole.PROVIDER) {
-    // Provider error state
-    if (providerError) {
-      const errorType = getErrorType(providerError);
+  // Success: Show appropriate profile view based on user role
+  const isProvider = completeProfile.profile.role === UserRole.PROVIDER;
 
-      // If provider profile not found (404), show setup message
-      if (errorType === "not_found") {
-        return (
-          <PageLayout>
-            <div className="flex flex-col items-center justify-center space-y-4 p-8 max-w-md mx-auto text-center">
-              <div className="rounded-full bg-blue-100 dark:bg-blue-900/20 p-4">
-                <Briefcase className="w-12 h-12 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Set Up Your Business Profile
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Complete your business profile to start offering your services
-                to clients.
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  onClick={() => router.push("/provider/create")}
-                  className="gap-2">
-                  <Briefcase className="w-4 h-4" />
-                  Create Business Profile
-                </Button>
-                <Button variant="outline" onClick={() => router.push("/")}>
-                  Go Home
-                </Button>
-              </div>
-            </div>
-          </PageLayout>
-        );
-      }
-
-      // Other provider errors
-      const errorConfig = getErrorConfig(errorType, user?.name);
-      return (
-        <PageLayout>
-          <ErrorStateDisplay
-            config={errorConfig}
-            error={{ message: providerError.message }}
-          />
-        </PageLayout>
-      );
-    }
-
-    // No provider profile data (shouldn't happen if no error, but safety check)
-    if (!providerProfile) {
-      return (
-        <PageLayout>
-          <div className="flex items-center justify-center min-h-[400px]">
-            <LoadingOverlay message="Loading business profile..." show={true} />
-          </div>
-        </PageLayout>
-      );
-    }
-
-    // Success - Show Business Profile
-    return (
-      <PageLayout>
-        <BusinessProfile
-          provider={providerProfile}
-          variant="full"
-          mode="owner"
-          showActions={true}
-          onEdit={() => router.push("/provider/edit")}
-          onViewServices={() => router.push("/profile/service-offered")}
-        />
-      </PageLayout>
-    );
-  }
-
-  // Client profile view
   return (
     <PageLayout>
-      <ClientProfileView />
+      {isProvider ? <ProviderProfileView /> : <ClientProfileView />}
     </PageLayout>
   );
 }

@@ -8,7 +8,7 @@ export interface Service {
   description: string;
   slug: string;
   tags: string[];
-  category: Category;
+  categoryId: Category;
   coverImage?: {
     _id: string;
     thumbnailUrl: string;

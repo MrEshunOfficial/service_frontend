@@ -104,7 +104,7 @@ ${service.title}
 
 ${service.description}
 
-📂 Category: ${service.category?.catName || "General"}${priceText}${tagsText}
+📂 Category: ${service.categoryId?.catName || "General"}${priceText}${tagsText}
 
 ${
   service.coverImage?.url ? `📷 Image: ${service.coverImage.url}\n\n` : ""
@@ -150,7 +150,7 @@ ${
 
 ${service.description}
 
-Category: ${service.category?.catName || "General"}${priceText}${tagsText}
+Category: ${service.categoryId?.catName || "General"}${priceText}${tagsText}
 
 ${url}`;
 
@@ -217,9 +217,60 @@ ${url}`;
 
   if (displayServices.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-950">
-        <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-300">No services found.</p>
+      <div className="flex items-center justify-center p-4 h-full">
+        <div className="max-w-md w-full text-center space-y-8">
+          {/* Illustration/Icon */}
+          <div className="mx-auto w-64 h-64 bg-linear-to-br from-blue-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 rounded-full flex items-center justify-center">
+            <svg
+              className="w-32 h-32 text-blue-600 dark:text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2m-8 0h8"
+              />
+            </svg>
+          </div>
+
+          {/* Content */}
+          <div className="space-y-4">
+            <h2 className="text-3xl font-semibold text-gray-900 dark:text-white">
+              No Services Yet
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
+              Get started by creating your first service. It only takes a moment
+              to set up and manage.
+            </p>
+          </div>
+
+          {/* Call to Action Button */}
+          <button
+            onClick={() => {
+              router.push("/service-offered/create");
+            }}
+            className="inline-flex items-center px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800"
+          >
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Create New Service
+          </button>
         </div>
       </div>
     );

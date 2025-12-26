@@ -126,7 +126,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     <Card className="group h-96 w-full max-w-xs overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl py-0 gap-0">
       {/* Image Header with Gradient Overlay */}
       <CardHeader className="h-32 p-0 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent z-10" />
 
         {service.coverImage?.thumbnailUrl ? (
           <Image
@@ -136,7 +136,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center">
+          <div className="w-full h-full bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-blue-900 dark:to-purple-900 flex items-center justify-center">
             <div className="text-center text-gray-400 dark:text-gray-500">
               <Package className="w-20 h-20 mx-auto mb-3 opacity-50" />
               <p className="text-sm font-medium">No Image Available</p>
@@ -186,11 +186,11 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         </div>
 
         {/* Category Badge at Bottom */}
-        {service.category && (
+        {service.categoryId && (
           <div className="absolute bottom-4 left-4 z-20">
             <Badge className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white shadow-lg backdrop-blur-sm px-3 py-1">
               <Package size={12} className="mr-1" />
-              {service.category.catName}
+              {service.categoryId.catName}
             </Badge>
           </div>
         )}
@@ -211,7 +211,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             {service.tags.slice(0, 3).map((tag, index) => (
               <span
                 key={index}
-                className="px-2.5 py-1 bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full font-medium border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+                className="px-2.5 py-1 bg-linear-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full font-medium border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
               >
                 #{tag}
               </span>
@@ -226,7 +226,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
 
         {/* Pricing Section */}
         {service.servicePricing && (
-          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 rounded-xl p-4 border border-emerald-100 dark:border-emerald-900">
+          <div className="bg-linear-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 rounded-xl p-4 border border-emerald-100 dark:border-emerald-900">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">

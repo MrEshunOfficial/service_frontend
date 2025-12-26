@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  Save,
+  Loader2,
+  Check,
+  ChevronsUpDown,
+  CheckCircle,
+} from "lucide-react";
 import {
   useCreateService,
   useUpdateService,
@@ -11,13 +17,20 @@ import type {
   CreateServiceData,
   UpdateServiceData,
 } from "@/lib/api/services/service.api";
-import { useAllCategories } from "@/hooks/services/services.category.hook";
+import { useActiveCategories } from "@/hooks/services/services.category.hook";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { SystemRole } from "@/types/base.types";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { Service } from "@/types/service.types";
+import { cn } from "@/lib/utils/utils";
 
 interface ServiceFormData {
   title: string;
@@ -57,7 +70,12 @@ export default function ServiceForm({
     data: categories,
     loading: loadingCategories,
     error: categoriesError,
-  } = useAllCategories(false);
+  } = useActiveCategories();
+
+  console.log("available categories: ", categories);
+
+  // Category popover state
+  const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
 
   // Initialize form data from service prop if in edit mode
   const getInitialFormData = (): ServiceFormData => {
@@ -67,9 +85,9 @@ export default function ServiceForm({
         description: service.description || "",
         tags: service.tags?.join(", ") || "",
         categoryId:
-          typeof service.category === "string"
-            ? service.category
-            : service.category?._id || "",
+          typeof service.categoryId === "string"
+            ? service.categoryId
+            : service.categoryId?._id || "",
         coverImage: service.coverImage?._id,
         serviceBasePrice:
           service.servicePricing?.serviceBasePrice?.toString() || "",
@@ -132,6 +150,20 @@ export default function ServiceForm({
       setValidationErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleCategorySelect = (categoryId: string) => {
+    setFormData((prev) => ({ ...prev, categoryId }));
+    setCategoryPopoverOpen(false);
+
+    // Clear validation error for category
+    if (validationErrors.categoryId) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.categoryId;
         return newErrors;
       });
     }
@@ -248,6 +280,10 @@ export default function ServiceForm({
     }
   };
 
+  const selectedCategory = categories?.find(
+    (cat) => cat._id === formData.categoryId
+  );
+
   if (submitSuccess) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] p-4">
@@ -315,7 +351,7 @@ export default function ServiceForm({
               )}
             </div>
 
-            {/* Category */}
+            {/* Category with Popover */}
             <div>
               <label
                 htmlFor="categoryId"
@@ -324,33 +360,87 @@ export default function ServiceForm({
                 Category <span className="text-red-500">*</span>
               </label>
               {loadingCategories ? (
-                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span className="text-sm">Loading categories...</span>
                 </div>
               ) : categoriesError ? (
-                <div className="text-sm text-red-600 dark:text-red-400">
+                <div className="text-sm text-red-600 dark:text-red-400 px-4 py-2 border border-red-500 rounded-lg">
                   Failed to load categories. Please refresh the page.
                 </div>
               ) : (
-                <select
-                  id="categoryId"
-                  name="categoryId"
-                  value={formData.categoryId}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 ${
-                    validationErrors.categoryId
-                      ? "border-red-500"
-                      : "border-gray-300 dark:border-gray-700"
-                  }`}
+                <Popover
+                  open={categoryPopoverOpen}
+                  onOpenChange={setCategoryPopoverOpen}
                 >
-                  <option value="">Select a category</option>
-                  {categories?.map((category) => (
-                    <option key={category._id} value={category._id}>
-                      {category.catName}
-                    </option>
-                  ))}
-                </select>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={categoryPopoverOpen}
+                      className={cn(
+                        "w-full justify-between h-auto min-h-[42px] px-4 py-2",
+                        !formData.categoryId && "text-muted-foreground",
+                        validationErrors.categoryId && "border-red-500"
+                      )}
+                    >
+                      {selectedCategory ? (
+                        <div className="flex items-center gap-3 flex-1">
+                          {selectedCategory.catCoverId && (
+                            <img
+                              src={selectedCategory.catCoverId.thumbnailUrl}
+                              alt={selectedCategory.catName}
+                              className="h-8 w-8 rounded object-cover shrink-0"
+                            />
+                          )}
+                          <span className="truncate">
+                            {selectedCategory.catName}
+                          </span>
+                        </div>
+                      ) : (
+                        "Select a category"
+                      )}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
+                    <ScrollArea className="h-[300px]">
+                      <div className="p-1">
+                        {categories?.map((category) => (
+                          <button
+                            key={category._id}
+                            type="button"
+                            onClick={() => handleCategorySelect(category._id)}
+                            className={cn(
+                              "relative flex w-full items-center gap-3 rounded-sm px-2 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+                              formData.categoryId === category._id &&
+                                "bg-accent"
+                            )}
+                          >
+                            {category.catCoverId && (
+                              <img
+                                src={category.catCoverId.thumbnailUrl}
+                                alt={category.catName}
+                                className="h-10 w-10 rounded object-cover shrink-0"
+                              />
+                            )}
+                            <span className="flex-1 text-left truncate">
+                              {category.catName}
+                            </span>
+                            <Check
+                              className={cn(
+                                "h-4 w-4 shrink-0",
+                                formData.categoryId === category._id
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </PopoverContent>
+                </Popover>
               )}
               {validationErrors.categoryId && (
                 <p className="text-sm text-red-600 dark:text-red-400 mt-1">

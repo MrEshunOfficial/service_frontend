@@ -50,7 +50,7 @@ const navigationItems: NavigationItem[] = [
     description: "Service management",
   },
   {
-    href: "/admin/service/categories",
+    href: "/admin/services/categories",
     label: "Categories",
     icon: FcManager,
     roles: ["admin", "super_admin"],
@@ -152,14 +152,14 @@ export const AdminNav: React.FC = () => {
 
   return (
     <div
-      className="flex flex-col h-full bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950"
+      className="flex flex-col h-full bg-linear-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950"
       data-testid="dashboard-navigation"
     >
       {/* Header */}
-      <div className="flex-shrink-0 px-4 py-5 border-b border-gray-200 dark:border-gray-800">
+      <div className="shrink-0 px-4 py-5 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900" />
@@ -189,11 +189,11 @@ export const AdminNav: React.FC = () => {
                   {showSeparator && (
                     <div className="py-3">
                       <div className="flex items-center gap-2 px-3">
-                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
+                        <div className="h-px flex-1 bg-linear-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
                         <span className="text-xs font-medium text-gray-400 dark:text-gray-600 uppercase tracking-wider">
                           Advanced
                         </span>
-                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
+                        <div className="h-px flex-1 bg-linear-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
                       </div>
                     </div>
                   )}
@@ -204,7 +204,7 @@ export const AdminNav: React.FC = () => {
                     className={cn(
                       "group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
                       isActive
-                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25"
+                        ? "bg-linear-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25"
                         : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
                     )}
                   >
@@ -216,7 +216,7 @@ export const AdminNav: React.FC = () => {
                     {/* Icon */}
                     <div
                       className={cn(
-                        "flex-shrink-0 transition-transform duration-200",
+                        "shrink-0 transition-transform duration-200",
                         hoveredItem === item.href && !isActive && "scale-110"
                       )}
                     >
@@ -246,10 +246,10 @@ export const AdminNav: React.FC = () => {
                         {item.badge && (
                           <span
                             className={cn(
-                              "flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide",
+                              "shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide",
                               isActive
                                 ? "bg-white/20 text-white"
-                                : "bg-gradient-to-r from-red-500 to-red-600 text-white"
+                                : "bg-linear-to-r from-red-500 to-red-600 text-white"
                             )}
                           >
                             {item.badge}
@@ -275,7 +275,7 @@ export const AdminNav: React.FC = () => {
 
                     {/* Hover effect */}
                     {!isActive && hoveredItem === item.href && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-950/20 rounded-xl pointer-events-none" />
+                      <div className="absolute inset-0 bg-linear-to-r from-blue-50 to-transparent dark:from-blue-950/20 rounded-xl pointer-events-none" />
                     )}
                   </Link>
                 </React.Fragment>
@@ -338,7 +338,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ handleLogout }) => {
   if (actions.length === 0) return null;
 
   return (
-    <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+    <div className="shrink-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
       {/* Quick Actions Expandable Section */}
       <div className="p-3">
         <button
@@ -369,7 +369,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ handleLogout }) => {
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200",
                     action.priority === "high"
-                      ? "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 text-blue-700 dark:text-blue-300 hover:shadow-md"
+                      ? "bg-linear-to-r from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 text-blue-700 dark:text-blue-300 hover:shadow-md"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                   )}
                 >
@@ -397,7 +397,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ handleLogout }) => {
         >
           <LogOut
             size={18}
-            className="flex-shrink-0 transition-transform group-hover:scale-110"
+            className="shrink-0 transition-transform group-hover:scale-110"
           />
           <span className="text-sm font-medium">Logout</span>
         </button>

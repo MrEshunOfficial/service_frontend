@@ -149,3 +149,4 @@ export interface BulkUpdateRequest {
   userIds: string[];
   updates: UpdateProfileRequest;
 }
+

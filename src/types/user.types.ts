@@ -127,3 +127,4 @@ export interface GetUsersParams {
 export interface RestoreAccountData {
   email: string;
 }
+

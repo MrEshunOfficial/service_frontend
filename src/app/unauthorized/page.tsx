@@ -28,7 +28,7 @@ export default function UnauthorizedPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-red-900/10 dark:to-orange-900/10">
+      <div className="absolute inset-0 bg-linear-to-br from-red-50 via-orange-50 to-yellow-50 dark:from-gray-900 dark:via-red-900/10 dark:to-orange-900/10">
         {/* Floating geometric shapes */}
         <div className="absolute top-20 left-10 w-32 h-32 bg-red-200/30 dark:bg-red-500/10 rounded-full blur-xl animate-pulse"></div>
         <div className="absolute top-40 right-20 w-24 h-24 bg-orange-200/40 dark:bg-orange-500/10 rounded-full blur-lg animate-pulse delay-1000"></div>
@@ -47,7 +47,7 @@ export default function UnauthorizedPage() {
             <CardHeader className="text-center pb-8">
               {/* Icon with animation */}
               <div className="mx-auto relative mb-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                <div className="w-20 h-20 bg-linear-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
                   <ShieldX className="w-10 h-10 text-white" />
                 </div>
                 <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center animate-ping">
@@ -55,7 +55,7 @@ export default function UnauthorizedPage() {
                 </div>
               </div>
 
-              <CardTitle className="text-4xl font-bold bg-gradient-to-r from-red-600 to-orange-600 dark:from-red-400 dark:to-orange-400 bg-clip-text text-transparent mb-2">
+              <CardTitle className="text-4xl font-bold bg-linear-to-r from-red-600 to-orange-600 dark:from-red-400 dark:to-orange-400 bg-clip-text text-transparent mb-2">
                 Access Denied
               </CardTitle>
               <p className="text-lg text-gray-600 dark:text-gray-300 font-medium">
@@ -88,8 +88,8 @@ export default function UnauthorizedPage() {
                     Go Back
                   </Button>
                   <Button
-                    onClick={() => router.push("/dashboard")}
-                    className="flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 group transition-all duration-200 flex-1"
+                    onClick={() => router.push("/profile")}
+                    className="flex items-center justify-center bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 group transition-all duration-200 flex-1"
                   >
                     <Home className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
                     Go to Dashboard
@@ -127,7 +127,7 @@ export default function UnauthorizedPage() {
               {/* Additional Info */}
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shrink-0 mt-0.5">
                     <span className="text-white text-sm font-bold">?</span>
                   </div>
                   <div className="text-sm text-blue-800 dark:text-blue-200">

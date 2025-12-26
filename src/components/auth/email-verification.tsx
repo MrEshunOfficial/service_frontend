@@ -105,58 +105,54 @@ const VerificationContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-          <div className="mb-6 flex justify-center">{getStatusIcon()}</div>
+    <div className="max-w-md w-full rounded-xl shadow-lg p-8 text-center">
+      <div className="mb-6 flex justify-center">{getStatusIcon()}</div>
 
-          <h1 className={`text-2xl font-bold mb-4 ${getStatusColor()}`}>
-            {status === "loading" && "Verifying Your Email..."}
-            {status === "success" && "Email Verified!"}
-            {status === "error" && "Verification Failed"}
-            {status === "expired" && "Link Expired"}
-          </h1>
+      <h1 className={`text-2xl font-bold mb-4 ${getStatusColor()}`}>
+        {status === "loading" && "Verifying Your Email..."}
+        {status === "success" && "Email Verified!"}
+        {status === "error" && "Verification Failed"}
+        {status === "expired" && "Link Expired"}
+      </h1>
 
-          <p className="text-gray-600 mb-6">{message}</p>
+      <p className="text-gray-600 mb-6">{message}</p>
 
-          {status === "success" && (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-500">
-                Redirecting to login in {countdown} seconds...
-              </p>
-              <button
-                onClick={handleBackToLogin}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
-              >
-                Go to Login Now
-              </button>
-            </div>
-          )}
-
-          {(status === "error" || status === "expired") && (
-            <div className="space-y-4">
-              <button
-                onClick={handleResendVerification}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
-              >
-                Resend Verification Email
-              </button>
-              <button
-                onClick={handleBackToLogin}
-                className="w-full bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition duration-200"
-              >
-                Back to Login
-              </button>
-            </div>
-          )}
-
-          {status === "loading" && (
-            <p className="text-sm text-gray-500">
-              Please wait while we verify your email address...
-            </p>
-          )}
+      {status === "success" && (
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">
+            Redirecting to login in {countdown} seconds...
+          </p>
+          <button
+            onClick={handleBackToLogin}
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
+          >
+            Go to Login Now
+          </button>
         </div>
-      </div>
+      )}
+
+      {(status === "error" || status === "expired") && (
+        <div className="space-y-4">
+          <button
+            onClick={handleResendVerification}
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
+          >
+            Resend Verification Email
+          </button>
+          <button
+            onClick={handleBackToLogin}
+            className="w-full bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition duration-200"
+          >
+            Back to Login
+          </button>
+        </div>
+      )}
+
+      {status === "loading" && (
+        <p className="text-sm text-gray-500">
+          Please wait while we verify your email address...
+        </p>
+      )}
     </div>
   );
 };
@@ -165,7 +161,7 @@ const EmailVerificationPage = () => {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
       }

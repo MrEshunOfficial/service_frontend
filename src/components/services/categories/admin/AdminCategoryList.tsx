@@ -231,7 +231,7 @@ export default function AdminCategoryList() {
 
   if (error) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="w-full h-full flex items-center justify-center">
         <div className="text-red-500 dark:text-red-400 flex items-center gap-2">
           <AlertCircle className="w-5 h-5" />
           <span>Error loading categories: {error.message}</span>
@@ -243,12 +243,12 @@ export default function AdminCategoryList() {
   const bulkOptions = getBulkActionOptions();
 
   return (
-    <div className="w-full h-full flex flex-col gap-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      <header className="h-auto border border-gray-300 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
+    <div className="w-full h-full flex flex-col gap-1">
+      <header className="h-auto border rounded-lg p-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold">Categories Management</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               {filteredCategories.length} of {categoriesArray.length} categories
             </p>
           </div>
@@ -282,13 +282,13 @@ export default function AdminCategoryList() {
 
         <div className="flex gap-2">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search categories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all"
+              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition-all"
             />
           </div>
 
@@ -301,13 +301,13 @@ export default function AdminCategoryList() {
                   showFilters ||
                   selectedTags.length > 0 ||
                   filterStatus !== "all"
-                    ? "bg-blue-50 dark:bg-blue-900/30 border-blue-500 dark:border-blue-400"
+                    ? "ring-2 ring-primary"
                     : ""
                 }`}
               >
                 <Filter className="w-4 h-4" />
                 {(selectedTags.length > 0 || filterStatus !== "all") && (
-                  <span className="px-1.5 py-0.5 bg-blue-500 text-white text-xs rounded-full">
+                  <span className="px-1.5 py-0.5 bg-primary text-primary-foreground text-xs rounded-full">
                     {(filterStatus !== "all" ? 1 : 0) + selectedTags.length}
                   </span>
                 )}
@@ -328,7 +328,7 @@ export default function AdminCategoryList() {
 
                 {/* Status Filter */}
                 <div>
-                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+                  <label className="text-xs font-medium mb-2 block">
                     Status
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -351,7 +351,7 @@ export default function AdminCategoryList() {
                 {/* Tags Filter */}
                 {availableTags && availableTags.length > 0 && (
                   <div>
-                    <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+                    <label className="text-xs font-medium mb-2 block">
                       Tags
                     </label>
                     <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
@@ -475,10 +475,10 @@ export default function AdminCategoryList() {
         </div>
       </header>
 
-      <div className="h-[59vh] p-2 overflow-auto styled-scrollbar border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+      <div className="h-[59vh] p-2 overflow-auto styled-scrollbar border rounded-lg shadow-sm">
         <div className="space-y-3">
           {filteredCategories.length > 0 && (
-            <div className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-300 dark:border-gray-600 sticky top-0 z-10">
+            <div className="flex items-center gap-3 p-3 border rounded-md sticky top-0 z-10">
               <input
                 type="checkbox"
                 checked={
@@ -486,7 +486,7 @@ export default function AdminCategoryList() {
                   filteredCategories.length > 0
                 }
                 onChange={handleSelectAll}
-                className="w-4 h-4 text-blue-600 dark:text-blue-400 rounded"
+                className="w-4 h-4 text-primary rounded"
               />
               <span className="text-sm font-medium">Select All</span>
             </div>
@@ -497,12 +497,12 @@ export default function AdminCategoryList() {
               key={category._id}
               className={`p-5 border rounded-lg transition-all ${
                 category.isDeleted
-                  ? "bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-800 opacity-75"
+                  ? "opacity-50"
                   : !category.isActive
-                  ? "bg-gray-50 dark:bg-gray-900/50 border-gray-400 dark:border-gray-600 opacity-60"
+                  ? "opacity-70"
                   : selectedCategories.includes(category._id)
-                  ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
-                  : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  ? "ring-2 ring-primary"
+                  : "hover:ring-2 hover:ring-muted"
               }`}
             >
               <div className="flex items-start gap-4">
@@ -510,7 +510,7 @@ export default function AdminCategoryList() {
                   type="checkbox"
                   checked={selectedCategories.includes(category._id)}
                   onChange={() => handleSelectCategory(category._id)}
-                  className="w-4 h-4 mt-1 text-blue-600 dark:text-blue-400 rounded"
+                  className="w-4 h-4 mt-1 text-primary rounded"
                 />
 
                 {/* Category Cover with Dialog */}
@@ -521,7 +521,7 @@ export default function AdminCategoryList() {
                   }
                 >
                   <DialogTrigger asChild>
-                    <div className="relative w-24 h-24 flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden cursor-pointer group">
+                    <div className="relative w-24 h-24 shrink-0 border-2 border-dashed rounded-lg overflow-hidden cursor-pointer group">
                       {(() => {
                         const imageUrl = category.catCoverId?.thumbnailUrl;
                         return imageUrl ? (
@@ -534,11 +534,11 @@ export default function AdminCategoryList() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <ImageIcon className="w-8 h-8 text-gray-400 dark:text-gray-600" />
+                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
                           </div>
                         );
                       })()}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <Edit className="w-5 h-5 text-white" />
                       </div>
                     </div>
@@ -567,25 +567,25 @@ export default function AdminCategoryList() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 flex-wrap mb-2">
-                        <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
+                        <h3 className="font-semibold text-lg">
                           {category.catName}
                         </h3>
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          className={`px-3 py-1 rounded-full text-xs font-medium border ${
                             category.isActive
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300"
-                              : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                              ? "text-green-700 dark:text-green-300"
+                              : "text-gray-600 dark:text-gray-400"
                           }`}
                         >
                           {category.isActive ? "Active" : "Inactive"}
                         </span>
                         {category.isDeleted && (
-                          <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                          <span className="px-3 py-1 rounded-full text-xs font-medium border text-red-700 dark:text-red-300">
                             Deleted
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      <p className="text-sm text-muted-foreground mb-3">
                         {category.catDesc}
                       </p>
                       {category.tags && category.tags.length > 0 && (
@@ -593,13 +593,13 @@ export default function AdminCategoryList() {
                           {category.tags.slice(0, 3).map((tag) => (
                             <span
                               key={tag}
-                              className="px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 rounded-full text-xs font-medium"
+                              className="px-3 py-1 border rounded-full text-xs font-medium"
                             >
                               {tag}
                             </span>
                           ))}
                           {category.tags.length > 3 && (
-                            <span className="px-3 py-1 bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 rounded-full text-xs font-medium">
+                            <span className="px-3 py-1 border rounded-full text-xs font-medium text-muted-foreground">
                               +{category.tags.length - 3} more
                             </span>
                           )}
@@ -651,7 +651,7 @@ export default function AdminCategoryList() {
                               size="sm"
                               onClick={() => setEditingId(category._id)}
                               disabled={admin.loading}
-                              className="w-full justify-start text-blue-600 dark:text-blue-400"
+                              className="w-full justify-start"
                             >
                               <Edit className="w-4 h-4 mr-2" />
                               Edit
@@ -707,8 +707,8 @@ export default function AdminCategoryList() {
           ))}
 
           {filteredCategories.length === 0 && (
-            <div className="text-center py-16 text-gray-500 dark:text-gray-400">
-              <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
+            <div className="text-center py-16 text-muted-foreground">
+              <AlertCircle className="w-16 h-16 mx-auto mb-4" />
               <p className="text-lg">No categories found</p>
               <p className="text-sm mt-2">
                 Try adjusting your filters or search query
@@ -718,8 +718,8 @@ export default function AdminCategoryList() {
         </div>
       </div>
 
-      <footer className="h-16 border border-gray-300 dark:border-gray-700 rounded-lg px-4 bg-white dark:bg-gray-800 shadow-sm flex items-center justify-between text-sm">
-        <div className="text-gray-600 dark:text-gray-400">
+      <footer className="h-16 border rounded-lg px-4 shadow-sm flex items-center justify-between text-sm">
+        <div className="text-muted-foreground">
           Total: {categoriesArray.length} | Active:{" "}
           {categoriesArray.filter((c) => c.isActive && !c.isDeleted).length} |
           Inactive:{" "}
@@ -803,7 +803,7 @@ export default function AdminCategoryList() {
                 deleteAlert.categoryId &&
                 handleDelete(deleteAlert.categoryId, deleteAlert.permanent)
               }
-              className="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+              className="bg-destructive hover:bg-destructive/90"
             >
               {deleteAlert.permanent ? "Delete Permanently" : "Delete"}
             </AlertDialogAction>
@@ -855,12 +855,8 @@ export default function AdminCategoryList() {
               }
               className={
                 bulkActionAlert.action === "delete"
-                  ? "bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
-                  : bulkActionAlert.action === "activate"
-                  ? "bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600"
-                  : bulkActionAlert.action === "deactivate"
-                  ? "bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600"
-                  : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                  ? "bg-destructive hover:bg-destructive/90"
+                  : ""
               }
             >
               {bulkActionAlert.action === "activate" && "Activate"}

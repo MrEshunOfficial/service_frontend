@@ -25,7 +25,7 @@ interface UsePaginatedServicesState {
 // ============================================
 
 /**
- * Hook to fetch public services
+ * Fixed hook to fetch public services with proper re-rendering
  */
 export function usePublicServices(filters?: ServiceFilters) {
   const [state, setState] = useState<UsePaginatedServicesState>({
@@ -38,35 +38,54 @@ export function usePublicServices(filters?: ServiceFilters) {
     error: null,
   });
 
-  const filtersRef = useRef(filters);
-  filtersRef.current = filters;
-
   const fetchServices = useCallback(async () => {
+    console.log("🔄 Fetching services with filters:", filters);
+    
     setState((prev) => ({ ...prev, loading: true, error: null }));
+    
     try {
-      const data = await serviceAPI.getPublicServices(filtersRef.current);
-      setState({
-        services: data.services,
+      const data = await serviceAPI.getPublicServices(filters);
+      
+      console.log("✅ Received data:", {
+        servicesCount: data.services?.length,
         total: data.total,
         page: data.page,
-        limit: data.limit,
-        totalPages: data.totalPages,
+        totalPages: data.totalPages
+      });
+      
+      setState({
+        services: data.services || [],
+        total: data.total || 0,
+        page: data.page || 1,
+        limit: data.limit || 10,
+        totalPages: data.totalPages || 0,
         loading: false,
         error: null,
       });
     } catch (err) {
-      console.error("Error fetching public services:", err);
-      setState((prev) => ({
-        ...prev,
+      console.error("❌ Error fetching public services:", err);
+      setState({
+        services: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0,
         loading: false,
         error: err as Error,
-      }));
+      });
     }
-  }, []);
+  }, [
+    filters?.page,
+    filters?.limit,
+    filters?.categoryId,
+    filters?.tags,
+    filters?.sortBy,
+    filters?.sortOrder,
+  ]);
 
   useEffect(() => {
     fetchServices();
-  }, [JSON.stringify(filters)]);
+  }, [fetchServices]);
 
   return { ...state, refetch: fetchServices };
 }

@@ -280,7 +280,7 @@ const PasswordStrengthIndicator = ({
 
 // Success Screen Component
 const SuccessScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => (
-  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center px-4 transition-colors duration-200">
+  <div className="w-full max-w-lg rounded-xl shadow-lg dark:shadow-2xl p-8 transition-all duration-200">
     <div className="max-w-md w-full">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-2xl p-8 text-center transition-all duration-200">
         <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -455,91 +455,81 @@ const PasswordResetForm = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center px-4 transition-colors duration-200">
-      <div className="max-w-md w-full">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-2xl p-8 transition-all duration-200">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Reset Password
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              Enter your new password below
-            </p>
-          </div>
+    <div className="w-full max-w-lg rounded-xl shadow-lg dark:shadow-2xl p-8 transition-all duration-200">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          Reset Password
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300">
+          Enter your new password below
+        </p>
+      </div>
 
-          <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-lg transition-colors duration-200">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 transition-colors duration-200 w-full">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Auth Error Display */}
-                {authError && (
-                  <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                    <div className="flex items-center text-sm text-red-600 dark:text-red-400">
-                      <AlertCircle className="h-4 w-4 mr-2" />
-                      {authError}
-                    </div>
-                  </div>
-                )}
-
-                {/* New Password Field */}
-                <InputField
-                  id="password"
-                  label="New Password"
-                  type="password"
-                  icon={<Lock className="h-5 w-5" />}
-                  value={password}
-                  onChange={handlePasswordChange}
-                  placeholder="Enter your new password"
-                  error={errors.password}
-                  minLength={8}
-                >
-                  <PasswordGeneratorPopover
-                    onSelectPassword={applyGeneratedPassword}
-                  />
-                </InputField>
-
-                {/* Confirm Password Field */}
-                <InputField
-                  id="confirmPassword"
-                  label="Confirm New Password"
-                  type="password"
-                  icon={<Lock className="h-5 w-5" />}
-                  value={confirmPassword}
-                  onChange={handleConfirmPasswordChange}
-                  placeholder="Confirm your new password"
-                  error={errors.confirmPassword}
-                  minLength={8}
-                />
-
-                {/* Password Strength Indicator */}
-                <PasswordStrengthIndicator
-                  password={password}
-                  confirmPassword={confirmPassword}
-                />
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  disabled={!isFormValid() || isLoading}
-                  loading={isLoading}
-                >
-                  Reset Password
-                </Button>
-              </form>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Auth Error Display */}
+        {authError && (
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+            <div className="flex items-center text-sm text-red-600 dark:text-red-400">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              {authError}
             </div>
           </div>
+        )}
 
-          {/* Back to Login Link */}
-          <div className="mt-6 text-center">
-            <button
-              onClick={handleBackToLogin}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200 flex items-center justify-center gap-2 mx-auto"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Sign In
-            </button>
-          </div>
-        </div>
+        {/* New Password Field */}
+        <InputField
+          id="password"
+          label="New Password"
+          type="password"
+          icon={<Lock className="h-5 w-5" />}
+          value={password}
+          onChange={handlePasswordChange}
+          placeholder="Enter your new password"
+          error={errors.password}
+          minLength={8}
+        >
+          <PasswordGeneratorPopover onSelectPassword={applyGeneratedPassword} />
+        </InputField>
+
+        {/* Confirm Password Field */}
+        <InputField
+          id="confirmPassword"
+          label="Confirm New Password"
+          type="password"
+          icon={<Lock className="h-5 w-5" />}
+          value={confirmPassword}
+          onChange={handleConfirmPasswordChange}
+          placeholder="Confirm your new password"
+          error={errors.confirmPassword}
+          minLength={8}
+        />
+
+        {/* Password Strength Indicator */}
+        <PasswordStrengthIndicator
+          password={password}
+          confirmPassword={confirmPassword}
+        />
+
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          disabled={!isFormValid() || isLoading}
+          loading={isLoading}
+        >
+          Reset Password
+        </Button>
+      </form>
+
+      {/* Back to Login Link */}
+      <div className="mt-6 text-center">
+        <button
+          onClick={handleBackToLogin}
+          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200 flex items-center justify-center gap-2 mx-auto"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Sign In
+        </button>
       </div>
     </div>
   );

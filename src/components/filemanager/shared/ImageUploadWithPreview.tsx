@@ -387,7 +387,7 @@ export function ImageUploadWithPreview({
       {error && (
         <div className="mt-2 flex items-start gap-2 text-sm text-red-600 dark:text-red-400">
           <svg
-            className="w-4 h-4 flex-shrink-0 mt-0.5"
+            className="w-4 h-4 shrink-0 mt-0.5"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -404,7 +404,7 @@ export function ImageUploadWithPreview({
       {/* Success Message */}
       {uploadedFileId && !error && !isProcessing && (
         <div className="mt-2 flex items-start gap-2 text-sm text-emerald-600 dark:text-emerald-400">
-          <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
           <span>Image uploaded successfully</span>
         </div>
       )}

@@ -12,11 +12,12 @@ export default function BaseLayout({
   children,
   maxWidth = "max-w-screen",
   background = "bg-white dark:bg-black",
-  height = "",
+  height = "min-h-screen",
 }: BaseLayoutProps) {
   return (
     <div
-      className={`flex min-h-screen w-full items-center justify-center ${background} ${height}`}>
+      className={`flex w-full items-center justify-center ${background} ${height}`}
+    >
       <main className={`w-full ${maxWidth}`}>{children}</main>
     </div>
   );

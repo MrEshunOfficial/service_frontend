@@ -24,6 +24,7 @@ import {
   useDeleteService,
   useRestoreService,
 } from "@/hooks/services/service.hook";
+import { ThemeModeToggle } from "@/components/headerUi/ThemeModeToggle";
 
 type ActionType = "approve" | "reject" | "delete" | "restore" | null;
 
@@ -107,10 +108,10 @@ export default function AdminServicesPage() {
   };
 
   const getCategoryName = (service: Service): string => {
-    if (typeof service.category === "string") {
+    if (typeof service.categoryId === "string") {
       return "Category";
     }
-    return service.category?.catName || "Uncategorized";
+    return service.categoryId.catName || "Uncategorized";
   };
 
   const getStatusBadge = (service: Service) => {
@@ -180,10 +181,10 @@ export default function AdminServicesPage() {
   }
 
   return (
-    <main className="h-full flex flex-col bg-gray-50 dark:bg-gray-950">
+    <main className="h-full flex flex-col">
       {/* Breadcrumb */}
-      <div className="w-full p-4 border-b bg-white dark:bg-gray-900 shadow-sm">
-        <div className="max-w-7xl mx-auto">
+      <div className="w-full p-4 border-b shadow-sm">
+        <div className="w-full flex items-center justify-between">
           <nav className="flex items-center space-x-2 text-sm">
             <a
               href="/"
@@ -213,12 +214,13 @@ export default function AdminServicesPage() {
               Service List
             </span>
           </nav>
+          <ThemeModeToggle />
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-4 py-6 max-w-7xl mx-auto w-full">
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
+      <div className="flex-1 p-2 max-w-7xl mx-auto w-full">
+        <div className=" rounded-lg shadow-lg overflow-hidden">
           {/* Header with Search */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-800">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -334,8 +336,8 @@ export default function AdminServicesPage() {
                 </p>
               </div>
             ) : (
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-800/50">
+              <table className="w-full border rounded-md">
+                <thead className="bg-red-700">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                       Title
@@ -357,11 +359,11 @@ export default function AdminServicesPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-800 space-y-3">
                   {filteredServices.map((service) => (
                     <tr
                       key={service._id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors rounded mt-2"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -369,7 +371,7 @@ export default function AdminServicesPage() {
                             <img
                               src={service.coverImage.thumbnailUrl}
                               alt={service.title}
-                              className="w-10 h-10 rounded object-cover flex-shrink-0"
+                              className="w-10 h-10 rounded object-cover shrink-0"
                             />
                           )}
                           <div className="min-w-0">

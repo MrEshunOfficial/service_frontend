@@ -11,7 +11,10 @@ import { Briefcase, Home, Shield } from "lucide-react";
 
 export default function page() {
   return (
-    <main className="h-full space-y-2">
+    <main className="h-full space-y-2 relative hide-scrollbar">
+      <div className="absolute inset-0 opacity-25 dark:opacity-35 pointer-events-none">
+        <div className="w-full h-full bg-linear-to-br from-red-100 via-pink-50 to-blue-100 dark:from-red-950 dark:via-pink-950 dark:to-blue-950 blur-3xl"></div>
+      </div>
       {/* Breadcrumb */}
       <div className="w-full p-3 border-b">
         <div className="max-w-7xl mx-auto">
