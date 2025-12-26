@@ -1,4 +1,4 @@
-// types/service.types.ts (Frontend version)
+// types/service.types.ts
 
 import { Category } from "./category.types";
 
@@ -37,4 +37,3 @@ export interface ServicePricing {
   platformCommissionRate: number;
   providerEarnings: number;
 }
-

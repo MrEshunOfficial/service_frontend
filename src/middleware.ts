@@ -3,15 +3,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
-// ============================================
 // ROUTE CONFIGURATION
-// ============================================
 const publicRoutes = ['/', '/about', '/how-it-works', '/pricing', '/terms', '/privacy', '/services'];
 const authRoutes = ['/login', '/register', '/signup', '/forgot-password', '/reset-password', '/verify-email'];
 const protectedRoutes = ['/profile', '/settings', '/services-offered'];
-
-// Admin routes: anything under /admin (including /admin itself)
-// Super admin routes: anything under /admin/super (including /admin/super itself)
 
 interface JWTPayload {
   userId: string;
@@ -24,10 +19,8 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const token = request.cookies.get('token')?.value;
 
-  console.log('🔒 Middleware Check:', { path, hasToken: !!token });
-
   // ============================================
-  // ROUTE TYPE CHECKS (SIMPLIFIED & FIXED)
+  // ROUTE TYPE CHECKS
   // ============================================
   const isPublicRoute = publicRoutes.some(route =>
     path === route || (route !== '/' && path.startsWith(route + '/'))
@@ -47,7 +40,6 @@ export async function middleware(request: NextRequest) {
   // PROTECTED & ADMIN ROUTES - Require authentication
   // ============================================
   if (isProtectedRoute || isInAdminArea) {
-    console.log('🔐 Protected or admin route detected:', path);
 
     // No token - redirect to login
     if (!token) {
@@ -68,27 +60,16 @@ export async function middleware(request: NextRequest) {
         return response;
       }
 
-      console.log('✅ Token valid:', {
-        userId: payload.userId,
-        verified: payload.isEmailVerified,
-        admin: payload.isAdmin,
-        superAdmin: payload.isSuperAdmin
-      });
-
       // Super admin only area - deny if not super admin
       if (isInSuperAdminArea && !payload.isSuperAdmin) {
-        console.log('❌ Super admin access denied');
         return NextResponse.redirect(new URL('/unauthorized', request.url));
       }
 
       // Regular admin area (not super admin subpath) - allow admins OR super admins
       if (!isInSuperAdminArea && isInAdminArea && !payload.isAdmin && !payload.isSuperAdmin) {
-        console.log('❌ Admin access denied');
         return NextResponse.redirect(new URL('/unauthorized', request.url));
       }
 
-      // All checks passed - add user headers and proceed
-      console.log('✅ Access granted to:', path);
       const response = NextResponse.next();
       response.headers.set('x-user-authenticated', 'true');
       response.headers.set('x-user-id', payload.userId);
@@ -116,7 +97,6 @@ export async function middleware(request: NextRequest) {
       const payload = await verifyToken(token);
 
       if (payload) {
-        console.log('✅ User already authenticated, redirecting from auth page');
 
         // Redirect based on role
         if (payload.isSuperAdmin) {
@@ -128,8 +108,6 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/profile', request.url));
       }
     } catch (error) {
-      console.error('Auth verification failed:', error);
-      // Invalid token - clear it and continue to auth page
       const response = NextResponse.next();
       response.cookies.delete('token');
       return response;
@@ -166,8 +144,8 @@ async function verifyToken(token: string): Promise<JWTPayload | null> {
       isAdmin: payload.isAdmin as boolean || false,
       isSuperAdmin: payload.isSuperAdmin as boolean || false,
     };
-  } catch (error) {
-    console.error('Token verification failed:', error);
+  } catch {
+    console.error('Token verification failed');
     return null;
   }
 }

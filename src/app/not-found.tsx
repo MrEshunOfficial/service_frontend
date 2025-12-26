@@ -23,7 +23,7 @@ export default function NotFound() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4">
       <div className="max-w-2xl mx-auto text-center">
         {/* Animated 404 Number */}
         <div
@@ -31,7 +31,7 @@ export default function NotFound() {
             isAnimated ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          <h1 className="text-9xl md:text-[12rem] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 animate-pulse">
+          <h1 className="text-9xl md:text-[12rem] font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-pink-600 animate-pulse">
             404
           </h1>
           <div className="absolute inset-0 text-9xl md:text-[12rem] font-bold text-blue-100 dark:text-gray-700 -z-10">
@@ -58,7 +58,7 @@ export default function NotFound() {
           {/* Floating Elements */}
           <div className="relative py-8">
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-20 animate-pulse"></div>
+              <div className="w-32 h-32 bg-linear-to-r from-blue-400 to-purple-500 rounded-full opacity-20 animate-pulse"></div>
             </div>
             <div className="relative">
               <svg
@@ -81,7 +81,7 @@ export default function NotFound() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={handleGoHome}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-8 py-3 bg-linear-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <span className="flex items-center justify-center gap-2">
                 <svg
@@ -166,8 +166,8 @@ export default function NotFound() {
 
         {/* Background Pattern */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-10 animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full opacity-10 animate-pulse delay-1000"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-linear-to-br from-purple-400 to-pink-400 rounded-full opacity-10 animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-linear-to-br from-blue-400 to-cyan-400 rounded-full opacity-10 animate-pulse delay-1000"></div>
         </div>
       </div>
     </div>
