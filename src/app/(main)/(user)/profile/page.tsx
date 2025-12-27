@@ -114,7 +114,7 @@ function PageLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="h-full flex flex-col">
       {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto w-full p-3 mb-3">
+      <div className="w-full p-3 mb-3">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -138,7 +138,7 @@ function PageLayout({ children }: { children: React.ReactNode }) {
 
       {/* Content */}
       <div className="flex-1 w-full relative overflow-auto">
-        <div className="max-w-7xl mx-auto px-4 py-6">{children}</div>
+        <>{children}</>
       </div>
     </div>
   );
