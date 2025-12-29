@@ -247,7 +247,8 @@ const LocationStep: React.FC = () => {
                 type="button"
                 onClick={() => getUserLocation(false)}
                 disabled={isGettingLocation}
-                className="flex-1 bg-teal-600 hover:bg-teal-700 flex items-center justify-center gap-2">
+                className="flex-1 bg-teal-600 hover:bg-teal-700 flex items-center justify-center gap-2"
+              >
                 {isGettingLocation && locationAttempt === "standard" ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -268,7 +269,8 @@ const LocationStep: React.FC = () => {
                   onClick={retryWithFallback}
                   disabled={isGettingLocation}
                   variant="outline"
-                  className="flex-1 flex items-center justify-center gap-2">
+                  className="flex-1 flex items-center justify-center gap-2"
+                >
                   {isGettingLocation && locationAttempt === "fallback" ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -291,7 +293,8 @@ const LocationStep: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowManualEntry(!showManualEntry)}
-                className="text-xs">
+                className="text-xs"
+              >
                 {showManualEntry ? "Hide" : "Or enter coordinates manually"}
               </Button>
             )}
@@ -366,7 +369,8 @@ const LocationStep: React.FC = () => {
                     setLocationSuccess(false);
                     setShowManualEntry(true);
                   }}
-                  className="text-xs">
+                  className="text-xs"
+                >
                   Clear
                 </Button>
               </div>
@@ -403,7 +407,7 @@ const LocationStep: React.FC = () => {
       {/* Information Box */}
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
         <div className="flex gap-3">
-          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
           <div className="text-sm text-blue-900 dark:text-blue-100">
             <p className="font-medium mb-2">Why we need your location:</p>
             <ul className="list-disc list-inside space-y-1 text-blue-800 dark:text-blue-200">

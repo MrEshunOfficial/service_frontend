@@ -8,7 +8,6 @@ export default function ProfileLayout({ children }: { children: ReactNode }) {
 
   // Handle post task action
   const handlePostTask = () => {
-    console.log("Post task");
     router.push("/");
   };
   const handleBrowseTask = () => {

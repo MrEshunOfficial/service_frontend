@@ -77,7 +77,8 @@ const ProgressIndicator: React.FC = () => {
                       : isActive
                       ? "bg-teal-600 text-white ring-4 ring-teal-100"
                       : "bg-gray-200 text-gray-600"
-                  }`}>
+                  }`}
+                >
                   {isCompleted ? (
                     <CheckCircle className="w-5 h-5" />
                   ) : (
@@ -88,7 +89,8 @@ const ProgressIndicator: React.FC = () => {
                   <div
                     className={`text-sm font-medium ${
                       isActive ? "text-teal-600" : "text-gray-600"
-                    }`}>
+                    }`}
+                  >
                     {config.title}
                   </div>
                   <div className="text-xs text-gray-500 hidden sm:block">
@@ -286,7 +288,8 @@ const ProviderProfileFormContent: React.FC<{
           variant="outline"
           onClick={goToPreviousStep}
           disabled={isFirstStep || isSubmitting}
-          className="flex items-center gap-2">
+          className="flex items-center gap-2"
+        >
           <ArrowLeft className="w-4 h-4" />
           Previous
         </Button>
@@ -300,7 +303,8 @@ const ProviderProfileFormContent: React.FC<{
             type="button"
             variant="outline"
             onClick={() => router.push("/provider")}
-            disabled={isSubmitting}>
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
 
@@ -309,7 +313,8 @@ const ProviderProfileFormContent: React.FC<{
               type="button"
               onClick={handleNext}
               disabled={isSubmitting}
-              className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700">
+              className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700"
+            >
               Next
               <ArrowRight className="w-4 h-4" />
             </Button>
@@ -318,7 +323,8 @@ const ProviderProfileFormContent: React.FC<{
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700">
+              className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700"
+            >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               {mode === "edit" ? "Update Profile" : "Create Profile"}
             </Button>

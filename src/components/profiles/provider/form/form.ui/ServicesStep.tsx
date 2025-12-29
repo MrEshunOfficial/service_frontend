@@ -160,12 +160,14 @@ const ServicesStep: React.FC = () => {
                 <Badge
                   key={service._id}
                   variant="secondary"
-                  className="px-3 py-1.5 text-sm flex items-center gap-2">
+                  className="px-3 py-1.5 text-sm flex items-center gap-2"
+                >
                   {service.title}
                   <button
                     type="button"
                     onClick={() => handleRemoveService(service._id)}
-                    className="ml-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full p-0.5">
+                    className="ml-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full p-0.5"
+                  >
                     <X className="w-3 h-3" />
                   </button>
                 </Badge>
@@ -201,7 +203,8 @@ const ServicesStep: React.FC = () => {
           <Button
             type="button"
             onClick={handleCreateNewService}
-            className="bg-teal-600 hover:bg-teal-700 flex items-center gap-2">
+            className="bg-teal-600 hover:bg-teal-700 flex items-center gap-2"
+          >
             <Plus className="w-4 h-4" />
             Create New Service
           </Button>
@@ -251,7 +254,8 @@ const ServicesStep: React.FC = () => {
                           ? "border-teal-500 border-2 bg-teal-50 dark:bg-teal-900/20"
                           : "border-gray-200"
                       }`}
-                      onClick={() => handleServiceToggle(service._id)}>
+                      onClick={() => handleServiceToggle(service._id)}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
                           <Checkbox
@@ -275,17 +279,17 @@ const ServicesStep: React.FC = () => {
                                 )}
                               </div>
                               {isSelected && (
-                                <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0" />
+                                <CheckCircle className="w-5 h-5 text-teal-600 shrink-0" />
                               )}
                             </div>
 
                             {/* Service Category */}
-                            {service.category && (
+                            {service.categoryId && (
                               <div className="mt-2">
                                 <Badge variant="outline" className="text-xs">
-                                  {typeof service.category === "string"
-                                    ? service.category
-                                    : service.category.catName}
+                                  {typeof service.categoryId === "string"
+                                    ? service.categoryId
+                                    : service.categoryId.catName}
                                 </Badge>
                               </div>
                             )}
@@ -296,7 +300,8 @@ const ServicesStep: React.FC = () => {
                                 variant={
                                   service.isPrivate ? "default" : "secondary"
                                 }
-                                className="text-xs">
+                                className="text-xs"
+                              >
                                 {service.isPrivate ? "Private" : "Public"}
                               </Badge>
                               {service.servicePricing && (
@@ -321,7 +326,7 @@ const ServicesStep: React.FC = () => {
       {/* Help Text */}
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
         <div className="flex gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
           <div className="text-sm text-blue-900 dark:text-blue-100">
             <p className="font-medium mb-1">Tips for selecting services:</p>
             <ul className="list-disc list-inside space-y-1 text-blue-800 dark:text-blue-200">

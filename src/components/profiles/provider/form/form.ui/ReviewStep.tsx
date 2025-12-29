@@ -48,7 +48,7 @@ const ReviewStep: React.FC = () => {
       {/* Success Message */}
       <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-4">
         <div className="flex gap-3">
-          <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
+          <CheckCircle className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" />
           <div className="text-sm text-teal-900 dark:text-teal-100">
             <p className="font-medium mb-1">You're almost done!</p>
             <p className="text-teal-800 dark:text-teal-200">
@@ -72,7 +72,8 @@ const ReviewStep: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={() => handleEdit(FormStep.BUSINESS_INFO)}
-              className="flex items-center gap-1">
+              className="flex items-center gap-1"
+            >
               <Edit className="w-4 h-4" />
               Edit
             </Button>
@@ -88,14 +89,16 @@ const ReviewStep: React.FC = () => {
           <div>
             <p className="text-sm text-gray-500">Company Trained</p>
             <Badge
-              variant={formData.isCompanyTrained ? "default" : "secondary"}>
+              variant={formData.isCompanyTrained ? "default" : "secondary"}
+            >
               {formData.isCompanyTrained ? "Yes" : "No"}
             </Badge>
           </div>
           <div>
             <p className="text-sm text-gray-500">Availability</p>
             <Badge
-              variant={formData.isAlwaysAvailable ? "default" : "secondary"}>
+              variant={formData.isAlwaysAvailable ? "default" : "secondary"}
+            >
               {formData.isAlwaysAvailable
                 ? "Always Available"
                 : "Scheduled Hours"}
@@ -108,7 +111,8 @@ const ReviewStep: React.FC = () => {
                 {Object.entries(formData.workingHours).map(([day, hours]) => (
                   <div
                     key={day}
-                    className="flex justify-between text-sm bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded">
+                    className="flex justify-between text-sm bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded"
+                  >
                     <span className="font-medium capitalize">{day}</span>
                     <span className="text-gray-600">
                       {hours.start} - {hours.end}
@@ -121,9 +125,8 @@ const ReviewStep: React.FC = () => {
           <div>
             <p className="text-sm text-gray-500">Initial Deposit Required</p>
             <Badge
-              variant={
-                formData.requireInitialDeposit ? "default" : "secondary"
-              }>
+              variant={formData.requireInitialDeposit ? "default" : "secondary"}
+            >
               {formData.requireInitialDeposit ? "Yes" : "No"}
             </Badge>
             {formData.requireInitialDeposit && formData.percentageDeposit && (
@@ -148,7 +151,8 @@ const ReviewStep: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={() => handleEdit(FormStep.BUSINESS_INFO)}
-              className="flex items-center gap-1">
+              className="flex items-center gap-1"
+            >
               <Edit className="w-4 h-4" />
               Edit
             </Button>
@@ -203,7 +207,8 @@ const ReviewStep: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={() => handleEdit(FormStep.SERVICES)}
-              className="flex items-center gap-1">
+              className="flex items-center gap-1"
+            >
               <Edit className="w-4 h-4" />
               Edit
             </Button>
@@ -235,7 +240,8 @@ const ReviewStep: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={() => handleEdit(FormStep.LOCATION)}
-              className="flex items-center gap-1">
+              className="flex items-center gap-1"
+            >
               <Edit className="w-4 h-4" />
               Edit
             </Button>
@@ -282,7 +288,7 @@ const ReviewStep: React.FC = () => {
       {/* Final Reminder */}
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
         <div className="flex gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
           <div className="text-sm text-blue-900 dark:text-blue-100">
             <p className="font-medium mb-1">Before you submit:</p>
             <ul className="list-disc list-inside space-y-1 text-blue-800 dark:text-blue-200">
@@ -342,11 +348,11 @@ const ServiceCard: React.FC<{ serviceId: string }> = ({ serviceId }) => {
               {service.description}
             </p>
           )}
-          {service.category && (
+          {service.categoryId && (
             <Badge variant="secondary" className="text-xs">
-              {typeof service.category === "string"
-                ? service.category
-                : service.category.catName}
+              {typeof service.categoryId === "string"
+                ? service.categoryId
+                : service.categoryId.catName}
             </Badge>
           )}
           {service.servicePricing && (

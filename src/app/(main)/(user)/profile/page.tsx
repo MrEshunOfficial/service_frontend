@@ -190,8 +190,8 @@ function ClientProfileView() {
   const router = useRouter();
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <>
+      <Card className="dark:bg-black/25 w-full h-full space-y-3">
         <CardHeader>
           <CardTitle>Client Dashboard</CardTitle>
         </CardHeader>
@@ -220,7 +220,7 @@ function ClientProfileView() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }
 
