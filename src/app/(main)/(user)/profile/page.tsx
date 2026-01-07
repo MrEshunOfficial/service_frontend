@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
+import ProviderDashboard from "@/components/profiles/MockComponent";
 
 // Types
 type ErrorType =
@@ -137,7 +138,7 @@ function PageLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 w-full relative overflow-auto">
+      <div className="flex-1 w-full relative overflow-auto hide-scrollbar ">
         <>{children}</>
       </div>
     </div>
@@ -191,35 +192,7 @@ function ClientProfileView() {
 
   return (
     <>
-      <Card className="dark:bg-black/25 w-full h-full space-y-3">
-        <CardHeader>
-          <CardTitle>Client Dashboard</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-center py-12">
-            <UserX className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">
-              Client Dashboard Coming Soon
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              We're working on bringing you an amazing client experience. Stay
-              tuned!
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Button variant="outline" onClick={() => router.push("/search")}>
-                <Briefcase className="w-4 h-4 mr-2" />
-                Browse Services
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => router.push("/bookings")}
-              >
-                View Bookings
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <ProviderDashboard />
     </>
   );
 }
