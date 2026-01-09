@@ -1,8 +1,7 @@
 // types/profile.types.ts
 
-import { UserRole } from "./base.types";
-import {File} from "@/types/file.types"
-
+import { File } from "@/types/file.types";
+import { UserRole } from "../base.types";
 
 /**
  * User role enum
@@ -149,4 +148,3 @@ export interface BulkUpdateRequest {
   userIds: string[];
   updates: UpdateProfileRequest;
 }
-

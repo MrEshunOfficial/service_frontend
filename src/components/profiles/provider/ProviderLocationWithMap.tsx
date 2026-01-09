@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { MapPin, Navigation, Maximize2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Coordinates } from "@/types/provider.types";
+import { Coordinates } from "@/types/base.types";
 
 interface GoogleMapEmbedProps {
   coordinates: Coordinates;
@@ -187,12 +187,7 @@ export const LocationSectionWithMap: React.FC<{
   distanceFormatted?: string;
   showDistance?: boolean;
   businessName?: string;
-}> = ({
-  location,
-  distanceFormatted,
-  showDistance,
-  businessName,
-}) => {
+}> = ({ location, distanceFormatted, showDistance, businessName }) => {
   if (!location.gpsCoordinates) {
     return (
       <Card>

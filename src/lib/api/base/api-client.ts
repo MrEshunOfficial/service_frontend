@@ -135,13 +135,17 @@ export abstract class APIClient {
       }
 
       const responseData = await response.json();
-      
+
       // Handle wrapped responses { data: ... } vs direct responses
       // Check if response is an object with a 'data' property
-      if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+      if (
+        responseData &&
+        typeof responseData === "object" &&
+        "data" in responseData
+      ) {
         return responseData.data as T;
       }
-      
+
       // Return direct response
       return responseData as T;
     } catch (error) {

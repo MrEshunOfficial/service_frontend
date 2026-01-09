@@ -10,7 +10,7 @@ import {
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useCompleteProfile } from "@/hooks/profiles/userProfile.hook";
-import { UserRole } from "@/types/base.types";
+import { UserRole, PopulationLevel } from "@/types/base.types";
 import { APIError } from "@/lib/api/base/api-client";
 import {
   Home,
@@ -20,14 +20,18 @@ import {
   RefreshCw,
   UserX,
   UserPlus,
-  Briefcase,
 } from "lucide-react";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import ProviderDashboard from "@/components/profiles/MockComponent";
+import {
+  useClientProfile,
+  useCompleteClientProfile,
+} from "@/hooks/profiles/useClientProfile";
+import { ClientProfileDisplay } from "@/components/profiles/client/ClientProfielDashboard";
+import { Card, CardContent } from "@/components/ui/card";
+import ProviderDashboard from "@/components/profiles/provider/bussiness.profile";
 
 // Types
 type ErrorType =
@@ -93,8 +97,7 @@ function ErrorStateDisplay({
         <Button
           onClick={config.primaryAction.onClick}
           className="gap-2"
-          variant="default"
-        >
+          variant="default">
           {PrimaryIcon && <PrimaryIcon className="w-4 h-4" />}
           {config.primaryAction.label}
         </Button>
@@ -121,8 +124,7 @@ function PageLayout({ children }: { children: React.ReactNode }) {
             <BreadcrumbItem>
               <BreadcrumbLink
                 href="/"
-                className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-              >
+                className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                 <Home className="w-4 h-4" />
                 Home
               </BreadcrumbLink>
@@ -138,62 +140,85 @@ function PageLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 w-full relative overflow-auto hide-scrollbar ">
-        <>{children}</>
+      <div className="flex-1 w-full relative overflow-auto hide-scrollbar">
+        {children}
       </div>
     </div>
   );
 }
 
-// Provider Profile View
 function ProviderProfileView() {
-  const { user } = useAuth();
-  const router = useRouter();
-
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Provider Dashboard</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-center py-12">
-            <UserX className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">
-              Provider Dashboard Coming Soon
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              We're working on bringing you an amazing provider experience. Stay
-              tuned!
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Button variant="outline" onClick={() => router.push("/search")}>
-                <Briefcase className="w-4 h-4 mr-2" />
-                Browse Services
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => router.push("/bookings")}
-              >
-                View Bookings
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="w-full">
+      <ProviderDashboard />
     </div>
   );
 }
 
 // Client Profile View
 function ClientProfileView() {
-  const { user } = useAuth();
-  const router = useRouter();
+  const {
+    loading,
+    error,
+    updateProfile,
+    removeFavoriteService,
+    removeFavoriteProvider,
+    addAddress,
+    removeAddress,
+    setDefaultAddress,
+    updateIdDetails,
+  } = useClientProfile();
+
+  const { profile: completeProfile } = useCompleteClientProfile();
+
+  const updateEmergencyContact = async (data: any) => {
+    await updateProfile({
+      emergencyContact: data,
+    });
+  };
+
+  if (loading) {
+    return <LoadingOverlay message="Getting dashboard ready..." show={true} />;
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="py-8 text-center text-destructive">
+            Error loading profile: {error.message}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!completeProfile) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            No profile data available
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <ProviderDashboard />
-    </>
+    <div className="container mx-auto py-8">
+      <ClientProfileDisplay
+        profile={completeProfile}
+        onUpdateProfile={updateProfile}
+        onRemoveFavoriteService={removeFavoriteService}
+        onRemoveFavoriteProvider={removeFavoriteProvider}
+        onAddAddress={addAddress}
+        onRemoveAddress={removeAddress}
+        onSetDefaultAddress={setDefaultAddress}
+        onUpdateIdDetails={updateIdDetails}
+        onUpdateEmergencyContact={updateEmergencyContact}
+      />
+    </div>
   );
 }
 

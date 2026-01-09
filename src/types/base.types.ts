@@ -57,6 +57,13 @@ export interface ContactDetails {
   businessEmail?: string; // official company email
 }
 
+export enum PopulationLevel {
+  NONE = "none",
+  MINIMAL = "minimal",
+  STANDARD = "standard",
+  DETAILED = "detailed",
+}
+
 export enum idType {
   NATIONAL_ID = "national_id",
   PASSPORT = "passport",
