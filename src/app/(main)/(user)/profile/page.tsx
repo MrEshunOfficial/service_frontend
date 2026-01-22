@@ -31,7 +31,7 @@ import {
 } from "@/hooks/profiles/useClientProfile";
 import { ClientProfileDisplay } from "@/components/profiles/client/ClientProfielDashboard";
 import { Card, CardContent } from "@/components/ui/card";
-import ProviderDashboard from "@/components/profiles/provider/bussiness.profile";
+import ProviderDashboard from "@/components/profiles/provider/dashboard-ui/bussiness.profile";
 
 // Types
 type ErrorType =
@@ -97,7 +97,8 @@ function ErrorStateDisplay({
         <Button
           onClick={config.primaryAction.onClick}
           className="gap-2"
-          variant="default">
+          variant="default"
+        >
           {PrimaryIcon && <PrimaryIcon className="w-4 h-4" />}
           {config.primaryAction.label}
         </Button>
@@ -124,7 +125,8 @@ function PageLayout({ children }: { children: React.ReactNode }) {
             <BreadcrumbItem>
               <BreadcrumbLink
                 href="/"
-                className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
+                className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
+              >
                 <Home className="w-4 h-4" />
                 Home
               </BreadcrumbLink>

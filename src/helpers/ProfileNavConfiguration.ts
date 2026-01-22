@@ -100,14 +100,21 @@ export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
     children: [
       {
         id: "tasks-available",
-        label: "Available Tasks",
+        label: "Matched History",
         icon: FileText,
         href: "/tasks/available",
         roles: [UserRole.PROVIDER],
       },
       {
+        id: "tasks-requested",
+        label: "Requests Received",
+        icon: TrendingUp,
+        href: "/tasks/requested",
+        roles: [UserRole.PROVIDER],
+      },
+      {
         id: "tasks-recent",
-        label: "Recently Posted",
+        label: "Floating Tasks",
         icon: TrendingUp,
         href: "/tasks/recently-posted",
         roles: [UserRole.PROVIDER],
@@ -123,9 +130,16 @@ export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
     children: [
       {
         id: "my-tasks",
-        label: "My Posted Tasks",
+        label: "Post History",
         icon: FileText,
         href: "/tasks/posted",
+        roles: [UserRole.CUSTOMER],
+      },
+      {
+        id: "my-tasks",
+        label: "Booked Tasks",
+        icon: FileText,
+        href: "/tasks/booked",
         roles: [UserRole.CUSTOMER],
       },
     ],
@@ -185,8 +199,15 @@ export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
     id: "settings",
     label: "Settings",
     icon: Settings,
+    href: "/settings/provider",
+    roles: [UserRole.PROVIDER],
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Settings,
     href: "/settings",
-    roles: [UserRole.CUSTOMER, UserRole.PROVIDER],
+    roles: [UserRole.CUSTOMER],
   },
   {
     id: "help",

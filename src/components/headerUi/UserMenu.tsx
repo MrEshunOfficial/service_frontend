@@ -32,9 +32,9 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils/utils";
-import { UserProfile } from "@/types/profile.types";
 import { User } from "@/types/user.types";
 import { ImageUploadPopover } from "../filemanager/EntityImageUpload";
+import { UserProfile } from "@/types/profiles/profile.types";
 
 // Configuration objects for cleaner code
 const THEME_CONFIG = {
@@ -92,7 +92,7 @@ const NotificationButton: React.FC<{ count?: number }> = ({ count = 0 }) => (
         >
           <Badge
             variant="destructive"
-            className="h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full bg-gradient-to-r from-red-500 to-red-600 shadow-lg"
+            className="h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full bg-linear-to-r from-red-500 to-red-600 shadow-lg"
           >
             {count > 99 ? "99+" : count}
           </Badge>
@@ -150,7 +150,7 @@ const UserAvatar: React.FC<{
         )}
       >
         <AvatarImage src={avatarUrl} alt={`${displayName} avatar`} />
-        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-medium">
+        <AvatarFallback className="bg-linear-to-br from-blue-500 to-purple-600 text-white font-medium">
           {displayName.charAt(0)?.toUpperCase()}
         </AvatarFallback>
       </Avatar>
@@ -199,12 +199,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     () => [
       { href: "/profile", icon: UserIcon, label: "Profile", key: "profile" },
       {
-        href:
-          role === UserRole.PROVIDER
-            ? "/provider-dashboard"
-            : "/client-dashboard",
+        href: role === UserRole.PROVIDER ? "/tasks/available" : "/tasks/posted",
         icon: BarChart3,
-        label: "Dashboard",
+        label: "tasks",
         key: "dashboard",
       },
     ],
@@ -264,7 +261,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
-          className="w-52 p-0 z-[60]"
+          className="w-52 p-0 z-60"
           align="center"
           sideOffset={10}
           side="bottom"
@@ -284,10 +281,10 @@ export const UserMenu: React.FC<UserMenuProps> = ({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600" />
+                  <div className="w-full h-full bg-linear-to-br from-blue-500 to-purple-600" />
                 )}
                 {/* Overlay gradient for better text readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/30 to-transparent" />
               </div>
 
               {/* Upload Button - positioned bottom right */}

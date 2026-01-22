@@ -361,3 +361,4 @@ export interface ClientProfileDetailedResponse {
 export interface NearestClientResult extends ClientProfile {
   distance: number;
 }
+

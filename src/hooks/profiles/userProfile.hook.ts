@@ -2,21 +2,9 @@
 
 import { APIError } from "@/lib/api/base/api-client";
 import { profileAPI } from "@/lib/api/profiles/user.profile.api";
-import {
-  UserProfile,
-  UpdateProfileRequest,
-  CompleteProfile,
-  CreateProfileRequest,
-  ProfileStats,
-  ProfileSearchResult,
-  ProfileSearchParams,
-  BatchProfilesResult,
-  BatchProfilesRequest,
-  PaginationParams,
-  PaginatedProfilesResult,
-  BulkUpdateResult,
-  BulkUpdateRequest,
-} from "@/types/profile.types";
+import { UpdateProfileRequest, CompleteProfile, CreateProfileRequest, ProfileStats, ProfileSearchResult, ProfileSearchParams, BatchProfilesResult, BatchProfilesRequest, PaginationParams, PaginatedProfilesResult, BulkUpdateResult, BulkUpdateRequest } from "@/types/profiles/profile.types";
+import { UserProfile } from "@/types/profiles/provider-profile.types";
+
 import { useState, useEffect, useCallback, useRef } from "react";
 
 /**
