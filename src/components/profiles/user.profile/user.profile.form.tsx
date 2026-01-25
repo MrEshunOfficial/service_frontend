@@ -237,7 +237,7 @@ export default function ProfileForm({
     return (
       <div className="w-full max-w-md mx-auto">
         <div className="bg-white/90 dark:bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl p-8 text-center border border-gray-200 dark:border-white/10">
-          <div className="w-20 h-20 bg-gradient-to-tr from-emerald-400 to-emerald-600 dark:from-emerald-500 dark:to-emerald-700 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg transform transition-transform duration-300 hover:scale-105">
+          <div className="w-20 h-20 bg-linear-to-tr from-emerald-400 to-emerald-600 dark:from-emerald-500 dark:to-emerald-700 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg transform transition-transform duration-300 hover:scale-105">
             <CheckCircle2 className="w-10 h-10 text-white" />
           </div>
 
@@ -251,7 +251,7 @@ export default function ProfileForm({
 
           <div className="space-y-4">
             <Button
-              className="w-full bg-gradient-to-r from-teal-500 to-teal-600 dark:from-teal-400 dark:to-teal-500 hover:from-teal-600 hover:to-teal-700 text-white dark:text-gray-900"
+              className="w-full bg-linear-to-r from-teal-500 to-teal-600 dark:from-teal-400 dark:to-teal-500 hover:from-teal-600 hover:to-teal-700 text-white dark:text-gray-900"
               onClick={navigateToRoleProfile}
               size="lg">
               Setup {selectedRole === UserRole.PROVIDER ? "Business" : "Client"}{" "}
@@ -329,7 +329,7 @@ export default function ProfileForm({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                      <div className="w-full h-full bg-linear-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
                         <User className="w-16 h-16 text-gray-400 dark:text-gray-500" />
                       </div>
                     )}
@@ -370,12 +370,12 @@ export default function ProfileForm({
                         onClick={() => field.onChange(UserRole.PROVIDER)}
                         className={`relative p-5 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
                           field.value === UserRole.PROVIDER
-                            ? "border-teal-600 dark:border-teal-400 bg-gradient-to-br from-teal-400/30 to-teal-600/30 dark:from-teal-500/40 dark:to-teal-700/40 shadow-lg scale-[1.02]"
+                            ? "border-teal-600 dark:border-teal-400 bg-linear-to-br from-teal-400/30 to-teal-600/30 dark:from-teal-500/40 dark:to-teal-700/40 shadow-lg scale-[1.02]"
                             : "border-gray-200 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:border-gray-300 dark:hover:border-white/20 hover:shadow-md hover:bg-white/80 dark:hover:bg-white/10"
                         }`}>
                         <div className="flex items-start gap-3">
                           <div
-                            className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                            className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
                               field.value === UserRole.PROVIDER
                                 ? "bg-teal-600 dark:bg-teal-400 text-white dark:text-gray-900"
                                 : "bg-gray-200/80 dark:bg-white/10 text-gray-700 dark:text-white/90"
@@ -402,12 +402,12 @@ export default function ProfileForm({
                         onClick={() => field.onChange(UserRole.CUSTOMER)}
                         className={`relative p-5 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
                           field.value === UserRole.CUSTOMER
-                            ? "border-sky-500 dark:border-sky-400 bg-gradient-to-br from-sky-400/30 to-sky-600/30 dark:from-sky-500/40 dark:to-sky-700/40 shadow-lg scale-[1.02]"
+                            ? "border-sky-500 dark:border-sky-400 bg-linear-to-br from-sky-400/30 to-sky-600/30 dark:from-sky-500/40 dark:to-sky-700/40 shadow-lg scale-[1.02]"
                             : "border-gray-200 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:border-gray-300 dark:hover:border-white/20 hover:shadow-md hover:bg-white/80 dark:hover:bg-white/10"
                         }`}>
                         <div className="flex items-start gap-3">
                           <div
-                            className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                            className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
                               field.value === UserRole.CUSTOMER
                                 ? "bg-sky-500 dark:bg-sky-400 text-white dark:text-gray-900"
                                 : "bg-gray-200/80 dark:bg-white/10 text-gray-700 dark:text-white/90"

@@ -1,11 +1,10 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useProviderFloatingTasks } from "@/hooks/useTasksAndBookings";
 import { Task, TaskPriority, PRIORITY_LABELS } from "@/types/task.types";
 import {
   Calendar,
   MapPin,
-  DollarSign,
   Clock,
   Heart,
   Send,
@@ -13,17 +12,17 @@ import {
   Search,
 } from "lucide-react";
 
-const RecentlyPostedTasksPage = () => {
+const FloatingTasksPage = () => {
   const { tasks, loading, error, expressInterest, refreshTasks } =
     useProviderFloatingTasks();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [interestMessage, setInterestMessage] = useState("");
   const [expressingInterest, setExpressingInterest] = useState<string | null>(
-    null
+    null,
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPriority, setFilterPriority] = useState<TaskPriority | "all">(
-    "all"
+    "all",
   );
   const [showFilters, setShowFilters] = useState(false);
 
@@ -56,29 +55,40 @@ const RecentlyPostedTasksPage = () => {
           task.title.toLowerCase().includes(query) ||
           task.description.toLowerCase().includes(query) ||
           task.tags?.some((tag) => tag.toLowerCase().includes(query)) ||
-          task.category?.toLowerCase().includes(query)
+          task.category?.toLowerCase().includes(query),
       );
     }
 
     if (filterPriority !== "all") {
       filtered = filtered.filter(
-        (task) => task.schedule.priority === filterPriority
+        (task) => task.schedule.priority === filterPriority,
       );
     }
 
     filtered.sort((a, b) => {
-      const aDistance = a.matchedProviders?.[0]?.distance || Infinity;
-      const bDistance = b.matchedProviders?.[0]?.distance || Infinity;
+      // Safe access to matchedProviders with optional chaining and type checking
+      const aProvider = a.matchedProviders?.[0];
+      const bProvider = b.matchedProviders?.[0];
 
-      if (aDistance !== bDistance) return aDistance - bDistance;
+      const aDistance =
+        aProvider && "distance" in aProvider
+          ? (aProvider.distance as number)
+          : Infinity;
+      const bDistance =
+        bProvider && "distance" in bProvider
+          ? (bProvider.distance as number)
+          : Infinity;
+
+      if (aDistance !== bDistance)
+        return (aDistance as number) - (bDistance as number);
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
     return filtered;
   }, [tasks, searchQuery, filterPriority]);
 
-  const getPriorityColor = (priority: TaskPriority) => {
-    const colors = {
+  const getPriorityColor = (priority: TaskPriority): string => {
+    const colors: Record<TaskPriority, string> = {
       [TaskPriority.LOW]:
         "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
       [TaskPriority.MEDIUM]:
@@ -88,13 +98,10 @@ const RecentlyPostedTasksPage = () => {
       [TaskPriority.URGENT]:
         "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
     };
-    return (
-      colors[priority] ||
-      "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-    );
+    return colors[priority];
   };
 
-  const formatDate = (date: string | Date) => {
+  const formatDate = (date: string | Date): string => {
     return new Date(date).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -102,11 +109,7 @@ const RecentlyPostedTasksPage = () => {
     });
   };
 
-  const formatCurrency = (amount: number, currency: string = "GHS") => {
-    return `${currency} ${amount.toFixed(2)}`;
-  };
-
-  const getTimeAgo = (date: string | Date) => {
+  const getTimeAgo = (date: string | Date): string => {
     const now = new Date();
     const posted = new Date(date);
     const diffMs = now.getTime() - posted.getTime();
@@ -120,8 +123,8 @@ const RecentlyPostedTasksPage = () => {
     return formatDate(date);
   };
 
-  const hasExpressedInterest = (task: Task) => {
-    return task.interestedProviders && task.interestedProviders.length > 0;
+  const hasExpressedInterest = (task: Task): boolean => {
+    return !!task.interestedProviders && task.interestedProviders.length > 0;
   };
 
   if (loading) {
@@ -135,8 +138,7 @@ const RecentlyPostedTasksPage = () => {
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="h-48 bg-gray-200 dark:bg-gray-800 rounded-lg"
-                ></div>
+                  className="h-48 bg-gray-200 dark:bg-gray-800 rounded-lg"></div>
               ))}
             </div>
           </div>
@@ -158,8 +160,7 @@ const RecentlyPostedTasksPage = () => {
             </p>
             <button
               onClick={refreshTasks}
-              className="px-6 py-2 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white rounded-lg transition-colors"
-            >
+              className="px-6 py-2 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white rounded-lg transition-colors">
               Try Again
             </button>
           </div>
@@ -195,8 +196,7 @@ const RecentlyPostedTasksPage = () => {
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
               <Filter className="w-5 h-5" />
               Filters
             </button>
@@ -215,8 +215,7 @@ const RecentlyPostedTasksPage = () => {
                       filterPriority === "all"
                         ? "bg-blue-600 text-white"
                         : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                    }`}
-                  >
+                    }`}>
                     All
                   </button>
                   {Object.values(TaskPriority).map((priority) => (
@@ -227,8 +226,7 @@ const RecentlyPostedTasksPage = () => {
                         filterPriority === priority
                           ? "bg-blue-600 text-white"
                           : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                      }`}
-                    >
+                      }`}>
                       {PRIORITY_LABELS[priority]}
                     </button>
                   ))}
@@ -265,11 +263,23 @@ const RecentlyPostedTasksPage = () => {
               const alreadyInterested = hasExpressedInterest(task);
               const interestCount = task.interestedProviders?.length || 0;
 
+              // Type guard for distance property
+              const hasDistance = matchData && "distance" in matchData;
+              const distance = hasDistance ? matchData.distance : undefined;
+
+              // Type guard for matchReasons property
+              const hasMatchReasons =
+                matchData &&
+                "matchReasons" in matchData &&
+                Array.isArray(matchData.matchReasons);
+              const matchReasons: string[] | undefined = hasMatchReasons
+                ? (matchData.matchReasons as string[])
+                : undefined;
+
               return (
                 <div
                   key={task._id}
-                  className="bg-white dark:bg-gray-900 rounded-lg shadow-sm hover:shadow-md dark:hover:shadow-gray-950/50 transition-all border border-gray-200 dark:border-gray-800"
-                >
+                  className="bg-white dark:bg-gray-900 rounded-lg shadow-sm hover:shadow-md dark:hover:shadow-gray-950/50 transition-all border border-gray-200 dark:border-gray-800">
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
@@ -279,9 +289,8 @@ const RecentlyPostedTasksPage = () => {
                           </h3>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                              task.schedule.priority
-                            )}`}
-                          >
+                              task.schedule.priority,
+                            )}`}>
                             {PRIORITY_LABELS[task.schedule.priority]}
                           </span>
                           {task.category && (
@@ -295,10 +304,12 @@ const RecentlyPostedTasksPage = () => {
                             <Clock className="w-4 h-4" />
                             {getTimeAgo(task.createdAt)}
                           </span>
-                          {matchData?.distance !== undefined && (
+                          {distance !== undefined && distance !== null && (
                             <span className="flex items-center gap-1 text-green-600 dark:text-green-400 font-medium">
                               <MapPin className="w-4 h-4" />
-                              {matchData.distance.toFixed(1)} km away
+                              {typeof distance === "number" &&
+                                distance.toFixed(1)}{" "}
+                              km away
                             </span>
                           )}
                           {interestCount > 0 && (
@@ -351,32 +362,6 @@ const RecentlyPostedTasksPage = () => {
                           )}
                         </div>
                       </div>
-
-                      {task.estimatedBudget && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                          <DollarSign className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">
-                              Budget
-                            </p>
-                            <p>
-                              {task.estimatedBudget.min &&
-                              task.estimatedBudget.max
-                                ? `${formatCurrency(
-                                    task.estimatedBudget.min
-                                  )} - ${formatCurrency(
-                                    task.estimatedBudget.max
-                                  )}`
-                                : task.estimatedBudget.max
-                                ? `Up to ${formatCurrency(
-                                    task.estimatedBudget.max
-                                  )}`
-                                : "Negotiable"}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
                       {task.schedule.timeSlot && (
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                           <Clock className="w-4 h-4 text-gray-400 dark:text-gray-500" />
@@ -393,24 +378,22 @@ const RecentlyPostedTasksPage = () => {
                       )}
                     </div>
 
-                    {matchData?.matchReasons &&
-                      matchData.matchReasons.length > 0 && (
-                        <div className="mb-5">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Relevant to your services:
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {matchData.matchReasons.map((reason, idx) => (
-                              <span
-                                key={idx}
-                                className="px-3 py-1 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 text-xs rounded-full"
-                              >
-                                {reason}
-                              </span>
-                            ))}
-                          </div>
+                    {matchReasons && matchReasons.length > 0 && (
+                      <div className="mb-5">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Relevant to your services:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {matchReasons.map((reason: string, idx: number) => (
+                            <span
+                              key={idx}
+                              className="px-3 py-1 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 text-xs rounded-full">
+                              {reason}
+                            </span>
+                          ))}
                         </div>
-                      )}
+                      </div>
+                    )}
 
                     {task.tags && task.tags.length > 0 && (
                       <div className="mb-5">
@@ -418,8 +401,7 @@ const RecentlyPostedTasksPage = () => {
                           {task.tags.map((tag, idx) => (
                             <span
                               key={idx}
-                              className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs rounded-full"
-                            >
+                              className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs rounded-full">
                               {tag}
                             </span>
                           ))}
@@ -460,8 +442,7 @@ const RecentlyPostedTasksPage = () => {
                             <button
                               onClick={() => handleExpressInterest(task._id)}
                               disabled={expressingInterest === task._id}
-                              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
-                            >
+                              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors">
                               <Send className="w-5 h-5" />
                               {expressingInterest === task._id
                                 ? "Sending..."
@@ -472,8 +453,7 @@ const RecentlyPostedTasksPage = () => {
                                 setSelectedTask(null);
                                 setInterestMessage("");
                               }}
-                              className="px-6 py-3 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium transition-colors"
-                            >
+                              className="px-6 py-3 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium transition-colors">
                               Cancel
                             </button>
                           </div>
@@ -481,8 +461,7 @@ const RecentlyPostedTasksPage = () => {
                       ) : (
                         <button
                           onClick={() => setSelectedTask(task)}
-                          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
-                        >
+                          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
                           <Heart className="w-5 h-5" />
                           Express Interest
                         </button>
@@ -499,4 +478,4 @@ const RecentlyPostedTasksPage = () => {
   );
 };
 
-export default RecentlyPostedTasksPage;
+export default FloatingTasksPage;

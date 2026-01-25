@@ -22,15 +22,14 @@ export default function EditServicePage() {
   if (loading) {
     return (
       <div className="flex flex-col h-[88vh]">
-        <div className="flex-shrink-0 w-full border-b bg-white dark:bg-gray-950 backdrop-blur-3xl z-50">
+        <div className="shrink-0 w-full border-b bg-white dark:bg-gray-950 backdrop-blur-3xl z-50">
           <div className="p-3">
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink
                     href="/"
-                    className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-                  >
+                    className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                     <Home className="w-4 h-4" />
                     Home
                   </BreadcrumbLink>
@@ -39,8 +38,7 @@ export default function EditServicePage() {
                 <BreadcrumbItem>
                   <BreadcrumbLink
                     href="/service-offered"
-                    className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-                  >
+                    className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                     <Briefcase className="w-4 h-4" />
                     Services
                   </BreadcrumbLink>
@@ -68,15 +66,14 @@ export default function EditServicePage() {
   if (error || !service) {
     return (
       <div className="flex flex-col h-[88vh]">
-        <div className="flex-shrink-0 w-full border-b bg-white dark:bg-gray-950 backdrop-blur-3xl z-50">
+        <div className="shrink-0 w-full border-b bg-white dark:bg-gray-950 backdrop-blur-3xl z-50">
           <div className="p-3">
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink
                     href="/"
-                    className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-                  >
+                    className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                     <Home className="w-4 h-4" />
                     Home
                   </BreadcrumbLink>
@@ -85,8 +82,7 @@ export default function EditServicePage() {
                 <BreadcrumbItem>
                   <BreadcrumbLink
                     href="/service-offered"
-                    className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-                  >
+                    className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                     <Briefcase className="w-4 h-4" />
                     Services
                   </BreadcrumbLink>
@@ -115,8 +111,7 @@ export default function EditServicePage() {
             </p>
             <a
               href="/service-offered"
-              className="inline-flex items-center gap-2 px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
-            >
+              className="inline-flex items-center gap-2 px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
               <Briefcase className="w-4 h-4" />
               Back to Services
             </a>
@@ -129,15 +124,14 @@ export default function EditServicePage() {
   return (
     <div className="flex flex-col h-[88vh]">
       {/* Fixed Breadcrumb Header */}
-      <div className="flex-shrink-0 w-full border-b bg-white dark:bg-gray-950 backdrop-blur-3xl z-50">
+      <div className="shrink-0 w-full border-b bg-white dark:bg-gray-950 backdrop-blur-3xl z-50">
         <div className="p-3">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href="/"
-                  className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-                >
+                  className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                   <Home className="w-4 h-4" />
                   Home
                 </BreadcrumbLink>
@@ -146,8 +140,7 @@ export default function EditServicePage() {
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href="/service-offered"
-                  className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-                >
+                  className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                   <Briefcase className="w-4 h-4" />
                   Services
                 </BreadcrumbLink>
@@ -156,8 +149,7 @@ export default function EditServicePage() {
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href={`/services/${service.slug}`}
-                  className="text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-                >
+                  className="text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                   {service.title}
                 </BreadcrumbLink>
               </BreadcrumbItem>

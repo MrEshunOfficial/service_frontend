@@ -152,27 +152,29 @@ export interface BookingStatusHistoryItem {
 export interface Booking {
   _id: string;
   bookingNumber: string;
-  
+
   // References - can be either strings (ObjectIds) or populated objects
   taskId: string | Task;
   clientId: string;
-  providerId: string | {
-    _id: string;
-    businessName?: string;
-    locationData?: UserLocation;
-    isActive?: boolean;
-    hasVerifiedAddress?: boolean;
-    firstName?: string;
-    lastName?: string;
-    profileImage?: string;
-    rating?: number;
-    contactDetails?: {
-      businessContact?: string;
-      businessEmail?: string;
-    };
-  };
+  providerId:
+    | string
+    | {
+        _id: string;
+        businessName?: string;
+        locationData?: UserLocation;
+        isActive?: boolean;
+        hasVerifiedAddress?: boolean;
+        firstName?: string;
+        lastName?: string;
+        profileImage?: string;
+        rating?: number;
+        contactDetails?: {
+          businessContact?: string;
+          businessEmail?: string;
+        };
+      };
   serviceId?: string | ServiceInfo;
-  
+
   // Service details
   serviceLocation: UserLocation;
   scheduledDate?: Date | string;
@@ -182,7 +184,7 @@ export interface Booking {
   };
   serviceDescription?: string;
   specialInstructions?: string;
-  
+
   // Pricing
   depositPaid: boolean;
   depositAmount?: number;
@@ -191,12 +193,12 @@ export interface Booking {
   balanceRemaining?: number;
   depositRemaining?: number;
   currency: string;
-  
+
   // Status
   status: BookingStatus;
   paymentStatus: "PENDING" | "PARTIAL" | "PAID" | "REFUNDED";
   statusHistory: BookingStatusHistoryItem[];
-  
+
   // Timestamps
   startedAt?: Date | string;
   completedAt?: Date | string;
@@ -204,11 +206,11 @@ export interface Booking {
   confirmedAt?: Date | string;
   createdAt: Date | string;
   updatedAt: Date | string;
-  
+
   // Cancellation
   cancellationReason?: string;
   cancelledBy?: string;
-  
+
   // Computed fields (from virtuals)
   isActive?: boolean;
   isConfirmed?: boolean;
@@ -218,11 +220,11 @@ export interface Booking {
   isUpcoming?: boolean;
   isPastDue?: boolean;
   durationInDays?: number | null;
-  
+
   // Additional fields
   providerMessage?: string;
   isDeleted: boolean;
-  
+
   // Legacy/compatibility fields
   task?: Task;
   customer?: {
@@ -305,7 +307,10 @@ export interface CompleteBookingRequest {
  * =============================================================================
  */
 
-export interface BaseQueryParams extends Record<string, string | number | boolean | undefined> {
+export interface BaseQueryParams extends Record<
+  string,
+  string | number | boolean | undefined
+> {
   page?: number;
   limit?: number;
 }
@@ -625,7 +630,12 @@ export interface BookingResponse {
 }
 
 export interface TaskNotification extends BaseNotification {
-  type: "task_matched" | "provider_interested" | "task_accepted" | "task_cancelled" | "task_expired";
+  type:
+    | "task_matched"
+    | "provider_interested"
+    | "task_accepted"
+    | "task_cancelled"
+    | "task_expired";
   taskId: string;
   data?: {
     providerId?: string;
@@ -635,7 +645,11 @@ export interface TaskNotification extends BaseNotification {
 }
 
 export interface BookingNotification extends BaseNotification {
-  type: "booking_confirmed" | "booking_started" | "booking_completed" | "booking_cancelled";
+  type:
+    | "booking_confirmed"
+    | "booking_started"
+    | "booking_completed"
+    | "booking_cancelled";
   bookingId: string;
   data?: {
     providerId?: string;
@@ -694,24 +708,40 @@ export type Notification = TaskNotification | BookingNotification;
 /**
  * Check if taskId is populated with full Task object
  */
-export function isTaskPopulated(booking: Booking): booking is Booking & { taskId: Task } {
-  return typeof booking.taskId === 'object' && booking.taskId !== null && '_id' in booking.taskId;
+export function isTaskPopulated(
+  booking: Booking,
+): booking is Booking & { taskId: Task } {
+  return (
+    typeof booking.taskId === "object" &&
+    booking.taskId !== null &&
+    "_id" in booking.taskId
+  );
 }
 
 /**
  * Check if providerId is populated with full provider object
  */
-export function isProviderPopulated(booking: Booking): booking is Booking & { 
-  providerId: NonNullable<Extract<Booking['providerId'], object>>
+export function isProviderPopulated(booking: Booking): booking is Booking & {
+  providerId: NonNullable<Extract<Booking["providerId"], object>>;
 } {
-  return typeof booking.providerId === 'object' && booking.providerId !== null && '_id' in booking.providerId;
+  return (
+    typeof booking.providerId === "object" &&
+    booking.providerId !== null &&
+    "_id" in booking.providerId
+  );
 }
 
 /**
  * Check if serviceId is populated with full ServiceInfo object
  */
-export function isServicePopulated(booking: Booking): booking is Booking & { serviceId: ServiceInfo } {
-  return typeof booking.serviceId === 'object' && booking.serviceId !== null && '_id' in booking.serviceId;
+export function isServicePopulated(
+  booking: Booking,
+): booking is Booking & { serviceId: ServiceInfo } {
+  return (
+    typeof booking.serviceId === "object" &&
+    booking.serviceId !== null &&
+    "_id" in booking.serviceId
+  );
 }
 
 /**
@@ -762,15 +792,15 @@ export function getBookingService(booking: Booking): ServiceInfo | null {
 export function getProviderDisplayName(booking: Booking): string {
   const provider = getBookingProvider(booking);
   if (!provider) return "Service Provider";
-  
-  if ('businessName' in provider && provider.businessName) {
+
+  if ("businessName" in provider && provider.businessName) {
     return provider.businessName;
   }
-  
-  const firstName = 'firstName' in provider ? provider.firstName : '';
-  const lastName = 'lastName' in provider ? provider.lastName : '';
-  const fullName = `${firstName || ''} ${lastName || ''}`.trim();
-  
+
+  const firstName = "firstName" in provider ? provider.firstName : "";
+  const lastName = "lastName" in provider ? provider.lastName : "";
+  const fullName = `${firstName || ""} ${lastName || ""}`.trim();
+
   return fullName || "Service Provider";
 }
 
@@ -779,24 +809,27 @@ export function getProviderDisplayName(booking: Booking): string {
  */
 export function getCustomerDisplayName(booking: Booking): string {
   if (!booking.customer) return "Customer";
-  
-  const fullName = `${booking.customer.firstName} ${booking.customer.lastName}`.trim();
+
+  const fullName =
+    `${booking.customer.firstName} ${booking.customer.lastName}`.trim();
   return fullName || "Customer";
 }
 
 /**
  * Format location string from UserLocation
  */
-export function formatLocationString(location: UserLocation | undefined): string {
+export function formatLocationString(
+  location: UserLocation | undefined,
+): string {
   if (!location) return "Location not specified";
-  
+
   const parts: string[] = [];
   if (location.nearbyLandmark) parts.push(location.nearbyLandmark);
   if (location.locality) parts.push(location.locality);
   if (location.district) parts.push(location.district);
   if (location.city) parts.push(location.city);
   if (location.region) parts.push(location.region);
-  
+
   return parts.length > 0 ? parts.join(", ") : "Location not specified";
 }
 

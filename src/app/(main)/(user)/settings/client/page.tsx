@@ -70,7 +70,7 @@ export default function ClientPreferencesPage() {
 
   // Handle communication preference toggle
   const handleCommPrefChange = (
-    key: keyof typeof formData.communicationPreferences
+    key: keyof typeof formData.communicationPreferences,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -334,7 +334,7 @@ export default function ClientPreferencesPage() {
               <div className="grid grid-cols-2 gap-3">
                 {categories.map((category) => {
                   const isSelected = formData.preferredCategories.includes(
-                    category._id
+                    category._id,
                   );
                   return (
                     <button

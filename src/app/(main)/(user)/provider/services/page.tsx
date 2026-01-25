@@ -95,7 +95,7 @@ export default function ServiceList() {
     service: Service,
     url: string,
     priceText: string,
-    tagsText: string
+    tagsText: string,
   ) => {
     // Create rich text for clipboard
     const shareText = `━━━━━━━━━━━━━━━━━━━━━
@@ -179,7 +179,7 @@ ${url}`;
 
   const handleToggleFavorite = (id: string) => {
     setFavoriteIds((prev) =>
-      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id],
     );
     // TODO: Persist to backend/localStorage
   };
@@ -206,8 +206,7 @@ ${url}`;
           </p>
           <button
             onClick={() => refetch()}
-            className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
-          >
+            className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors">
             Retry
           </button>
         </div>
@@ -226,8 +225,7 @@ ${url}`;
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+              xmlns="http://www.w3.org/2000/svg">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -253,15 +251,13 @@ ${url}`;
             onClick={() => {
               router.push("/service-offered/create");
             }}
-            className="inline-flex items-center px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800"
-          >
+            className="inline-flex items-center px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800">
             <svg
               className="w-5 h-5 mr-2"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+              xmlns="http://www.w3.org/2000/svg">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
