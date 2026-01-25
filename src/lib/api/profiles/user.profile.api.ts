@@ -2,7 +2,6 @@
 
 import {
   ProfileExistsResponse,
-  UserProfile,
   CompleteProfile,
   ProfileStats,
   CreateProfileRequest,
@@ -15,13 +14,14 @@ import {
   PaginatedProfilesResult,
   BulkUpdateRequest,
   BulkUpdateResult,
-} from "@/types/profile.types";
+} from "@/types/profiles/profile.types";
+import { UserProfile } from "@/types/profiles/provider-profile.types";
 import { APIClient } from "../base/api-client";
 
 /**
  * Profile API Client
  * Handles all profile-related API requests
- * 
+ *
  * Note: The base APIClient automatically unwraps { data: ... } responses,
  * so all methods return the data directly without needing to access .data
  */
@@ -38,7 +38,7 @@ export class ProfileAPIClient extends APIClient {
    */
   async checkProfileExists(): Promise<boolean> {
     const response = await this.get<ProfileExistsResponse>(
-      `${this.basePath}/exists`
+      `${this.basePath}/exists`,
     );
     return response.exists;
   }
@@ -48,10 +48,7 @@ export class ProfileAPIClient extends APIClient {
    * GET /api/profiles/me
    */
   async getMyProfile(includeDetails = false): Promise<UserProfile> {
-    return this.get<UserProfile>(
-      `${this.basePath}/me`,
-      { includeDetails }
-    );
+    return this.get<UserProfile>(`${this.basePath}/me`, { includeDetails });
   }
 
   /**
@@ -59,9 +56,7 @@ export class ProfileAPIClient extends APIClient {
    * GET /api/profiles/me/complete
    */
   async getCompleteProfile(): Promise<CompleteProfile> {
-    return this.get<CompleteProfile>(
-      `${this.basePath}/me/complete`
-    );
+    return this.get<CompleteProfile>(`${this.basePath}/me/complete`);
   }
 
   /**
@@ -69,9 +64,7 @@ export class ProfileAPIClient extends APIClient {
    * GET /api/profiles/me/stats
    */
   async getMyProfileStats(): Promise<ProfileStats> {
-    return this.get<ProfileStats>(
-      `${this.basePath}/me/stats`
-    );
+    return this.get<ProfileStats>(`${this.basePath}/me/stats`);
   }
 
   /**
@@ -79,10 +72,7 @@ export class ProfileAPIClient extends APIClient {
    * POST /api/profiles
    */
   async createProfile(data: CreateProfileRequest): Promise<UserProfile> {
-    return this.post<UserProfile>(
-      this.basePath,
-      data
-    );
+    return this.post<UserProfile>(this.basePath, data);
   }
 
   /**
@@ -90,10 +80,7 @@ export class ProfileAPIClient extends APIClient {
    * PATCH /api/profiles/me
    */
   async updateMyProfile(updates: UpdateProfileRequest): Promise<UserProfile> {
-    return this.patch<UserProfile>(
-      `${this.basePath}/me`,
-      updates
-    );
+    return this.patch<UserProfile>(`${this.basePath}/me`, updates);
   }
 
   /**
@@ -109,9 +96,7 @@ export class ProfileAPIClient extends APIClient {
    * POST /api/profiles/me/restore
    */
   async restoreMyProfile(): Promise<UserProfile> {
-    return this.post<UserProfile>(
-      `${this.basePath}/me/restore`
-    );
+    return this.post<UserProfile>(`${this.basePath}/me/restore`);
   }
 
   /**
@@ -119,12 +104,9 @@ export class ProfileAPIClient extends APIClient {
    * GET /api/profiles/search
    */
   async searchProfiles(
-    params: ProfileSearchParams
+    params: ProfileSearchParams,
   ): Promise<ProfileSearchResult> {
-    return this.get<ProfileSearchResult>(
-      `${this.basePath}/search`,
-      params
-    );
+    return this.get<ProfileSearchResult>(`${this.basePath}/search`, params);
   }
 
   /**
@@ -132,12 +114,9 @@ export class ProfileAPIClient extends APIClient {
    * POST /api/profiles/batch
    */
   async getProfilesByUserIds(
-    request: BatchProfilesRequest
+    request: BatchProfilesRequest,
   ): Promise<BatchProfilesResult> {
-    return this.post<BatchProfilesResult>(
-      `${this.basePath}/batch`,
-      request
-    );
+    return this.post<BatchProfilesResult>(`${this.basePath}/batch`, request);
   }
 
   /**
@@ -145,12 +124,9 @@ export class ProfileAPIClient extends APIClient {
    * GET /api/profiles
    */
   async getAllProfiles(
-    params: PaginationParams = {}
+    params: PaginationParams = {},
   ): Promise<PaginatedProfilesResult> {
-    return this.get<PaginatedProfilesResult>(
-      this.basePath,
-      params
-    );
+    return this.get<PaginatedProfilesResult>(this.basePath, params);
   }
 
   /**
@@ -158,12 +134,9 @@ export class ProfileAPIClient extends APIClient {
    * PATCH /api/profiles/bulk
    */
   async bulkUpdateProfiles(
-    request: BulkUpdateRequest
+    request: BulkUpdateRequest,
   ): Promise<BulkUpdateResult> {
-    return this.patch<BulkUpdateResult>(
-      `${this.basePath}/bulk`,
-      request
-    );
+    return this.patch<BulkUpdateResult>(`${this.basePath}/bulk`, request);
   }
 
   /**
@@ -172,12 +145,11 @@ export class ProfileAPIClient extends APIClient {
    */
   async getProfileByUserId(
     userId: string,
-    includeDetails = false
+    includeDetails = false,
   ): Promise<UserProfile> {
-    return this.get<UserProfile>(
-      `${this.basePath}/user/${userId}`,
-      { includeDetails }
-    );
+    return this.get<UserProfile>(`${this.basePath}/user/${userId}`, {
+      includeDetails,
+    });
   }
 
   /**
@@ -186,12 +158,11 @@ export class ProfileAPIClient extends APIClient {
    */
   async getProfileById(
     profileId: string,
-    includeDetails = false
+    includeDetails = false,
   ): Promise<UserProfile> {
-    return this.get<UserProfile>(
-      `${this.basePath}/${profileId}`,
-      { includeDetails }
-    );
+    return this.get<UserProfile>(`${this.basePath}/${profileId}`, {
+      includeDetails,
+    });
   }
 
   /**
@@ -200,12 +171,9 @@ export class ProfileAPIClient extends APIClient {
    */
   async updateProfileById(
     profileId: string,
-    updates: UpdateProfileRequest
+    updates: UpdateProfileRequest,
   ): Promise<UserProfile> {
-    return this.patch<UserProfile>(
-      `${this.basePath}/${profileId}`,
-      updates
-    );
+    return this.patch<UserProfile>(`${this.basePath}/${profileId}`, updates);
   }
 
   /**
@@ -213,9 +181,7 @@ export class ProfileAPIClient extends APIClient {
    * DELETE /api/profiles/:userId/permanent
    */
   async permanentlyDeleteProfile(userId: string): Promise<void> {
-    await this.delete<void>(
-      `${this.basePath}/${userId}/permanent`
-    );
+    await this.delete<void>(`${this.basePath}/${userId}/permanent`);
   }
 }
 

@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 export default function CreateProfilePage() {
   const router = useRouter();
   return (
-    <div className="h-full flex flex-col bg-gradient-to-b from-blue-50 to-gray-100 dark:from-slate-900 dark:to-slate-950">
+    <div className="h-full flex flex-col bg-linear-to-b from-blue-50 to-gray-100 dark:from-slate-900 dark:to-slate-950">
       {/* Breadcrumb - Fixed positioning with backdrop */}
       <div className="w-full p-3">
         <div className="max-w-7xl mx-auto">
@@ -24,8 +24,7 @@ export default function CreateProfilePage() {
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href="/"
-                  className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-                >
+                  className="flex items-center gap-2 text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                   <Home className="w-4 h-4" />
                   Home
                 </BreadcrumbLink>
@@ -34,8 +33,7 @@ export default function CreateProfilePage() {
               <BreadcrumbItem>
                 <BreadcrumbLink
                   href="/profile"
-                  className="text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors"
-                >
+                  className="text-gray-700 hover:text-teal-600 dark:text-white/90 dark:hover:text-teal-400 transition-colors">
                   Profile
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -60,7 +58,7 @@ export default function CreateProfilePage() {
 
         {/* Gradient Overlay */}
         <div
-          className="absolute inset-0 bg-gradient-to-br from-black/5 to-transparent dark:from-black/30 dark:to-transparent"
+          className="absolute inset-0 bg-linear-to-br from-black/5 to-transparent dark:from-black/30 dark:to-transparent"
           aria-hidden="true"
         />
 

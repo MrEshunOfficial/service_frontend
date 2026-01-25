@@ -37,6 +37,7 @@ import { IdDetailsDialog } from "./IdDetailsDialog";
 import { PaymentMethodDialog } from "./PaymentMethodDialog";
 import { PreferredCategoriesDialog } from "./PreferredCategoriesDialog";
 import { CompleteClientProfile } from "@/types/profiles/client.profile.types";
+import { IdDetails } from "@/types/base.types";
 
 interface ClientProfileDisplayProps {
   profile: CompleteClientProfile;
@@ -99,8 +100,6 @@ export function ClientProfileDisplay({
   if (!profile?.client) {
     return (
       <Card className="bg-transparent">
-        {" "}
-        {/* Added bg-transparent */}
         <CardContent className="py-8 text-center text-muted-foreground">
           No profile data available
         </CardContent>
@@ -123,22 +122,13 @@ export function ClientProfileDisplay({
     verificationStatus.idVerified
       ? "Fully Verified"
       : verificationStatus.phoneVerified || verificationStatus.emailVerified
-      ? "Partially Verified"
-      : "Unverified";
-
-  const normalizedIdDetails = client.idDetails
-    ? {
-        ...client.idDetails,
-        fileImage: client.idDetails.fileImage?.map((img) => img._id) ?? [],
-      }
-    : undefined;
+        ? "Partially Verified"
+        : "Unverified";
 
   return (
     <div className="space-y-6">
       {/* Header Card */}
       <Card className="bg-transparent">
-        {" "}
-        {/* Added bg-transparent */}
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex flex-col items-center space-y-4">
@@ -150,7 +140,7 @@ export function ClientProfileDisplay({
                 <AvatarFallback className="text-3xl font-semibold bg-linear-to-br from-blue-500 to-purple-600 text-white">
                   {getInitials(
                     client.preferredName,
-                    client.profile?.userId?.email
+                    client.profile?.userId?.email,
                   )}
                 </AvatarFallback>
               </Avatar>
@@ -160,8 +150,8 @@ export function ClientProfileDisplay({
                   verificationLevel === "Fully Verified"
                     ? "default"
                     : verificationLevel === "Partially Verified"
-                    ? "secondary"
-                    : "outline"
+                      ? "secondary"
+                      : "outline"
                 }
                 className="flex items-center gap-1">
                 {verificationLevel === "Fully Verified" ? (
@@ -249,8 +239,6 @@ export function ClientProfileDisplay({
       {showStats && stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-transparent">
-            {" "}
-            {/* Added bg-transparent */}
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Bookings
@@ -266,8 +254,6 @@ export function ClientProfileDisplay({
           </Card>
 
           <Card className="bg-transparent">
-            {" "}
-            {/* Added bg-transparent */}
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Saved Addresses
@@ -285,8 +271,6 @@ export function ClientProfileDisplay({
           </Card>
 
           <Card className="bg-transparent">
-            {" "}
-            {/* Added bg-transparent */}
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Payment Methods
@@ -304,8 +288,6 @@ export function ClientProfileDisplay({
           </Card>
 
           <Card className="cursor-pointer hover:bg-accent/50 transition-colors bg-transparent">
-            {" "}
-            {/* Added bg-transparent */}
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Favorites</CardTitle>
               <FavoritesPopover
@@ -332,8 +314,6 @@ export function ClientProfileDisplay({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Verification Details */}
         <Card className="bg-transparent">
-          {" "}
-          {/* Added bg-transparent */}
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -412,8 +392,6 @@ export function ClientProfileDisplay({
               {/* ID Details */}
               {client.idDetails && (
                 <Card className="w-full mt-3 bg-transparent">
-                  {" "}
-                  {/* Added bg-transparent to nested Card */}
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Shield className="h-5 w-5" />
@@ -464,8 +442,6 @@ export function ClientProfileDisplay({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Preferences */}
         <Card className="bg-transparent">
-          {" "}
-          {/* Added bg-transparent */}
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -569,7 +545,7 @@ export function ClientProfileDisplay({
                         <Badge key={index} variant="secondary">
                           {category}
                         </Badge>
-                      )
+                      ),
                     )}
                   </div>
                 </div>
@@ -597,8 +573,6 @@ export function ClientProfileDisplay({
         <div className="space-y-6">
           {/* Payment Methods */}
           <Card className="bg-transparent">
-            {" "}
-            {/* Added bg-transparent */}
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -642,7 +616,7 @@ export function ClientProfileDisplay({
                           <Badge variant="default">Default</Badge>
                         )}
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               ) : (
@@ -655,8 +629,6 @@ export function ClientProfileDisplay({
 
           {/* Emergency Contact */}
           <Card className="bg-transparent">
-            {" "}
-            {/* Added bg-transparent */}
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -723,7 +695,15 @@ export function ClientProfileDisplay({
       <IdDetailsDialog
         open={isIdDetailsDialogOpen}
         onOpenChange={setIsIdDetailsDialogOpen}
-        currentIdDetails={normalizedIdDetails}
+        currentIdDetails={
+          client.idDetails
+            ? ({
+                ...client.idDetails,
+                fileImage:
+                  client.idDetails.fileImage?.map((img) => img._id) ?? [],
+              } as unknown as IdDetails)
+            : undefined
+        }
         onSave={onUpdateIdDetails}
       />
 

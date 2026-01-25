@@ -45,14 +45,14 @@ export function PreferredCategoriesDialog({
 
   const filteredCategories =
     categories?.filter((cat) =>
-      cat.catName.toLowerCase().includes(searchQuery.toLowerCase())
+      cat.catName.toLowerCase().includes(searchQuery.toLowerCase()),
     ) || [];
 
   const handleToggleCategory = (categoryName: string) => {
     setSelectedCategories((prev) =>
       prev.includes(categoryName)
         ? prev.filter((c) => c !== categoryName)
-        : [...prev, categoryName]
+        : [...prev, categoryName],
     );
   };
 
@@ -133,7 +133,7 @@ export function PreferredCategoriesDialog({
               <div className="space-y-2 py-2">
                 {filteredCategories.map((category) => {
                   const isSelected = selectedCategories.includes(
-                    category.catName
+                    category.catName,
                   );
                   return (
                     <div

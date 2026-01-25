@@ -34,7 +34,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { UserProfile } from "@/types/profile.types";
+import { UserProfile } from "@/types/profiles/profile.types";
 
 // Schema
 const profileFormSchema = z.object({
@@ -52,7 +52,7 @@ const profileFormSchema = z.object({
     .string()
     .regex(
       /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/,
-      "Invalid phone number format"
+      "Invalid phone number format",
     )
     .optional()
     .or(z.literal("")),
@@ -79,9 +79,31 @@ export default function ProfileForm({
   const router = useRouter();
   const [showSuccess, setShowSuccess] = useState(false);
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const isUpdateMode = mode === "update";
+
+  // Helper function to safely extract profilePictureId
+  const getProfilePictureId = (
+    profile: UserProfile | null,
+  ): string | undefined => {
+    if (!profile?.profilePictureId) return undefined;
+
+    // If it's already a string, return it
+    if (typeof profile.profilePictureId === "string") {
+      return profile.profilePictureId;
+    }
+
+    // If it's a File object, return its _id
+    if (
+      typeof profile.profilePictureId === "object" &&
+      "_id" in profile.profilePictureId
+    ) {
+      return profile.profilePictureId._id.toString();
+    }
+
+    return undefined;
+  };
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -89,7 +111,7 @@ export default function ProfileForm({
       role: initialData?.role || undefined,
       bio: initialData?.bio || "",
       mobileNumber: initialData?.mobileNumber || "",
-      profilePictureId: initialData?.profilePictureId || undefined,
+      profilePictureId: getProfilePictureId(initialData),
     },
   });
 
@@ -112,7 +134,7 @@ export default function ProfileForm({
         role: initialData.role,
         bio: initialData.bio || "",
         mobileNumber: initialData.mobileNumber || "",
-        profilePictureId: initialData.profilePictureId || undefined,
+        profilePictureId: getProfilePictureId(initialData),
       });
     }
   }, [initialData, isUpdateMode, form]);
@@ -163,11 +185,11 @@ export default function ProfileForm({
       }
     } catch (error) {
       toast.error(
-        `Error ${isUpdateMode ? "updating" : "creating"} profile: ${error}`
+        `Error ${isUpdateMode ? "updating" : "creating"} profile: ${error}`,
       );
       console.error(
         `Error ${isUpdateMode ? "updating" : "creating"} profile:`,
-        error
+        error,
       );
     }
   };
@@ -231,16 +253,14 @@ export default function ProfileForm({
             <Button
               className="w-full bg-gradient-to-r from-teal-500 to-teal-600 dark:from-teal-400 dark:to-teal-500 hover:from-teal-600 hover:to-teal-700 text-white dark:text-gray-900"
               onClick={navigateToRoleProfile}
-              size="lg"
-            >
+              size="lg">
               Setup {selectedRole === UserRole.PROVIDER ? "Business" : "Client"}{" "}
               Profile
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
             <button
               className="text-gray-600 dark:text-white/80 hover:text-gray-900 dark:hover:text-white underline text-sm"
-              onClick={navigateToProfile}
-            >
+              onClick={navigateToProfile}>
               Skip
             </button>
           </div>
@@ -352,16 +372,14 @@ export default function ProfileForm({
                           field.value === UserRole.PROVIDER
                             ? "border-teal-600 dark:border-teal-400 bg-gradient-to-br from-teal-400/30 to-teal-600/30 dark:from-teal-500/40 dark:to-teal-700/40 shadow-lg scale-[1.02]"
                             : "border-gray-200 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:border-gray-300 dark:hover:border-white/20 hover:shadow-md hover:bg-white/80 dark:hover:bg-white/10"
-                        }`}
-                      >
+                        }`}>
                         <div className="flex items-start gap-3">
                           <div
                             className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
                               field.value === UserRole.PROVIDER
                                 ? "bg-teal-600 dark:bg-teal-400 text-white dark:text-gray-900"
                                 : "bg-gray-200/80 dark:bg-white/10 text-gray-700 dark:text-white/90"
-                            }`}
-                          >
+                            }`}>
                             <Briefcase className="w-5 h-5" />
                           </div>
                           <div className="flex-1">
@@ -386,16 +404,14 @@ export default function ProfileForm({
                           field.value === UserRole.CUSTOMER
                             ? "border-sky-500 dark:border-sky-400 bg-gradient-to-br from-sky-400/30 to-sky-600/30 dark:from-sky-500/40 dark:to-sky-700/40 shadow-lg scale-[1.02]"
                             : "border-gray-200 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:border-gray-300 dark:hover:border-white/20 hover:shadow-md hover:bg-white/80 dark:hover:bg-white/10"
-                        }`}
-                      >
+                        }`}>
                         <div className="flex items-start gap-3">
                           <div
                             className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
                               field.value === UserRole.CUSTOMER
                                 ? "bg-sky-500 dark:bg-sky-400 text-white dark:text-gray-900"
                                 : "bg-gray-200/80 dark:bg-white/10 text-gray-700 dark:text-white/90"
-                            }`}
-                          >
+                            }`}>
                             <User className="w-5 h-5" />
                           </div>
                           <div className="flex-1">
@@ -484,15 +500,13 @@ export default function ProfileForm({
                 type="button"
                 variant="outline"
                 disabled={loading}
-                onClick={handleCancel}
-              >
+                onClick={handleCancel}>
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={loading}
-                className="bg-teal-600 dark:bg-teal-400 hover:bg-teal-700 dark:hover:bg-teal-300 text-white dark:text-gray-900"
-              >
+                className="bg-teal-600 dark:bg-teal-400 hover:bg-teal-700 dark:hover:bg-teal-300 text-white dark:text-gray-900">
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin mr-2" />

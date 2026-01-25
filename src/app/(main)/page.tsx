@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Shield, TrendingUp, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/auth/useAuth";
@@ -17,9 +17,16 @@ export default function HomePage() {
   const { profile, loading: profileLoading } = useProfile({
     autoLoad: isAuthenticated,
   });
+
+  // ✅ FIX: Create stable params object using useMemo
+  const taskParams = useMemo(
+    () => ({ status: TaskStatus.FLOATING }),
+    [], // Empty dependency array - created only once
+  );
+
   const { tasks } = useCustomerTasks(
-    { status: TaskStatus.FLOATING },
-    isAuthenticated && profile?.role === UserRole.CUSTOMER
+    taskParams,
+    isAuthenticated && profile?.role === UserRole.CUSTOMER,
   );
 
   const [showTaskResultDialog, setShowTaskResultDialog] = useState(false);
@@ -33,7 +40,7 @@ export default function HomePage() {
 
   // Get floating tasks for the dialog
   const floatingTasks = tasks.filter(
-    (task) => task.status === TaskStatus.FLOATING
+    (task) => task.status === TaskStatus.FLOATING,
   );
 
   const handleBrowseServices = () => {
@@ -127,8 +134,7 @@ export default function HomePage() {
                 <div className="pt-2">
                   <button
                     onClick={handleViewMyTasks}
-                    className="inline-flex items-center gap-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors group"
-                  >
+                    className="inline-flex items-center gap-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors group">
                     View my tasks
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </button>

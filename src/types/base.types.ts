@@ -103,4 +103,3 @@ export enum ServiceStatus {
   REJECTED = "rejected",
   SUSPENDED = "suspended",
 }
-
