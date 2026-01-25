@@ -1,7 +1,11 @@
 "use client";
 import React, { useState } from "react";
 import { useProviderRequestedTasks } from "@/hooks/useTasksAndBookings";
-import { Task, ProviderResponseRequestBody } from "@/types/task.types";
+import {
+  Task,
+  ProviderResponseRequestBody,
+  TaskStatus,
+} from "@/types/task.types";
 import {
   Clock,
   MapPin,
@@ -12,6 +16,14 @@ import {
   XCircle,
   Eye,
   RefreshCw,
+  Check,
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+  MessageSquare,
+  ExternalLink,
+  ExpandIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BackgroundOverlay } from "@/components/ui/LoadingOverlay";
@@ -63,6 +75,10 @@ const RequestedTasksList: React.FC = () => {
 
   const handleViewDetails = (taskId: string) => {
     router.push(`/tasks/requested/${taskId}`);
+  };
+
+  const handleViewBooking = (bookingId: string) => {
+    router.push(`/tasks/provider/bookings/${bookingId}`);
   };
 
   if (loading) {
@@ -140,13 +156,12 @@ const RequestedTasksList: React.FC = () => {
               Requested Tasks
             </h1>
             <p className="text-gray-600 dark:text-gray-400 text-base sm:text-lg">
-              Customers have specifically requested you for these tasks
+              Customers have specifically requested you
             </p>
             <div className="mt-4 inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-full px-4 py-2">
               <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                {tasks.length} {tasks.length === 1 ? "Request" : "Requests"}{" "}
-                Pending
+                {tasks.length} {tasks.length === 1 ? "Request" : "Requests"}
               </span>
             </div>
           </div>
@@ -159,14 +174,19 @@ const RequestedTasksList: React.FC = () => {
           </button>
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-3">
           {tasks.map((task) => (
-            <TaskCard
+            <CompactTaskCard
               key={task._id}
               task={task}
               onAccept={() => handleQuickAccept(task._id)}
               onReject={() => handleQuickReject(task._id)}
               onViewDetails={() => handleViewDetails(task._id)}
+              onViewBooking={
+                task.convertedToBookingId
+                  ? () => handleViewBooking(task.convertedToBookingId!)
+                  : undefined
+              }
               isProcessing={processingTaskId === task._id}
             />
           ))}
@@ -176,127 +196,182 @@ const RequestedTasksList: React.FC = () => {
   );
 };
 
-interface TaskCardProps {
+interface CompactTaskCardProps {
   task: Task;
   onAccept: () => void;
   onReject: () => void;
   onViewDetails: () => void;
+  onViewBooking?: () => void;
   isProcessing: boolean;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({
+const CompactTaskCard: React.FC<CompactTaskCardProps> = ({
   task,
   onAccept,
   onReject,
   onViewDetails,
+  onViewBooking,
   isProcessing,
 }) => {
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      year: "numeric",
     });
   };
 
   const getCustomerName = () => {
     if (typeof task.customerId === "object" && task.customerId !== null) {
-      return task.customerId.name || "Unknown Customer";
+      return task.customerId.name || "Unknown";
     }
-    return "Unknown Customer";
+    return "Unknown";
+  };
+
+  // Status checks
+  const isAccepted = task.status === TaskStatus.ACCEPTED;
+  const isConverted = task.status === TaskStatus.CONVERTED;
+  const isCancelled = task.status === TaskStatus.CANCELLED;
+  const isExpired = task.status === TaskStatus.EXPIRED;
+
+  const canAccept =
+    task.status === TaskStatus.REQUESTED &&
+    !isAccepted &&
+    !isConverted &&
+    !isCancelled &&
+    !isExpired;
+
+  // Get status indicator
+  const getStatusIndicator = () => {
+    if (isConverted) {
+      return (
+        <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400">
+          <Check className="w-4 h-4" />
+          <span className="text-xs font-semibold">Booked</span>
+        </div>
+      );
+    }
+    if (isAccepted) {
+      return (
+        <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+          <CheckCircle className="w-4 h-4" />
+          <span className="text-xs font-semibold">Accepted</span>
+        </div>
+      );
+    }
+    if (isCancelled) {
+      return (
+        <div className="flex items-center gap-1.5 text-red-600 dark:text-red-400">
+          <XCircle className="w-4 h-4" />
+          <span className="text-xs font-semibold">Cancelled</span>
+        </div>
+      );
+    }
+    if (isExpired) {
+      return (
+        <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+          <Clock className="w-4 h-4" />
+          <span className="text-xs font-semibold">Expired</span>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
-    <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 p-6 hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/20 transition-all duration-300 hover:scale-[1.01]">
-      <div className="flex items-start justify-between mb-5">
-        <div className="flex-1">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {task.title}
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed line-clamp-2">
-            {task.description}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-        <div className="flex items-center gap-3 text-sm">
-          <div className="w-9 h-9 bg-linear-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-lg flex items-center justify-center shrink-0">
-            <User className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-          </div>
-          <span className="text-gray-700 dark:text-gray-300 font-medium">
-            {getCustomerName()}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3 text-sm">
-          <div className="w-9 h-9 bg-linear-to-br from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 rounded-lg flex items-center justify-center shrink-0">
-            <MapPin className="w-4 h-4 text-red-600 dark:text-red-400" />
-          </div>
-          <span className="text-gray-700 dark:text-gray-300 font-medium">
-            {task.customerLocation.locality || task.customerLocation.city}
-          </span>
-        </div>
-
-        {task.schedule?.preferredDate && (
-          <div className="flex items-center gap-3 text-sm">
-            <div className="w-9 h-9 bg-linear-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg flex items-center justify-center shrink-0">
-              <Clock className="w-4 h-4 text-green-600 dark:text-green-400" />
+    <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-all duration-200">
+      {/* Compact Header - Always Visible */}
+      <div className="p-4">
+        <div className="flex items-center justify-between gap-3">
+          {/* Left: Task Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 truncate">
+                {task.title}
+              </h3>
+              {getStatusIndicator()}
             </div>
-            <span className="text-gray-700 dark:text-gray-300 font-medium">
-              {formatDate(task.schedule.preferredDate)}
-            </span>
+
+            <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
+              <div className="flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5" />
+                <span className="truncate max-w-[120px]">
+                  {getCustomerName()}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5" />
+                <span className="truncate">
+                  {task.customerLocation.locality || task.customerLocation.city}
+                </span>
+              </div>
+              {task.schedule?.preferredDate && (
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{formatDate(task.schedule.preferredDate)}</span>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
 
-      {task.requestedProvider?.clientMessage && (
-        <div className="bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-5">
-          <p className="text-sm text-blue-900 dark:text-blue-100 leading-relaxed">
-            <span className="font-semibold block mb-1">
-              Customer's message:
-            </span>
-            <span className="text-blue-800 dark:text-blue-200">
-              "{task.requestedProvider.clientMessage}"
-            </span>
-          </p>
+          {/* Right: Quick Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            {canAccept && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAccept();
+                  }}
+                  disabled={isProcessing}
+                  className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Accept"
+                >
+                  {isProcessing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4" />
+                  )}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReject();
+                  }}
+                  disabled={isProcessing}
+                  className="p-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50"
+                  title="Decline"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              </>
+            )}
+
+            {isConverted && onViewBooking && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewBooking();
+                }}
+                className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                title="View Booking"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </button>
+            )}
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewDetails();
+              }}
+              disabled={isProcessing}
+              className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              title="View Details"
+            >
+              <ExpandIcon className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-      )}
-
-      <div className="flex flex-col sm:flex-row gap-3">
-        <button
-          onClick={onAccept}
-          disabled={isProcessing}
-          className="flex-1 bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 dark:from-green-500 dark:to-emerald-500 dark:hover:from-green-600 dark:hover:to-emerald-600 text-white py-3 px-5 rounded-lg font-semibold transition-all duration-200 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isProcessing ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            <>
-              <CheckCircle className="w-5 h-5" />
-              Accept
-            </>
-          )}
-        </button>
-        <button
-          onClick={onReject}
-          disabled={isProcessing}
-          className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-3 px-5 rounded-lg font-semibold transition-all duration-200 border border-gray-300 dark:border-gray-700 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <XCircle className="w-5 h-5" />
-          Reject
-        </button>
-        <button
-          onClick={onViewDetails}
-          disabled={isProcessing}
-          className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white py-3 px-5 rounded-lg font-semibold transition-all duration-200 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 flex items-center justify-center gap-2 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Eye className="w-5 h-5" />
-          Details
-        </button>
       </div>
     </div>
   );

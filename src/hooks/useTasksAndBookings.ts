@@ -356,7 +356,7 @@ export function useCustomerBookings(autoLoad: boolean = true) {
 }
 
 /**
- * Hook for managing a single booking
+ * Hook for managing a single booking (works for both customers and providers)
  * Auto-loads booking on mount
  */
 export function useBooking(bookingId: string, autoLoad: boolean = true) {
@@ -372,9 +372,14 @@ export function useBooking(bookingId: string, autoLoad: boolean = true) {
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
+      // ✅ FIXED: Use unified endpoint
       const response = await taskAPI.getBookingById(bookingId);
+      
+      // ✅ Handle both response formats
+      const bookingData = response.booking || response;
+      
       setState({
-        booking: response.booking || null,
+        booking: (bookingData as Booking) || null,
         loading: false,
         error: null,
         isInitialized: true,
@@ -415,6 +420,55 @@ export function useBooking(bookingId: string, autoLoad: boolean = true) {
     fetchBooking,
     refreshBooking: fetchBooking,
     cancelBooking,
+  };
+}
+
+/**
+ * ✅ UPDATE: Fix useProviderBooking to use the same unified endpoint
+ */
+export function useProviderBooking(bookingId: string, autoLoad: boolean = true) {
+  const [state, setState] = useState<UseBookingState>({
+    booking: null,
+    loading: autoLoad,
+    error: null,
+    isInitialized: false,
+  });
+
+  const fetchBooking = useCallback(async () => {
+    if (!bookingId) return;
+
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      // ✅ FIXED: Use unified endpoint (same as customer)
+      const response = await taskAPI.getBookingById(bookingId);
+      const bookingData = response.booking || response;
+      
+      setState({
+        booking: (bookingData as Booking) || null,
+        loading: false,
+        error: null,
+        isInitialized: true,
+      });
+    } catch (error) {
+      setState({
+        booking: null,
+        loading: false,
+        error: error as APIError,
+        isInitialized: true,
+      });
+    }
+  }, [bookingId]);
+
+  useEffect(() => {
+    if (autoLoad && bookingId && !state.isInitialized) {
+      fetchBooking();
+    }
+  }, [autoLoad, bookingId, state.isInitialized, fetchBooking]);
+
+  return {
+    ...state,
+    fetchBooking,
+    refreshBooking: fetchBooking,
   };
 }
 
@@ -1024,48 +1078,48 @@ export function usePlatformStatistics(autoLoad: boolean = true) {
   };
 }
 
-export function useProviderBooking(bookingId: string, autoLoad: boolean = true) {
-  const [state, setState] = useState<UseBookingState>({
-    booking: null,
-    loading: autoLoad,
-    error: null,
-    isInitialized: false,
-  });
+// export function useProviderBooking(bookingId: string, autoLoad: boolean = true) {
+//   const [state, setState] = useState<UseBookingState>({
+//     booking: null,
+//     loading: autoLoad,
+//     error: null,
+//     isInitialized: false,
+//   });
 
-  const fetchBooking = useCallback(async () => {
-    if (!bookingId) return;
+//   const fetchBooking = useCallback(async () => {
+//     if (!bookingId) return;
 
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-    try {
-      const response = await taskAPI.getBookingDetails(bookingId);
-      setState({
-        booking: response.booking || null,
-        loading: false,
-        error: null,
-        isInitialized: true,
-      });
-    } catch (error) {
-      setState({
-        booking: null,
-        loading: false,
-        error: error as APIError,
-        isInitialized: true,
-      });
-    }
-  }, [bookingId]);
+//     setState((prev) => ({ ...prev, loading: true, error: null }));
+//     try {
+//       const response = await taskAPI.getBookingDetails(bookingId);
+//       setState({
+//         booking: response.booking || null,
+//         loading: false,
+//         error: null,
+//         isInitialized: true,
+//       });
+//     } catch (error) {
+//       setState({
+//         booking: null,
+//         loading: false,
+//         error: error as APIError,
+//         isInitialized: true,
+//       });
+//     }
+//   }, [bookingId]);
 
-  useEffect(() => {
-    if (autoLoad && bookingId && !state.isInitialized) {
-      fetchBooking();
-    }
-  }, [autoLoad, bookingId, state.isInitialized, fetchBooking]);
+//   useEffect(() => {
+//     if (autoLoad && bookingId && !state.isInitialized) {
+//       fetchBooking();
+//     }
+//   }, [autoLoad, bookingId, state.isInitialized, fetchBooking]);
 
-  return {
-    ...state,
-    fetchBooking,
-    refreshBooking: fetchBooking,
-  };
-}
+//   return {
+//     ...state,
+//     fetchBooking,
+//     refreshBooking: fetchBooking,
+//   };
+// }
 
 /**
  * Hook for funnel analysis

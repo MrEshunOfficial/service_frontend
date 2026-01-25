@@ -106,6 +106,13 @@ export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
         roles: [UserRole.PROVIDER],
       },
       {
+        id: "booked-tasks",
+        label: "bookings",
+        icon: FileText,
+        href: "/tasks/provider/bookings",
+        roles: [UserRole.PROVIDER],
+      },
+      {
         id: "tasks-requested",
         label: "Requests Received",
         icon: TrendingUp,

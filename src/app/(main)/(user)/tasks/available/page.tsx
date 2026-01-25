@@ -12,6 +12,9 @@ import {
   MessageSquare,
   RefreshCw,
   Loader2,
+  AlertCircle,
+  ArrowRight,
+  Package,
 } from "lucide-react";
 import {
   Task,
@@ -44,11 +47,11 @@ const AvailableTasksPage = () => {
       setResponseMessage("");
       setSelectedTask(null);
 
-      // Show success message with booking info if available
+      // Navigate to booking if created
       if (response.booking) {
-        alert(
-          `Task accepted and converted to booking! Booking ID: ${response.booking._id}`,
-        );
+        const bookingId = response.booking._id;
+        alert(`Task accepted! Redirecting to booking...`);
+        window.location.href = `/provider/bookings/${bookingId}`;
       } else {
         alert("Task request accepted successfully!");
       }
@@ -103,6 +106,12 @@ const AvailableTasksPage = () => {
         "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300",
       [TaskStatus.ACCEPTED]:
         "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+      [TaskStatus.CONVERTED]:
+        "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+      [TaskStatus.CANCELLED]:
+        "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+      [TaskStatus.EXPIRED]:
+        "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
     };
 
     return (
@@ -119,8 +128,90 @@ const AvailableTasksPage = () => {
     });
   };
 
-  const formatCurrency = (amount: number, currency: string = "GHS") => {
-    return `${currency} ${amount.toFixed(2)}`;
+  const getTaskStatusInfo = (task: Task) => {
+    switch (task.status) {
+      case TaskStatus.MATCHED:
+        return {
+          icon: <TrendingUp className="w-5 h-5" />,
+          title: "Matched with You",
+          description:
+            "You were matched for this task based on your services and location",
+          color: "blue",
+          bgClass: "bg-blue-50 dark:bg-blue-950/30",
+          borderClass: "border-blue-200 dark:border-blue-800",
+          textClass: "text-blue-900 dark:text-blue-300",
+          subtextClass: "text-blue-700 dark:text-blue-400",
+        };
+      case TaskStatus.REQUESTED:
+        return {
+          icon: <MessageSquare className="w-5 h-5" />,
+          title: "Client Requested You",
+          description:
+            "The client specifically requested you for this task. Respond to accept or decline.",
+          color: "yellow",
+          bgClass: "bg-yellow-50 dark:bg-yellow-950/30",
+          borderClass: "border-yellow-200 dark:border-yellow-800",
+          textClass: "text-yellow-900 dark:text-yellow-300",
+          subtextClass: "text-yellow-700 dark:text-yellow-400",
+          urgent: true,
+        };
+      case TaskStatus.ACCEPTED:
+        return {
+          icon: <CheckCircle className="w-5 h-5" />,
+          title: "You've Accepted This Task",
+          description: "Waiting to be booked",
+          color: "green",
+          bgClass: "bg-green-50 dark:bg-green-950/30",
+          borderClass: "border-green-200 dark:border-green-800",
+          textClass: "text-green-900 dark:text-green-300",
+          subtextClass: "text-green-700 dark:text-green-400",
+        };
+      case TaskStatus.CONVERTED:
+        return {
+          icon: <Package className="w-5 h-5" />,
+          title: "Converted to Booking",
+          description: "This task has been already been booked",
+          color: "teal",
+          bgClass: "bg-teal-50 dark:bg-teal-950/30",
+          borderClass: "border-teal-200 dark:border-teal-800",
+          textClass: "text-teal-900 dark:text-teal-300",
+          subtextClass: "text-teal-700 dark:text-teal-400",
+        };
+      case TaskStatus.CANCELLED:
+        return {
+          icon: <XCircle className="w-5 h-5" />,
+          title: "Task Cancelled",
+          description:
+            task.cancellationReason || "This task has been cancelled",
+          color: "red",
+          bgClass: "bg-red-50 dark:bg-red-950/30",
+          borderClass: "border-red-200 dark:border-red-800",
+          textClass: "text-red-900 dark:text-red-300",
+          subtextClass: "text-red-700 dark:text-red-400",
+        };
+      case TaskStatus.EXPIRED:
+        return {
+          icon: <Clock className="w-5 h-5" />,
+          title: "Task Expired",
+          description: "This task has expired and is no longer active",
+          color: "gray",
+          bgClass: "bg-gray-50 dark:bg-gray-800",
+          borderClass: "border-gray-200 dark:border-gray-700",
+          textClass: "text-gray-900 dark:text-gray-300",
+          subtextClass: "text-gray-700 dark:text-gray-400",
+        };
+      default:
+        return {
+          icon: <AlertCircle className="w-5 h-5" />,
+          title: "Status Unknown",
+          description: "",
+          color: "gray",
+          bgClass: "bg-gray-50 dark:bg-gray-800",
+          borderClass: "border-gray-200 dark:border-gray-700",
+          textClass: "text-gray-900 dark:text-gray-300",
+          subtextClass: "text-gray-700 dark:text-gray-400",
+        };
+    }
   };
 
   if (loading) {
@@ -206,20 +297,20 @@ const AvailableTasksPage = () => {
         ) : (
           <div className="space-y-4">
             {tasks.map((task) => {
-              const isRequested = task.status === TaskStatus.REQUESTED;
-              const isAccepted = task.status === TaskStatus.ACCEPTED;
-              const isConverted = task.status === TaskStatus.CONVERTED;
-              const isCancelled = task.status === TaskStatus.CANCELLED;
-              const isExpired = task.status === TaskStatus.EXPIRED;
-
-              const canRespond = isRequested && !isAccepted;
+              const statusInfo = getTaskStatusInfo(task);
+              const canRespond = task.status === TaskStatus.REQUESTED;
 
               return (
                 <div
                   key={task._id}
-                  className="bg-white dark:bg-gray-900 rounded-lg shadow-sm hover:shadow-md dark:hover:shadow-gray-950/50 transition-all border border-gray-200 dark:border-gray-800"
+                  className={`bg-white dark:bg-gray-900 rounded-lg shadow-sm hover:shadow-md dark:hover:shadow-gray-950/50 transition-all border-2 ${
+                    statusInfo.urgent
+                      ? "border-yellow-400 dark:border-yellow-600"
+                      : "border-gray-200 dark:border-gray-800"
+                  }`}
                 >
                   <div className="p-6">
+                    {/* Header */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
@@ -244,10 +335,12 @@ const AvailableTasksPage = () => {
                       </div>
                     </div>
 
+                    {/* Description */}
                     <p className="text-gray-700 dark:text-gray-300 mb-5 leading-relaxed">
                       {task.description}
                     </p>
 
+                    {/* Task Details Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-6">
                       <div className="flex items-start gap-2 text-sm">
                         <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5" />
@@ -317,6 +410,7 @@ const AvailableTasksPage = () => {
                       </div>
                     </div>
 
+                    {/* Tags */}
                     {task.tags && task.tags.length > 0 && (
                       <div className="mb-5">
                         <div className="flex flex-wrap gap-2">
@@ -332,6 +426,7 @@ const AvailableTasksPage = () => {
                       </div>
                     )}
 
+                    {/* Category */}
                     {task.category && (
                       <div className="mb-5">
                         <span className="inline-flex items-center px-3 py-1 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-sm rounded-full">
@@ -340,171 +435,136 @@ const AvailableTasksPage = () => {
                       </div>
                     )}
 
-                    {canRespond && (
-                      <div className="border-t border-gray-200 dark:border-gray-800 pt-5 mt-5">
-                        {selectedTask?._id === task._id ? (
-                          <div className="space-y-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Message to Client
-                              </label>
-                              <textarea
-                                value={responseMessage}
-                                onChange={(e) =>
-                                  setResponseMessage(e.target.value)
-                                }
-                                placeholder="Introduce yourself and explain why you're a good fit for this task..."
-                                rows={4}
-                                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent resize-none transition-colors"
-                              />
-                            </div>
-                            <div className="flex gap-3 flex-col sm:flex-row">
-                              <button
-                                onClick={() => handleAccept(task._id)}
-                                disabled={respondingToTask === task._id}
-                                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
-                              >
-                                {respondingToTask === task._id ? (
-                                  <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    Accepting...
-                                  </>
-                                ) : (
-                                  <>
-                                    <CheckCircle className="w-5 h-5" />
-                                    Accept Task
-                                  </>
-                                )}
-                              </button>
-                              <button
-                                onClick={() => handleReject(task._id)}
-                                disabled={respondingToTask === task._id}
-                                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
-                              >
-                                {respondingToTask === task._id ? (
-                                  <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    Rejecting...
-                                  </>
-                                ) : (
-                                  <>
-                                    <XCircle className="w-5 h-5" />
-                                    Reject Task
-                                  </>
-                                )}
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setSelectedTask(null);
-                                  setResponseMessage("");
-                                }}
-                                disabled={respondingToTask === task._id}
-                                className="px-6 py-3 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium transition-colors disabled:opacity-50"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col sm:flex-row items-center justify-between bg-yellow-50 dark:bg-yellow-950/30 p-4 rounded-lg gap-4">
-                            <div className="flex items-center gap-3">
-                              <MessageSquare className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                    {/* Status-specific Actions */}
+                    <div
+                      className={`border-t ${statusInfo.borderClass} pt-5 mt-5`}
+                    >
+                      {canRespond && (
+                        <>
+                          {selectedTask?._id === task._id ? (
+                            <div className="space-y-4">
                               <div>
-                                <p className="font-medium text-yellow-900 dark:text-yellow-300">
-                                  Client has requested you for this task
-                                </p>
-                                <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                                  Respond to let them know if you can help
-                                </p>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                  Message to Client
+                                </label>
+                                <textarea
+                                  value={responseMessage}
+                                  onChange={(e) =>
+                                    setResponseMessage(e.target.value)
+                                  }
+                                  placeholder="Introduce yourself and explain why you're a good fit for this task..."
+                                  rows={4}
+                                  className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent resize-none transition-colors"
+                                />
+                              </div>
+                              <div className="flex gap-3 flex-col sm:flex-row">
+                                <button
+                                  onClick={() => handleAccept(task._id)}
+                                  disabled={respondingToTask === task._id}
+                                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                                >
+                                  {respondingToTask === task._id ? (
+                                    <>
+                                      <Loader2 className="w-5 h-5 animate-spin" />
+                                      Accepting...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle className="w-5 h-5" />
+                                      Accept Task
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => handleReject(task._id)}
+                                  disabled={respondingToTask === task._id}
+                                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                                >
+                                  {respondingToTask === task._id ? (
+                                    <>
+                                      <Loader2 className="w-5 h-5 animate-spin" />
+                                      Rejecting...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <XCircle className="w-5 h-5" />
+                                      Reject Task
+                                    </>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedTask(null);
+                                    setResponseMessage("");
+                                  }}
+                                  disabled={respondingToTask === task._id}
+                                  className="px-6 py-3 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium transition-colors disabled:opacity-50"
+                                >
+                                  Cancel
+                                </button>
                               </div>
                             </div>
-                            <button
-                              onClick={() => setSelectedTask(task)}
-                              className="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors whitespace-nowrap"
+                          ) : (
+                            <div
+                              className={`flex flex-col sm:flex-row items-center justify-between ${statusInfo.bgClass} border ${statusInfo.borderClass} p-4 rounded-lg gap-4`}
                             >
-                              Respond
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                              <div className="flex items-center gap-3">
+                                {statusInfo.icon}
+                                <div>
+                                  <p
+                                    className={`font-medium ${statusInfo.textClass}`}
+                                  >
+                                    {statusInfo.title}
+                                  </p>
+                                  <p
+                                    className={`text-sm ${statusInfo.subtextClass}`}
+                                  >
+                                    {statusInfo.description}
+                                  </p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => setSelectedTask(task)}
+                                className="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors whitespace-nowrap"
+                              >
+                                Respond
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
 
-                    {isAccepted && !isConverted && (
-                      <div className="border-t border-gray-200 dark:border-gray-800 pt-5 mt-5">
-                        <div className="flex items-center gap-3 bg-green-50 dark:bg-green-950/30 p-4 rounded-lg">
-                          <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                          <div>
-                            <p className="font-medium text-green-900 dark:text-green-300">
-                              You've accepted this task
-                            </p>
-                            <p className="text-sm text-green-700 dark:text-green-400">
-                              Waiting to be converted to a booking
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {isConverted && (
-                      <div className="border-t border-gray-200 dark:border-gray-800 pt-5 mt-5">
-                        <div className="flex items-center gap-3 bg-teal-50 dark:bg-teal-950/30 p-4 rounded-lg">
-                          <CheckCircle className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                      {/* Other status displays */}
+                      {!canRespond && (
+                        <div
+                          className={`flex items-start gap-3 ${statusInfo.bgClass} border ${statusInfo.borderClass} p-4 rounded-lg`}
+                        >
+                          {statusInfo.icon}
                           <div className="flex-1">
-                            <p className="font-medium text-teal-900 dark:text-teal-300">
-                              Converted to Booking
+                            <p
+                              className={`font-medium ${statusInfo.textClass} mb-1`}
+                            >
+                              {statusInfo.title}
                             </p>
-                            <p className="text-sm text-teal-700 dark:text-teal-400">
-                              This task has been successfully converted to a
-                              booking
+                            <p className={`text-sm ${statusInfo.subtextClass}`}>
+                              {statusInfo.description}
                             </p>
-                          </div>
-                          {task.convertedToBookingId && (
-                            <p className="text-xs text-teal-600 dark:text-teal-400 font-mono">
-                              Booking ID: {task.convertedToBookingId}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {isCancelled && (
-                      <div className="border-t border-gray-200 dark:border-gray-800 pt-5 mt-5">
-                        <div className="bg-red-50 dark:bg-red-950/30 p-4 rounded-lg">
-                          <div className="flex items-center gap-3 mb-2">
-                            <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                            <p className="font-medium text-red-900 dark:text-red-300">
-                              Task Cancelled
-                            </p>
-                          </div>
-                          {task.cancellationReason && (
-                            <p className="text-sm text-red-700 dark:text-red-400 ml-8">
-                              Reason: {task.cancellationReason}
-                            </p>
-                          )}
-                          {task.cancelledAt && (
-                            <p className="text-xs text-red-600 dark:text-red-400 ml-8 mt-1">
-                              Cancelled on {formatDate(task.cancelledAt)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {isExpired && (
-                      <div className="border-t border-gray-200 dark:border-gray-800 pt-5 mt-5">
-                        <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                          <Clock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-300">
-                              Task Expired
-                            </p>
-                            <p className="text-sm text-gray-700 dark:text-gray-400">
-                              This task has expired and is no longer active
-                            </p>
+                            {task.status === TaskStatus.CONVERTED &&
+                              task.convertedToBookingId && (
+                                <button
+                                  onClick={() =>
+                                    (window.location.href = `/tasks/provider/bookings/${task.convertedToBookingId}`)
+                                  }
+                                  className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors"
+                                >
+                                  View Booking
+                                  <ArrowRight className="w-4 h-4" />
+                                </button>
+                              )}
                           </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               );

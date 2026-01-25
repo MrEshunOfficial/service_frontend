@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useProviderRequestedTask } from "@/hooks/useTasksAndBookings";
-import { ProviderResponseRequestBody } from "@/types/task.types";
+import { ProviderResponseRequestBody, TaskStatus } from "@/types/task.types";
 import {
   Clock,
   MapPin,
@@ -15,6 +15,8 @@ import {
   Mail,
   Tag,
   AlertTriangle,
+  Check,
+  ArrowRight,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { BackgroundOverlay } from "@/components/ui/LoadingOverlay";
@@ -24,7 +26,7 @@ const RequestedTaskDetails: React.FC = () => {
   const router = useRouter();
   const taskId = params.id as string;
 
-  const { task, loading, error, respondToRequest, refreshTask } =
+  const { task, loading, error, respondToRequest } =
     useProviderRequestedTask(taskId);
 
   const [showResponseForm, setShowResponseForm] = useState(false);
@@ -83,6 +85,18 @@ const RequestedTaskDetails: React.FC = () => {
     return null;
   };
 
+  // ✅ Status checks
+  const isAccepted = task?.status === TaskStatus.ACCEPTED;
+  const isConverted = task?.status === TaskStatus.CONVERTED;
+  const isCancelled = task?.status === TaskStatus.CANCELLED;
+  const isExpired = task?.status === TaskStatus.EXPIRED;
+  const canRespond =
+    task?.status === TaskStatus.REQUESTED &&
+    !isAccepted &&
+    !isConverted &&
+    !isCancelled &&
+    !isExpired;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-950 relative overflow-hidden">
@@ -127,6 +141,51 @@ const RequestedTaskDetails: React.FC = () => {
     );
   }
 
+  // ✅ Get status badge component
+  const getStatusBadge = () => {
+    if (isConverted) {
+      return (
+        <span className="bg-linear-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 text-green-800 dark:text-green-200 text-xs font-bold px-3 py-1.5 rounded-full border border-green-200 dark:border-green-800 inline-flex items-center gap-2">
+          <Check className="w-3.5 h-3.5" />
+          CONVERTED TO BOOKING
+        </span>
+      );
+    }
+
+    if (isAccepted) {
+      return (
+        <span className="bg-linear-to-r from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 text-blue-800 dark:text-blue-200 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800 inline-flex items-center gap-2">
+          <CheckCircle className="w-3.5 h-3.5" />
+          ALREADY ACCEPTED
+        </span>
+      );
+    }
+
+    if (isCancelled) {
+      return (
+        <span className="bg-linear-to-r from-red-100 to-orange-100 dark:from-red-900/40 dark:to-orange-900/40 text-red-800 dark:text-red-200 text-xs font-bold px-3 py-1.5 rounded-full border border-red-200 dark:border-red-800 inline-flex items-center gap-2">
+          <XCircle className="w-3.5 h-3.5" />
+          CANCELLED
+        </span>
+      );
+    }
+
+    if (isExpired) {
+      return (
+        <span className="bg-linear-to-r from-gray-100 to-gray-200 dark:from-gray-900/40 dark:to-gray-800/40 text-gray-800 dark:text-gray-200 text-xs font-bold px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 inline-flex items-center gap-2">
+          <Clock className="w-3.5 h-3.5" />
+          EXPIRED
+        </span>
+      );
+    }
+
+    return (
+      <span className="bg-linear-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/40 dark:to-orange-900/40 text-yellow-800 dark:text-yellow-200 text-xs font-bold px-3 py-1.5 rounded-full border border-yellow-200 dark:border-yellow-800">
+        REQUESTED
+      </span>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 relative overflow-hidden">
       <BackgroundOverlay />
@@ -142,9 +201,7 @@ const RequestedTaskDetails: React.FC = () => {
         <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 mb-6 shadow-xl">
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
-              <span className="bg-linear-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/40 dark:to-orange-900/40 text-yellow-800 dark:text-yellow-200 text-xs font-bold px-3 py-1.5 rounded-full border border-yellow-200 dark:border-yellow-800">
-                REQUESTED
-              </span>
+              {getStatusBadge()}
             </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
               {task.title}
@@ -153,6 +210,71 @@ const RequestedTaskDetails: React.FC = () => {
               {task.description}
             </p>
           </div>
+
+          {/* ✅ Show status message for non-actionable tasks */}
+          {!canRespond && (
+            <div
+              className={`mb-6 p-4 rounded-lg border ${
+                isConverted
+                  ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800"
+                  : isAccepted
+                    ? "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800"
+                    : "bg-gray-50 dark:bg-gray-950/30 border-gray-200 dark:border-gray-800"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                {isConverted ? (
+                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/50 rounded-lg flex items-center justify-center shrink-0">
+                    <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  </div>
+                ) : isAccepted ? (
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center shrink-0">
+                    <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 bg-gray-100 dark:bg-gray-900/50 rounded-lg flex items-center justify-center shrink-0">
+                    <AlertCircle className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h3
+                    className={`font-semibold mb-1 ${
+                      isConverted
+                        ? "text-green-900 dark:text-green-100"
+                        : isAccepted
+                          ? "text-blue-900 dark:text-blue-100"
+                          : "text-gray-900 dark:text-gray-100"
+                    }`}
+                  >
+                    {isConverted
+                      ? "Task Converted to Booking"
+                      : isAccepted
+                        ? "Task Already Accepted"
+                        : isCancelled
+                          ? "Task Cancelled"
+                          : "Task Expired"}
+                  </h3>
+                  <p
+                    className={`text-sm ${
+                      isConverted
+                        ? "text-green-800 dark:text-green-200"
+                        : isAccepted
+                          ? "text-blue-800 dark:text-blue-200"
+                          : "text-gray-800 dark:text-gray-200"
+                    }`}
+                  >
+                    {isConverted
+                      ? "This task has been successfully converted to a booking. You can view the booking details below."
+                      : isAccepted
+                        ? "You have already accepted this task. The booking will be created shortly."
+                        : isCancelled
+                          ? "This task has been cancelled and is no longer available."
+                          : "This task has expired and is no longer available for acceptance."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mb-6">
             <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-4">
@@ -306,7 +428,8 @@ const RequestedTaskDetails: React.FC = () => {
           )}
         </div>
 
-        {!showResponseForm ? (
+        {/* ✅ UPDATED: Conditional action buttons based on task status */}
+        {canRespond && !showResponseForm ? (
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={() => {
@@ -319,7 +442,7 @@ const RequestedTaskDetails: React.FC = () => {
               className="flex-1 bg-linear-to-br from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 dark:from-green-500 dark:to-emerald-500 dark:hover:from-green-600 dark:hover:to-emerald-600 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 flex items-center justify-center gap-2"
             >
               <CheckCircle className="w-5 h-5" />
-              Accept Task
+              Accept Request
             </button>
             <button
               onClick={() => {
@@ -330,10 +453,10 @@ const RequestedTaskDetails: React.FC = () => {
               className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-4 px-6 rounded-xl font-semibold transition-all duration-200 border border-gray-300 dark:border-gray-700 flex items-center justify-center gap-2"
             >
               <XCircle className="w-5 h-5" />
-              Reject Task
+              Decline Request
             </button>
           </div>
-        ) : (
+        ) : canRespond && showResponseForm ? (
           <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 shadow-xl">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-3">
               {responseAction === "accept" ? (
@@ -341,14 +464,14 @@ const RequestedTaskDetails: React.FC = () => {
                   <div className="w-10 h-10 bg-linear-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg flex items-center justify-center">
                     <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                   </div>
-                  Accept Task
+                  Accept Request
                 </>
               ) : (
                 <>
                   <div className="w-10 h-10 bg-linear-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 rounded-lg flex items-center justify-center">
                     <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
                   </div>
-                  Reject Task
+                  Decline Request
                 </>
               )}
             </h2>
@@ -393,7 +516,7 @@ const RequestedTaskDetails: React.FC = () => {
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     <CheckCircle className="w-5 h-5" />
-                    Confirm {responseAction === "accept" ? "Accept" : "Reject"}
+                    Confirm {responseAction === "accept" ? "Accept" : "Decline"}
                   </span>
                 )}
               </button>
@@ -406,7 +529,19 @@ const RequestedTaskDetails: React.FC = () => {
               </button>
             </div>
           </div>
-        )}
+        ) : isConverted && task.convertedToBookingId ? (
+          <button
+            onClick={() =>
+              router.push(
+                `/tasks/provider/bookings/${task.convertedToBookingId}`,
+              )
+            }
+            className="w-full bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 dark:from-green-500 dark:to-emerald-500 dark:hover:from-green-600 dark:hover:to-emerald-600 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 flex items-center justify-center gap-2"
+          >
+            <ArrowRight className="w-5 h-5" />
+            View Booking Details
+          </button>
+        ) : null}
       </div>
     </div>
   );

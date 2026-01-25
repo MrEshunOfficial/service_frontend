@@ -602,6 +602,28 @@ export interface BaseNotification {
   createdAt: Date | string;
 }
 
+/**
+ * Booking with Task Response (from unified endpoint)
+ */
+export interface BookingWithTask {
+  booking: Booking;
+  task?: Task; // Task is populated in the booking
+}
+
+/**
+ * Standard Booking Response
+ */
+export interface BookingResponse {
+  success?: boolean;
+  message: string;
+  data?: {
+    booking: Booking;
+  };
+  booking?: Booking; // For backward compatibility
+  task?: Task;
+  error?: string;
+}
+
 export interface TaskNotification extends BaseNotification {
   type: "task_matched" | "provider_interested" | "task_accepted" | "task_cancelled" | "task_expired";
   taskId: string;
@@ -650,9 +672,9 @@ export type TaskWithBooking = Task & {
   booking?: Booking;
 };
 
-export type BookingWithTask = Booking & {
-  task: Task;
-};
+// export type BookingWithTask = Booking & {
+//   task: Task;
+// };
 
 export type TaskWithProviders = Task & {
   matchedProviders: ProviderProfile[];

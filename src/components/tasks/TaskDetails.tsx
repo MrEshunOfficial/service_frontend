@@ -15,22 +15,26 @@ import {
   Trash2,
   Loader2,
   ExternalLink,
+  User,
 } from "lucide-react";
 import {
   Task,
   TaskStatus,
   TaskPriority,
-  MatchedProvider,
   UpdateTaskRequestBody,
   RequestProviderRequestBody,
   CancelRequest,
   ProviderResponseRequestBody,
   RematchRequest,
+  TASK_STATUS_LABELS,
+  PRIORITY_LABELS,
 } from "@/types/task.types";
+import { UserRole } from "@/types/base.types";
+import { ProviderProfile } from "@/types/profiles/provider-profile.types";
 
 interface TaskDetailsProps {
   taskId: string;
-  userRole?: "customer" | "provider";
+  userRole?: UserRole.CUSTOMER | UserRole.PROVIDER;
   onUpdate?: () => void;
   onRequestProvider?: () => void;
   onCancel?: () => void;
@@ -39,11 +43,11 @@ interface TaskDetailsProps {
   onExpressInterest?: (taskId: string, message?: string) => Promise<void>;
   onRespondToRequest?: (
     taskId: string,
-    data: ProviderResponseRequestBody
+    data: ProviderResponseRequestBody,
   ) => Promise<void>;
   useTaskHook: (
     taskId: string,
-    autoLoad?: boolean
+    autoLoad?: boolean,
   ) => {
     task: Task | null;
     loading: boolean;
@@ -59,7 +63,7 @@ interface TaskDetailsProps {
 
 const TaskDetails: React.FC<TaskDetailsProps> = ({
   taskId,
-  userRole = "customer",
+  userRole = UserRole.CUSTOMER,
   onRequestProvider,
   onCancel,
   onDelete,
@@ -72,8 +76,9 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
     useTaskHook(taskId);
 
   const [activeAction, setActiveAction] = useState<string | null>(null);
-  const [selectedProvider, setSelectedProvider] =
-    useState<MatchedProvider | null>(null);
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(
+    null,
+  );
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
   const [cancelReason, setCancelReason] = useState("");
@@ -126,6 +131,23 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
     return `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
   };
 
+  // Get provider info from matched providers
+  const getProviderInfo = (
+    providerId: string | { _id: string },
+  ): ProviderProfile | null => {
+    const id = typeof providerId === "string" ? providerId : providerId._id;
+    if (!task?.matchedProviders) return null;
+
+    const match = task.matchedProviders.find(
+      (m) =>
+        (typeof m === "object" && "_id" in m ? m._id : m).toString() === id,
+    );
+
+    return match && typeof match === "object"
+      ? (match as ProviderProfile)
+      : null;
+  };
+
   // Handle request provider
   const handleRequestProvider = async (providerId: string) => {
     try {
@@ -136,7 +158,8 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
       });
       setShowProviderModal(false);
       setActionMessage("");
-      setSelectedProvider(null);
+      setSelectedProviderId(null);
+      await refreshTask(); // ✅ Refresh to show updated status
       if (onRequestProvider) onRequestProvider();
     } catch (err) {
       console.error("Error requesting provider:", err);
@@ -151,6 +174,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
       setActiveAction("cancelling");
       await cancelTask({ reason: cancelReason });
       setCancelReason("");
+      await refreshTask(); // ✅ Refresh to show updated status
       if (onCancel) onCancel();
     } catch (err) {
       console.error("Error cancelling task:", err);
@@ -182,6 +206,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
         await onExpressInterest(taskId, actionMessage);
       }
       setActionMessage("");
+      await refreshTask(); // ✅ Refresh to show updated status
     } catch (err) {
       console.error("Error expressing interest:", err);
     } finally {
@@ -200,6 +225,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
         });
       }
       setActionMessage("");
+      await refreshTask(); // ✅ Refresh to show updated status
     } catch (err) {
       console.error("Error responding to request:", err);
     } finally {
@@ -209,7 +235,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
 
   if (loading) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
+      <div className="w-full h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
       </div>
     );
@@ -241,8 +267,8 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
     );
   }
 
-  const isCustomer = userRole === "customer";
-  const isProvider = userRole === "provider";
+  const isCustomer = userRole === UserRole.CUSTOMER;
+  const isProvider = userRole === UserRole.PROVIDER;
   const canCancel = [
     TaskStatus.PENDING,
     TaskStatus.MATCHED,
@@ -264,12 +290,15 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
   const googleMapsUrl = hasCoordinates
     ? getGoogleMapsUrl(
         task.customerLocation.gpsCoordinates!.latitude,
-        task.customerLocation.gpsCoordinates!.longitude
+        task.customerLocation.gpsCoordinates!.longitude,
       )
     : null;
 
+  // Get customer info
+  const customer = typeof task.customerId === "object" ? task.customerId : null;
+
   return (
-    <div className="w-full space-y-3">
+    <div className={`w-full space-y-3`}>
       {/* Header Section */}
       <div className="shadow-lg rounded border p-6  bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <div className="flex items-start justify-between mb-4">
@@ -280,19 +309,19 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
               </h1>
               <span
                 className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                  task.status
+                  task.status,
                 )}`}
               >
-                {task.status.replace("_", " ")}
+                {TASK_STATUS_LABELS[task.status]}
               </span>
             </div>
             <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
               <span
                 className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(
-                  task.schedule.priority
+                  task.schedule.priority,
                 )}`}
               >
-                {task.schedule.priority}
+                {PRIORITY_LABELS[task.schedule.priority]}
               </span>
               <span className="flex items-center gap-1">
                 <Eye className="w-4 h-4" />
@@ -305,6 +334,30 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Customer Info (for providers) */}
+        {isProvider && customer && (
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-3">
+              <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {customer.name}
+                </p>
+                {customer.email && (
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {customer.email}
+                  </p>
+                )}
+                {customer.contactDetails?.primaryContact && (
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {customer.contactDetails.primaryContact}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Description */}
         <div className="mb-6">
@@ -411,26 +464,6 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
                 </p>
               </div>
             )}
-            {task.customerLocation.streetName && (
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Street
-                </p>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  {task.customerLocation.streetName}
-                </p>
-              </div>
-            )}
-            {task.customerLocation.houseNumber && (
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  House Number
-                </p>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  {task.customerLocation.houseNumber}
-                </p>
-              </div>
-            )}
             {task.customerLocation.isAddressVerified && (
               <div className="flex items-center gap-2 text-green-700 dark:text-green-400 text-xs">
                 <CheckCircle className="w-4 h-4" />
@@ -472,7 +505,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
                       year: "numeric",
                       month: "long",
                       day: "numeric",
-                    }
+                    },
                   )}
                 </p>
               </div>
@@ -495,17 +528,6 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
                 {task.schedule.flexibleDates ? "Yes" : "No"}
               </p>
             </div>
-            {task.estimatedBudget && (
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Estimated Budget
-                </p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {task.estimatedBudget.currency} {task.estimatedBudget.min} -{" "}
-                  {task.estimatedBudget.max}
-                </p>
-              </div>
-            )}
             {task.expiresAt && (
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
@@ -544,90 +566,149 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
         </div>
       )}
 
-      {/* Matched Providers Section */}
-      {task.matchedProviders && task.matchedProviders.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Star className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            Matched Providers ({task.matchedProviders.length})
-          </h3>
-          <div className="space-y-4">
-            {task.matchedProviders.map((match) => (
-              <div
-                key={match.providerId}
-                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4 flex-1">
-                    {match.provider?.profileImage && (
-                      <img
-                        src={match.provider.profileImage}
-                        alt={`${match.provider.firstName} ${match.provider.lastName}`}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                          {match.provider?.firstName} {match.provider?.lastName}
-                        </h4>
-                        <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
-                          {match.matchScore}% match
-                        </span>
-                      </div>
-                      {match.provider?.businessName && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          {match.provider.businessName}
-                        </p>
-                      )}
-                      {match.provider?.rating && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span>{match.provider.rating.toFixed(1)}</span>
-                          {match.provider.completedJobs && (
-                            <span className="text-gray-400 dark:text-gray-500">
-                              • {match.provider.completedJobs} jobs
-                            </span>
+      {/* Matched Providers Section (Customer view) */}
+      {isCustomer &&
+        task.matchedProviders &&
+        task.matchedProviders.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Star className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              Matched Providers ({task.matchedProviders.length})
+            </h3>
+            <div className="space-y-4">
+              {task.matchedProviders.map((matchItem: any, index: number) => {
+                // Extract provider info - handle both populated and unpopulated cases
+                const provider =
+                  typeof matchItem === "object" && matchItem.providerId
+                    ? typeof matchItem.providerId === "object"
+                      ? matchItem.providerId
+                      : null
+                    : typeof matchItem === "object" && "_id" in matchItem
+                      ? matchItem
+                      : null;
+
+                const providerId =
+                  provider?._id?.toString() ||
+                  (typeof matchItem.providerId === "string"
+                    ? matchItem.providerId
+                    : matchItem._id?.toString());
+
+                const matchScore = matchItem.matchScore || 0;
+                const matchReasons = matchItem.matchReasons || [];
+                const matchedServices = matchItem.matchedServices || [];
+
+                return (
+                  <div
+                    key={providerId || index}
+                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          {provider?.profileImage && (
+                            <img
+                              src={provider.profileImage}
+                              alt="Provider"
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
                           )}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-900 dark:text-white">
+                                {provider?.businessName ||
+                                  (provider?.firstName && provider?.lastName
+                                    ? `${provider.firstName} ${provider.lastName}`
+                                    : "Service Provider")}
+                              </h4>
+                              {matchScore > 0 && (
+                                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
+                                  {matchScore}% match
+                                </span>
+                              )}
+                            </div>
+
+                            {provider?.locationData?.city && (
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                <MapPin className="w-3 h-3 inline mr-1" />
+                                {provider.locationData.city}
+                                {provider.locationData.region &&
+                                  `, ${provider.locationData.region}`}
+                              </p>
+                            )}
+
+                            {provider?.rating !== undefined && (
+                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                <span>{provider.rating.toFixed(1)}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
-                      {match.matchReasons && match.matchReasons.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {match.matchReasons.map((reason, idx) => (
-                            <span
-                              key={idx}
-                              className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs"
-                            >
-                              {reason}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {match.distance !== undefined && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          <Navigation className="w-3 h-3 inline mr-1" />
-                          {match.distance.toFixed(1)} km away
-                        </p>
+
+                        {matchReasons.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {matchReasons.map((reason: string, idx: number) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-0.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded text-xs border border-green-200 dark:border-green-800"
+                              >
+                                ✓ {reason}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {matchedServices.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                              Matched Services:
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {matchedServices.map(
+                                (service: any, idx: number) => {
+                                  const serviceName =
+                                    typeof service === "object" && service.title
+                                      ? service.title
+                                      : "Service";
+                                  return (
+                                    <span
+                                      key={idx}
+                                      className="px-2 py-0.5 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 rounded text-xs"
+                                    >
+                                      {serviceName}
+                                    </span>
+                                  );
+                                },
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {provider?.contactDetails?.businessContact && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            Contact: {provider.contactDetails.businessContact}
+                          </p>
+                        )}
+                      </div>
+
+                      {canRequestProvider && (
+                        <button
+                          onClick={() => {
+                            setSelectedProviderId(providerId);
+                            setShowProviderModal(true);
+                          }}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
+                        >
+                          Request
+                        </button>
                       )}
                     </div>
                   </div>
-                  {isCustomer && canRequestProvider && (
-                    <button
-                      onClick={() => {
-                        setSelectedProvider(match);
-                        setShowProviderModal(true);
-                      }}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
-                    >
-                      Request
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Interested Providers Section */}
       {task.interestedProviders && task.interestedProviders.length > 0 && (
@@ -642,19 +723,8 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
                 key={interested.providerId}
                 className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
               >
-                <div className="flex items-start gap-4">
-                  {interested.provider?.profileImage && (
-                    <img
-                      src={interested.provider.profileImage}
-                      alt={`${interested.provider.firstName} ${interested.provider.lastName}`}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                  )}
+                <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                      {interested.provider?.firstName}{" "}
-                      {interested.provider?.lastName}
-                    </h4>
                     {interested.message && (
                       <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 italic">
                         "{interested.message}"
@@ -685,34 +755,38 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
         </div>
       )}
 
-      {/* Requested Provider Section */}
-      {task.requestedProvider && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+      {/* Task Status Section - Only show ONE based on current status */}
+      {task.status === TaskStatus.CONVERTED && task.convertedToBookingId && (
+        <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-            Awaiting Provider Response
+            <CheckCircle className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+            Converted to Booking
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <p className="text-sm text-gray-700 dark:text-gray-300">
-              Requested on:{" "}
-              {new Date(task.requestedProvider.requestedAt).toLocaleString()}
+              This task has been successfully converted to a booking.
             </p>
-            {task.requestedProvider.clientMessage && (
-              <div className="bg-white dark:bg-gray-800 rounded p-3 mt-2">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Your message:
-                </p>
-                <p className="text-sm text-gray-700 dark:text-gray-300 italic">
-                  "{task.requestedProvider.clientMessage}"
-                </p>
-              </div>
+            {task.convertedAt && (
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Converted on: {new Date(task.convertedAt).toLocaleString()}
+              </p>
             )}
+            <button
+              onClick={() => {
+                const role =
+                  userRole === UserRole.CUSTOMER ? "customer" : "provider";
+                window.location.href = `/${role}/bookings/${task.convertedToBookingId}`;
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              View Booking
+              <ExternalLink className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
 
-      {/* Accepted Provider Section */}
-      {task.acceptedProvider && (
+      {task.status === TaskStatus.ACCEPTED && task.acceptedProvider && (
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -740,6 +814,81 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
         </div>
       )}
 
+      {task.status === TaskStatus.REQUESTED && task.requestedProvider && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+            Awaiting Provider Response
+          </h3>
+          <div className="space-y-2">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              Requested on:{" "}
+              {new Date(task.requestedProvider.requestedAt).toLocaleString()}
+            </p>
+            {task.requestedProvider.clientMessage && (
+              <div className="bg-white dark:bg-gray-800 rounded p-3 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Your message:
+                </p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 italic">
+                  "{task.requestedProvider.clientMessage}"
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {task.status === TaskStatus.CANCELLED && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            Task Cancelled
+          </h3>
+          <div className="space-y-2">
+            {task.cancelledAt && (
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Cancelled on: {new Date(task.cancelledAt).toLocaleString()}
+              </p>
+            )}
+            {task.cancellationReason && (
+              <div className="bg-white dark:bg-gray-800 rounded p-3 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Reason:
+                </p>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  {task.cancellationReason}
+                </p>
+              </div>
+            )}
+            {task.cancelledBy && (
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Cancelled by: {task.cancelledBy}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {task.status === TaskStatus.EXPIRED && (
+        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            Task Expired
+          </h3>
+          <div className="space-y-2">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              This task has expired and is no longer active.
+            </p>
+            {task.expiresAt && (
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Expired on: {new Date(task.expiresAt).toLocaleString()}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons - Customer */}
       {isCustomer && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -747,32 +896,31 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
             Actions
           </h3>
           <div className="flex flex-wrap gap-3">
-            {canRematch && (
-              <>
-                <button
-                  onClick={() => handleRematch("intelligent")}
-                  disabled={activeAction === "rematching"}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 ${
-                      activeAction === "rematching" ? "animate-spin" : ""
-                    }`}
-                  />
-                  {activeAction === "rematching"
-                    ? "Rematching..."
-                    : "Rematch (Intelligent)"}
-                </button>
-                <button
-                  onClick={() => handleRematch("location-only")}
-                  disabled={activeAction === "rematching"}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
-                >
-                  <MapPin className="w-4 h-4" />
-                  Rematch (Location Only)
-                </button>
-              </>
-            )}
+            {canRematch && <div>re-match actions</div>}
+            <>
+              <button
+                onClick={() => handleRematch("intelligent")}
+                disabled={activeAction === "rematching"}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${
+                    activeAction === "rematching" ? "animate-spin" : ""
+                  }`}
+                />
+                {activeAction === "rematching"
+                  ? "Rematching..."
+                  : "Rematch (Intelligent)"}
+              </button>
+              <button
+                onClick={() => handleRematch("location-only")}
+                disabled={activeAction === "rematching"}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50 flex items-center gap-2"
+              >
+                <MapPin className="w-4 h-4" />
+                Rematch (Location Only)
+              </button>
+            </>
             {canCancel && (
               <div className="flex-1 min-w-full">
                 <textarea
@@ -810,9 +958,6 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
       {/* Action Buttons - Provider */}
       {isProvider && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Actions
-          </h3>
           {canExpressInterest && (
             <div className="space-y-3">
               <textarea
@@ -871,12 +1016,11 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
       )}
 
       {/* Request Provider Modal */}
-      {showProviderModal && selectedProvider && (
+      {showProviderModal && selectedProviderId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Request {selectedProvider.provider?.firstName}{" "}
-              {selectedProvider.provider?.lastName}
+              Request Provider
             </h3>
             <textarea
               value={actionMessage}
@@ -887,9 +1031,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
             />
             <div className="flex gap-3">
               <button
-                onClick={() =>
-                  handleRequestProvider(selectedProvider.providerId)
-                }
+                onClick={() => handleRequestProvider(selectedProviderId)}
                 disabled={activeAction === "requesting"}
                 className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50"
               >
@@ -901,7 +1043,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
                 onClick={() => {
                   setShowProviderModal(false);
                   setActionMessage("");
-                  setSelectedProvider(null);
+                  setSelectedProviderId(null);
                 }}
                 disabled={activeAction === "requesting"}
                 className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"

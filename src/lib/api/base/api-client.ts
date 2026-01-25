@@ -115,41 +115,52 @@ export abstract class APIClient {
   /**
    * Make HTTP request - automatically unwraps { data: ... } responses
    */
-  protected async makeRequest<T>(
-    endpoint: string,
-    config: RequestConfig = {}
-  ): Promise<T> {
-    const { params, headers: customHeaders, ...fetchConfig } = config;
+  // api/base/api-client.ts
 
-    const url = this.buildURL(endpoint, params);
-    const headers = this.buildHeaders(customHeaders);
+protected async makeRequest<T>(
+  endpoint: string,
+  config: RequestConfig = {}
+): Promise<T> {
+  const { params, headers: customHeaders, ...fetchConfig } = config;
 
-    try {
-      const response = await fetch(url, {
-        ...fetchConfig,
-        headers,
-      });
+  const url = this.buildURL(endpoint, params);
+  const headers = this.buildHeaders(customHeaders);
 
-      if (!response.ok) {
-        await this.handleErrorResponse(response);
-      }
+  try {
+    const response = await fetch(url, {
+      ...fetchConfig,
+      headers,
+    });
 
-      const responseData = await response.json();
-      if (
-        responseData &&
-        typeof responseData === "object" &&
-        "data" in responseData
-      ) {
-        return responseData.data as T;
-      }
-
-      // Return direct response
-      return responseData as T;
-    } catch (error) {
-      this.handleRequestError(error);
-      throw error;
+    if (!response.ok) {
+      await this.handleErrorResponse(response);
     }
+
+    const responseData = await response.json();
+    
+    // ✅ Handle multiple response formats
+    // 1. { data: { booking: {...} } }
+    if (responseData?.data?.booking) {
+      return responseData.data.booking as T;
+    }
+    
+    // 2. { data: ... }
+    if (responseData?.data) {
+      return responseData.data as T;
+    }
+    
+    // 3. { booking: ... }
+    if (responseData?.booking) {
+      return responseData.booking as T;
+    }
+
+    // 4. Direct response
+    return responseData as T;
+  } catch (error) {
+    this.handleRequestError(error);
+    throw error;
   }
+}
 
   /**
    * Handle error responses
@@ -234,3 +245,5 @@ export abstract class APIClient {
     return this.makeRequest<T>(endpoint, { method: "DELETE" });
   }
 }
+
+
