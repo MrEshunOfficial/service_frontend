@@ -186,20 +186,20 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
     localFiles.filter((f) => !f.id.startsWith("temp-")).length > 0;
 
   return (
-    <div className="space-y-6">
-      <div className="border-l-4 border-blue-600 pl-4">
-        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <Shield className="w-6 h-6 text-blue-600" />
+    <div className="space-y-6 bg-background text-foreground">
+      <div className="border-l-4 border-blue-600 dark:border-blue-400 pl-4">
+        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           ID Verification
         </h2>
-        <p className="text-slate-600 mt-1">
+        <p className="text-muted-foreground mt-1">
           Verify your identity to build trust with customers
         </p>
       </div>
 
-      <Alert className="bg-amber-50 border-amber-200">
-        <AlertCircle className="h-4 w-4 text-amber-600" />
-        <AlertDescription className="text-amber-900">
+      <Alert className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50">
+        <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+        <AlertDescription className="text-amber-900 dark:text-amber-200">
           <strong>Security Note:</strong> Your ID information is encrypted and
           only used for verification purposes. Upload clear photos of both the
           front and back of your ID.
@@ -207,9 +207,9 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
       </Alert>
 
       {/* Validation Info */}
-      <Alert className="bg-blue-50 border-blue-200">
-        <AlertCircle className="h-4 w-4 text-blue-600" />
-        <AlertDescription className="text-blue-900 text-sm">
+      <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50">
+        <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+        <AlertDescription className="text-blue-900 dark:text-blue-200 text-sm">
           <strong>Requirements:</strong>
           <ul className="list-disc ml-5 mt-2 space-y-1">
             <li>Maximum 2 images (front and back)</li>
@@ -227,7 +227,8 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                ID Type <span className="text-red-500">*</span>
+                ID Type{" "}
+                <span className="text-red-600 dark:text-red-400">*</span>
               </FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
@@ -259,7 +260,8 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                ID Number <span className="text-red-500">*</span>
+                ID Number{" "}
+                <span className="text-red-600 dark:text-red-400">*</span>
               </FormLabel>
               <FormControl>
                 <Input
@@ -281,7 +283,8 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>
-              ID Images <span className="text-red-500">*</span>
+              ID Images{" "}
+              <span className="text-red-600 dark:text-red-400">*</span>
             </FormLabel>
             <FormControl>
               <div className="space-y-4">
@@ -289,37 +292,38 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
                 <div
                   className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                     hasReachedLimit
-                      ? "border-gray-200 bg-gray-50"
-                      : "border-gray-300 hover:border-blue-400 bg-white"
-                  }`}
-                >
+                      ? "border-border bg-muted/50"
+                      : "border-border hover:border-blue-500 dark:hover:border-blue-400 bg-muted/20 hover:bg-muted/40"
+                  }`}>
                   <Upload
                     className={`w-12 h-12 mx-auto mb-4 ${
-                      hasReachedLimit ? "text-gray-300" : "text-gray-400"
+                      hasReachedLimit
+                        ? "text-muted-foreground/50"
+                        : "text-muted-foreground"
                     }`}
                   />
 
                   {hasReachedLimit ? (
                     <div className="space-y-2">
-                      <div className="flex items-center justify-center gap-2 text-green-600">
+                      <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
                         <CheckCircle2 className="w-5 h-5" />
                         <p className="text-sm font-medium">
                           Maximum files uploaded (2/2)
                         </p>
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Remove an image to upload a different one
                       </p>
                     </div>
                   ) : (
                     <>
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-muted-foreground mb-2">
                         Click to upload or drag and drop
                       </p>
-                      <p className="text-xs text-gray-500 mb-4">
+                      <p className="text-xs text-muted-foreground mb-4">
                         Upload front and back of your ID (PNG, JPG up to 5MB)
                       </p>
-                      <p className="text-xs text-blue-600 font-medium mb-4">
+                      <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-4">
                         {localFiles.length}/2 images uploaded
                       </p>
                     </>
@@ -342,8 +346,7 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
                       document.getElementById("id-upload")?.click()
                     }
                     disabled={uploading || hasReachedLimit}
-                    className="min-w-[140px]"
-                  >
+                    className="min-w-[140px]">
                     {uploading
                       ? "Uploading..."
                       : hasReachedLimit
@@ -360,8 +363,7 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
                       return (
                         <div
                           key={file.id}
-                          className="relative group border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow"
-                        >
+                          className="relative group border border-border rounded-lg overflow-hidden bg-background shadow-sm hover:shadow-md transition-all dark:hover:shadow-black/30">
                           <img
                             src={file.url}
                             alt={file.name}
@@ -370,14 +372,13 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
 
                           {/* Overlay on hover */}
                           {!isUploading && (
-                            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="absolute inset-0 bg-black/60 dark:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Button
                                 type="button"
                                 variant="destructive"
                                 size="sm"
                                 onClick={() => handleRemoveFile(file.id)}
-                                disabled={uploading}
-                              >
+                                disabled={uploading}>
                                 <X className="w-4 h-4 mr-1" />
                                 Remove
                               </Button>
@@ -385,18 +386,18 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
                           )}
 
                           {/* File info */}
-                          <div className="p-2 bg-white border-t">
-                            <p className="text-xs font-medium text-gray-700 truncate">
+                          <div className="p-2 bg-background border-t border-border">
+                            <p className="text-xs font-medium text-foreground truncate">
                               {index === 0 ? "Front" : "Back"} - {file.name}
                             </p>
                             {isUploading && (
-                              <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                                <span className="inline-block w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></span>
+                              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                                <span className="inline-block w-3 h-3 border-2 border-amber-600 dark:border-amber-400 border-t-transparent rounded-full animate-spin"></span>
                                 Uploading...
                               </p>
                             )}
                             {!isUploading && (
-                              <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                              <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
                                 <CheckCircle2 className="w-3 h-3" />
                                 Uploaded
                               </p>
@@ -409,7 +410,7 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
                 )}
               </div>
             </FormControl>
-            <FormDescription>
+            <FormDescription className="text-muted-foreground">
               {localFiles.length === 0
                 ? "Upload clear photos of both sides of your ID"
                 : localFiles.length === 1
@@ -425,9 +426,9 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
 
       {/* Upload Status */}
       {uploading && (
-        <Alert className="bg-blue-50 border-blue-200">
-          <AlertCircle className="h-4 w-4 text-blue-600 animate-pulse" />
-          <AlertDescription className="text-blue-900">
+        <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50">
+          <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 animate-pulse" />
+          <AlertDescription className="text-blue-900 dark:text-blue-200">
             Uploading ID images... Please wait.
           </AlertDescription>
         </Alert>

@@ -48,9 +48,8 @@ const ProviderSetupPrompt = () => {
         </div>
 
         <button
-          onClick={() => router.push("/provider/profile/setup")}
-          className="w-full py-3 bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-        >
+          onClick={() => router.push("/provider/setup")}
+          className="w-full py-3 bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
           Complete Profile Setup
           <ArrowRight className="w-5 h-5" />
         </button>

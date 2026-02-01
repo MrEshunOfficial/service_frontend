@@ -42,9 +42,8 @@ const ProviderDashboard = () => {
               Complete your provider profile to start receiving tasks
             </p>
             <button
-              onClick={() => router.push("/provider/profile/setup")}
-              className="mt-3 px-4 py-2 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition-colors text-sm"
-            >
+              onClick={() => router.push("/provider/setup")}
+              className="mt-3 px-4 py-2 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition-colors text-sm">
               Complete Profile Setup
             </button>
           </div>
@@ -58,8 +57,7 @@ const ProviderDashboard = () => {
               <Button
                 size={"sm"}
                 onClick={() => router.push("/provider/tasks/available")}
-                className="w-full bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm"
-              >
+                className="w-full bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm">
                 Browse Available Tasks
                 <ArrowRight className="w-5 h-5" />
               </Button>

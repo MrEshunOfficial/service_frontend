@@ -17,19 +17,9 @@ import { LocationStep } from "./LocationStep";
 import { PaymentSettingsStep } from "./PaymentSettingsStep";
 import { providerProfileSchema } from "./providerProfileSchema";
 import { ServiceSelectionStep } from "./ServiceSelectionStep";
+import { useRouter } from "next/navigation";
 
 type ProviderProfileFormData = z.infer<typeof providerProfileSchema>;
-
-// Define which steps are required and which are optional
-const STEP_CONFIG = {
-  1: { title: "Business Info", required: true },
-  2: { title: "Contact Details", required: true },
-  3: { title: "Location", required: true },
-  4: { title: "ID Verification", required: false },
-  5: { title: "Services", required: true },
-  6: { title: "Availability", required: false },
-  7: { title: "Payment Settings", required: false },
-};
 
 const FORM_STEPS = [
   {
@@ -70,6 +60,7 @@ export function CreateProviderProfileForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [skippedSteps, setSkippedSteps] = useState<Set<number>>(new Set());
   const { createProfile, loading } = useProviderProfile(false);
+  const router = useRouter();
 
   const form = useForm<ProviderProfileFormData>({
     resolver: zodResolver(providerProfileSchema),
@@ -140,6 +131,7 @@ export function CreateProviderProfileForm() {
       await createProfile(requestData);
 
       toast.success("Provider profile created successfully!");
+      router.push("/profile");
     } catch (error) {
       toast.error(
         `Failed to create provider profile: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -152,7 +144,7 @@ export function CreateProviderProfileForm() {
       1: ["businessName", "isCompanyTrained"],
       2: ["providerContactInfo.primaryContact"],
       3: ["locationData.ghanaPostGPS"],
-      4: [], // ID verification is completely optional - no required fields
+      4: [], // ID verification is completely optional
       5: ["serviceOfferings"],
       6: [], // Availability fields are conditionally validated
       7: [], // Payment fields are conditionally validated
@@ -312,18 +304,19 @@ export function CreateProviderProfileForm() {
   const currentStepSkipped = skippedSteps.has(currentStep);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-12 px-4">
+    <div className="min-h-screen py-12 px-4 bg-background text-foreground">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
             Create Provider Profile
           </h1>
-          <p className="text-slate-600">
+          <p className="text-muted-foreground">
             Complete all required steps to start offering your services
           </p>
+
           {skippedSteps.size > 0 && (
-            <div className="mt-4 inline-block px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-              <p className="text-sm text-amber-800">
+            <div className="mt-4 inline-block px-4 py-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-lg">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
                 ⚠️ You have {skippedSteps.size} skipped optional step
                 {skippedSteps.size > 1 ? "s" : ""}
               </p>
@@ -339,22 +332,23 @@ export function CreateProviderProfileForm() {
           onStepClick={handleStepClick}
         />
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 mt-8">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-2xl dark:shadow-black/30 p-8 mt-8 border border-slate-200 dark:border-slate-800">
           {/* Step Header */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-2xl font-bold text-slate-900">
+              <h2 className="text-2xl font-bold text-foreground">
                 {FORM_STEPS[currentStep - 1].title}
               </h2>
               {!isStepRequired(currentStep) && (
-                <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
                   Optional
                 </span>
               )}
             </div>
+
             {currentStepSkipped && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-sm text-amber-800">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-lg">
+                <p className="text-sm text-amber-800 dark:text-amber-200">
                   ⚠️ This step was previously skipped. Complete it now or skip
                   again to continue.
                 </p>
@@ -366,15 +360,14 @@ export function CreateProviderProfileForm() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <CurrentStepComponent form={form} />
 
-              <div className="flex justify-between pt-6 border-t gap-4">
+              <div className="flex justify-between pt-6 border-t border-border gap-4">
                 {/* Previous Button */}
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handlePrevious}
                   disabled={currentStep === 1 || loading}
-                  className="min-w-[120px]"
-                >
+                  className="min-w-[120px]">
                   <ChevronLeft className="w-4 h-4 mr-2" />
                   Previous
                 </Button>
@@ -388,8 +381,7 @@ export function CreateProviderProfileForm() {
                         variant="ghost"
                         onClick={handleSkip}
                         disabled={loading}
-                        className="min-w-[120px] text-slate-600 hover:text-slate-900"
-                      >
+                        className="min-w-[120px] text-muted-foreground hover:text-foreground">
                         Skip for now
                       </Button>
                     )}
@@ -399,8 +391,7 @@ export function CreateProviderProfileForm() {
                     type="button"
                     onClick={handleNext}
                     disabled={loading}
-                    className="min-w-[120px]"
-                  >
+                    className="min-w-[120px]">
                     {loading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -422,7 +413,7 @@ export function CreateProviderProfileForm() {
         </div>
 
         {/* Progress Summary */}
-        <div className="mt-6 text-center text-sm text-slate-600">
+        <div className="mt-6 text-center text-sm text-muted-foreground">
           <p>
             Step {currentStep} of {FORM_STEPS.length} •{" "}
             {FORM_STEPS.filter((s) => s.required).length} required steps •{" "}

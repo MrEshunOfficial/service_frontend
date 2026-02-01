@@ -23,21 +23,23 @@ export function PaymentSettingsStep({ form }: PaymentSettingsStepProps) {
   const depositPercentage = form.watch("percentageDeposit");
 
   return (
-    <div className="space-y-6">
-      <div className="border-l-4 border-blue-600 pl-4">
-        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <DollarSign className="w-6 h-6 text-blue-600" />
+    <div className="space-y-6 bg-background text-foreground">
+      <div className="border-l-4 border-blue-600 dark:border-blue-400 pl-4">
+        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <DollarSign className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           Payment Settings
         </h2>
-        <p className="text-slate-600 mt-1">
+        <p className="text-muted-foreground mt-1">
           Configure your payment preferences
         </p>
       </div>
 
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertTitle>About Initial Deposits</AlertTitle>
-        <AlertDescription>
+      <Alert className="border-border">
+        <Info className="h-4 w-4 text-muted-foreground" />
+        <AlertTitle className="text-foreground">
+          About Initial Deposits
+        </AlertTitle>
+        <AlertDescription className="text-muted-foreground">
           Requiring an initial deposit helps secure bookings and shows customer
           commitment. This amount is deducted from the final payment.
         </AlertDescription>
@@ -47,13 +49,15 @@ export function PaymentSettingsStep({ form }: PaymentSettingsStepProps) {
         control={form.control}
         name="requireInitialDeposit"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4 bg-gradient-to-r from-purple-50 to-pink-50">
+          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border border-border p-4 bg-purple-50/60 dark:bg-purple-950/25">
             <FormControl>
               <Switch checked={field.value} onCheckedChange={field.onChange} />
             </FormControl>
             <div className="space-y-1 leading-none flex-1">
-              <FormLabel>Require Initial Deposit</FormLabel>
-              <FormDescription>
+              <FormLabel className="text-foreground">
+                Require Initial Deposit
+              </FormLabel>
+              <FormDescription className="text-muted-foreground">
                 Customers must pay a deposit before booking confirmation
               </FormDescription>
             </div>
@@ -61,27 +65,29 @@ export function PaymentSettingsStep({ form }: PaymentSettingsStepProps) {
         )}
       />
 
-      {requireDeposit && (
-        <div className="space-y-6 p-6 border rounded-lg bg-gradient-to-br from-slate-50 to-gray-50">
+      {form.watch("requireInitialDeposit") && (
+        <div className="space-y-6 p-6 border border-border rounded-lg bg-muted/30 dark:bg-muted/20">
           <FormField
             control={form.control}
             name="percentageDeposit"
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center justify-between mb-4">
-                  <FormLabel>Deposit Percentage</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Deposit Percentage
+                  </FormLabel>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
                       min="0"
                       max="100"
-                      value={field.value || 0}
+                      value={field.value ?? ""}
                       onChange={(e) =>
-                        field.onChange(parseFloat(e.target.value))
+                        field.onChange(parseFloat(e.target.value) || 0)
                       }
-                      className="w-20 h-10 text-center font-semibold"
+                      className="w-20 h-10 text-center font-semibold bg-background border-border text-foreground"
                     />
-                    <span className="text-lg font-semibold text-slate-700">
+                    <span className="text-lg font-semibold text-foreground">
                       %
                     </span>
                   </div>
@@ -92,13 +98,13 @@ export function PaymentSettingsStep({ form }: PaymentSettingsStepProps) {
                     min={0}
                     max={100}
                     step={5}
-                    value={[field.value || 0]}
+                    value={[field.value ?? 0]}
                     onValueChange={(value) => field.onChange(value[0])}
                     className="w-full"
                   />
                 </FormControl>
 
-                <div className="flex justify-between text-xs text-gray-500 mt-2">
+                <div className="flex justify-between text-xs text-muted-foreground mt-2">
                   <span>0%</span>
                   <span>25%</span>
                   <span>50%</span>
@@ -106,9 +112,9 @@ export function PaymentSettingsStep({ form }: PaymentSettingsStepProps) {
                   <span>100%</span>
                 </div>
 
-                <FormDescription className="mt-4">
-                  Customers will pay {depositPercentage || 0}% upfront and the
-                  remaining {100 - (depositPercentage || 0)}% after service
+                <FormDescription className="mt-4 text-muted-foreground">
+                  Customers will pay {field.value ?? 0}% upfront and the
+                  remaining {100 - (field.value ?? 0)}% after service
                   completion.
                 </FormDescription>
                 <FormMessage />
@@ -116,28 +122,33 @@ export function PaymentSettingsStep({ form }: PaymentSettingsStepProps) {
             )}
           />
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-900 mb-2">
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 rounded-lg p-4">
+            <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">
               Example Calculation
             </h4>
-            <div className="text-sm text-blue-800 space-y-1">
+            <div className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
               <p>Service Price: GH₵ 100.00</p>
               <p>
-                Initial Deposit ({depositPercentage || 0}%): GH₵{" "}
-                {(((depositPercentage || 0) * 100) / 100).toFixed(2)}
+                Initial Deposit ({form.watch("percentageDeposit") ?? 0}%): GH₵{" "}
+                {(((form.watch("percentageDeposit") ?? 0) * 100) / 100).toFixed(
+                  2,
+                )}
               </p>
               <p>
                 Remaining Payment: GH₵{" "}
-                {(100 - ((depositPercentage || 0) * 100) / 100).toFixed(2)}
+                {(
+                  100 -
+                  ((form.watch("percentageDeposit") ?? 0) * 100) / 100
+                ).toFixed(2)}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {!requireDeposit && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <p className="text-sm text-gray-600">
+      {!form.watch("requireInitialDeposit") && (
+        <div className="bg-muted/50 border border-border rounded-lg p-4">
+          <p className="text-sm text-muted-foreground">
             Customers will pay the full amount after service completion.
           </p>
         </div>

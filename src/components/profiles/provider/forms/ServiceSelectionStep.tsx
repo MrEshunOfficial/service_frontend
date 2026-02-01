@@ -79,13 +79,13 @@ export function ServiceSelectionStep({ form }: ServiceSelectionStepProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="border-l-4 border-blue-600 pl-4">
-        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <Briefcase className="w-6 h-6 text-blue-600" />
+    <div className="space-y-6 bg-background text-foreground">
+      <div className="border-l-4 border-blue-600 dark:border-blue-400 pl-4">
+        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <Briefcase className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           Services You Offer
         </h2>
-        <p className="text-slate-600 mt-1">
+        <p className="text-muted-foreground mt-1">
           Select existing services or create new ones
         </p>
       </div>
@@ -97,22 +97,22 @@ export function ServiceSelectionStep({ form }: ServiceSelectionStepProps) {
           <FormItem>
             <div className="flex items-center justify-between mb-4">
               <FormLabel>
-                Selected Services <span className="text-red-500">*</span>
+                Selected Services{" "}
+                <span className="text-red-600 dark:text-red-400">*</span>
               </FormLabel>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setShowCreateDialog(true)}
-              >
+                onClick={() => setShowCreateDialog(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Service
               </Button>
             </div>
 
             {selectedServices.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4 p-4 bg-blue-50 rounded-lg">
-                <p className="w-full text-sm font-medium text-blue-900 mb-2">
+              <div className="flex flex-wrap gap-2 mb-4 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 rounded-lg">
+                <p className="w-full text-sm font-medium text-blue-900 dark:text-blue-200 mb-2">
                   Selected ({selectedServices.length}):
                 </p>
                 {selectedServices.map((serviceId) => {
@@ -121,15 +121,13 @@ export function ServiceSelectionStep({ form }: ServiceSelectionStepProps) {
                     <Badge
                       key={serviceId}
                       variant="secondary"
-                      className="gap-2 pr-1"
-                    >
+                      className="gap-2 pr-1 bg-secondary text-secondary-foreground hover:bg-secondary/80">
                       {service.title}
                       <button
                         type="button"
                         onClick={() => handleRemoveService(serviceId)}
-                        className="ml-1 hover:text-red-600 hover:bg-red-100 rounded-full p-0.5 transition-colors"
-                        aria-label={`Remove ${service.title}`}
-                      >
+                        className="ml-1 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full p-0.5 transition-colors"
+                        aria-label={`Remove ${service.title}`}>
                         <X className="w-3 h-3" />
                       </button>
                     </Badge>
@@ -139,7 +137,7 @@ export function ServiceSelectionStep({ form }: ServiceSelectionStepProps) {
             )}
 
             <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search services..."
                 value={searchQuery}
@@ -148,14 +146,14 @@ export function ServiceSelectionStep({ form }: ServiceSelectionStepProps) {
               />
             </div>
 
-            <ScrollArea className="h-[400px] border rounded-lg p-4">
+            <ScrollArea className="h-[400px] border border-border rounded-lg bg-background">
               {loading ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   Loading services...
                 </div>
               ) : filteredServices.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">
+                  <p className="text-muted-foreground mb-4">
                     {searchQuery
                       ? "No services found matching your search."
                       : "No services available."}
@@ -163,28 +161,26 @@ export function ServiceSelectionStep({ form }: ServiceSelectionStepProps) {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setShowCreateDialog(true)}
-                  >
+                    onClick={() => setShowCreateDialog(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Create Your First Service
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 p-4">
                   {filteredServices.map((service) => {
                     const isSelected = selectedServices.includes(service._id);
                     return (
                       <div
                         key={service._id}
                         className={`
-                          p-4 rounded-lg border-2 cursor-pointer transition-all
-                          ${
-                            isSelected
-                              ? "border-blue-500 bg-blue-50"
-                              : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
-                          }
-                        `}
-                      >
+                      p-4 rounded-lg border-2 cursor-pointer transition-all
+                      ${
+                        isSelected
+                          ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-950/30"
+                          : "border-border hover:border-blue-400 dark:hover:border-blue-500 hover:bg-muted/50"
+                      }
+                    `}>
                         <div className="flex items-start gap-3">
                           <div className="mt-1">
                             <Checkbox
@@ -196,25 +192,28 @@ export function ServiceSelectionStep({ form }: ServiceSelectionStepProps) {
                           </div>
                           <div
                             className="flex-1"
-                            onClick={() => handleServiceToggle(service._id)}
-                          >
+                            onClick={() => handleServiceToggle(service._id)}>
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold text-slate-900">
+                              <h3 className="font-semibold text-foreground">
                                 {service.title}
                               </h3>
                               {isSelected && (
-                                <Check className="w-4 h-4 text-blue-600" />
+                                <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                               )}
                             </div>
-                            <p className="text-sm text-gray-600 mb-2">
+                            <p className="text-sm text-muted-foreground mb-2">
                               {service.description}
                             </p>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant="outline" className="text-xs">
+                              <Badge
+                                variant="outline"
+                                className="text-xs border-border text-muted-foreground">
                                 {service.categoryId?.catName || "Uncategorized"}
                               </Badge>
                               {service.servicePricing && (
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs bg-secondary text-secondary-foreground">
                                   From GH₵{" "}
                                   {service.servicePricing.serviceBasePrice}
                                 </Badge>
@@ -229,7 +228,7 @@ export function ServiceSelectionStep({ form }: ServiceSelectionStepProps) {
               )}
             </ScrollArea>
 
-            <FormDescription className="mt-2">
+            <FormDescription className="mt-2 text-muted-foreground">
               Select at least one service that you offer. You can create custom
               services if you don't find what you're looking for.
             </FormDescription>
@@ -240,15 +239,17 @@ export function ServiceSelectionStep({ form }: ServiceSelectionStepProps) {
 
       {/* Create Service Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 bg-background border-border">
           <DialogHeader className="p-6 pb-0">
-            <DialogTitle>Create New Service</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-foreground">
+              Create New Service
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Create a new service offering. It will be automatically added to
               your selected services once created.
             </DialogDescription>
           </DialogHeader>
-          <div className="overflow-y-auto">
+          <div className="overflow-y-auto p-6">
             <ServiceForm
               mode="create"
               onSuccess={handleServiceCreated}

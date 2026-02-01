@@ -54,8 +54,7 @@ export function ProviderProfileEmptyState() {
         <Button
           size="lg"
           onClick={() => router.push("/provider/setup")}
-          className="gap-2 mt-2"
-        >
+          className="gap-2 mt-2">
           <Sparkles className="w-4 h-4" />
           Create Business Profile
           <ArrowRight className="w-4 h-4" />
@@ -69,8 +68,7 @@ export function ProviderProfileEmptyState() {
           return (
             <Card
               key={index}
-              className="border-2 hover:shadow-md transition-shadow"
-            >
+              className="border-2 hover:shadow-md transition-shadow">
               <CardContent className="pt-6 space-y-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Icon className="w-5 h-5 text-primary" />
@@ -97,8 +95,7 @@ export function ProviderProfileEmptyState() {
           </p>
           <Button
             onClick={() => router.push("/provider/setup")}
-            className="gap-2"
-          >
+            className="gap-2">
             Setup business Profile Now
           </Button>
         </CardContent>
