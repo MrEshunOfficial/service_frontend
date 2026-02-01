@@ -9,6 +9,8 @@ import {
   ChevronDown,
   LogOut,
   Shield,
+  Camera,
+  Mail,
 } from "lucide-react";
 import { SystemRole, UserRole } from "@/types/base.types";
 import { useAuth } from "@/hooks/auth/useAuth";
@@ -50,17 +52,15 @@ export default function UserProfileNav({
 
   // Local state for current avatar URL
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | undefined>(
-    completeProfile?.profilePicture?.url
+    completeProfile?.profilePicture?.url,
   );
 
   const navigateToAdmin = () => {
-    // Navigate to specific admin page based on role
     if (user?.systemRole === SystemRole.SUPER_ADMIN) {
       router.push("/admin/super/dashboard");
     } else if (user?.systemRole === SystemRole.ADMIN) {
       router.push("/admin/dashboard");
     } else {
-      // Fallback - shouldn't happen if the button is only shown to admins
       router.push("/admin/dashboard");
     }
   };
@@ -129,8 +129,6 @@ export default function UserProfileNav({
   // Check if a link is active based on current pathname
   const isLinkActive = (link: NavigationLink): boolean => {
     if (!link.href) return false;
-
-    // Exact match only for precise active state
     return pathname === link.href;
   };
 
@@ -139,7 +137,7 @@ export default function UserProfileNav({
 
   // Extract user information
   const profile = completeProfile?.profile;
-  const displayName = user?.name?.split("@")[0] || "User";
+  const displayName = user?.name || "User";
   const displayEmail = user?.email || profile?.userId || "user@email.com";
   const userRole =
     profile?.role === UserRole.PROVIDER ? "Service Provider" : "Customer";
@@ -153,7 +151,7 @@ export default function UserProfileNav({
   // Render navigation item
   const renderNavigationItem = (
     link: NavigationLink,
-    depth: number = 0
+    depth: number = 0,
   ): React.ReactNode => {
     const Icon = link.icon;
     const isActive = isLinkActive(link);
@@ -165,8 +163,8 @@ export default function UserProfileNav({
         <button
           onClick={() => handleNavClick(link)}
           disabled={isLoading}
-          className={`w-9/10 flex items-center justify-between px-4 py-3 rounded-xl transition-all ${
-            depth > 0 ? "ml-3" : ""
+          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${
+            depth > 0 ? "ml-4" : ""
           } ${
             isActive
               ? "bg-linear-to-r from-red-500 to-blue-600 text-white shadow-md"
@@ -196,7 +194,7 @@ export default function UserProfileNav({
         {hasChildren && isExpanded && (
           <div className="mt-1 space-y-1">
             {link.children!.map((child) =>
-              renderNavigationItem(child, depth + 1)
+              renderNavigationItem(child, depth + 1),
             )}
           </div>
         )}
@@ -243,7 +241,7 @@ export default function UserProfileNav({
             </div>
           )}
 
-          {/* Minimal Overlaid User Info at Bottom */}
+          {/* Overlaid User Info */}
           <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 via-black/60 to-transparent p-4 text-start">
             {isLoading ? (
               <div className="space-y-2">
@@ -256,7 +254,8 @@ export default function UserProfileNav({
                 <h3 className="text-base font-bold text-white capitalize truncate drop-shadow-lg">
                   {displayName}
                 </h3>
-                <p className="text-xs text-white/90 truncate drop-shadow">
+                <p className="text-xs text-white/90 truncate drop-shadow flex items-center gap-1">
+                  <Mail className="w-3 h-3" />
                   {displayEmail}
                 </p>
                 <span className="inline-block text-xs text-blue-300 font-medium bg-blue-500/30 px-2 py-0.5 rounded mt-1">
@@ -296,7 +295,7 @@ export default function UserProfileNav({
                 </div>
               )}
 
-              {/* Upload Button - positioned bottom right */}
+              {/* Upload Button */}
               <div className="absolute bottom-3 right-3 z-10">
                 <ImageUploadPopover
                   type="profile"
@@ -304,6 +303,7 @@ export default function UserProfileNav({
                   onUploadSuccess={handleProfilePictureUpdate}
                   trigger={
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-white/95 hover:bg-white dark:bg-gray-800/95 dark:hover:bg-gray-800 rounded-lg shadow-lg transition-colors text-sm cursor-pointer">
+                      <Camera className="w-4 h-4 text-gray-700 dark:text-gray-300" />
                       <span className="font-medium text-gray-700 dark:text-gray-300">
                         Change
                       </span>
@@ -325,7 +325,8 @@ export default function UserProfileNav({
               </div>
 
               <div>
-                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide flex items-center gap-1">
+                  <Mail className="w-3 h-3" />
                   Email
                 </label>
                 <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5 break-all">
@@ -379,25 +380,26 @@ export default function UserProfileNav({
         )}
       </div>
 
-      {/* Navigation Section - Dynamic with Expand/Collapse */}
+      {/* Navigation Section */}
       <ScrollArea className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 px-2 hide-scrollbar">
         {navigationLinks.map((link) => renderNavigationItem(link))}
       </ScrollArea>
 
+      {/* Admin Button */}
       {(user?.systemRole === SystemRole.ADMIN ||
         user?.systemRole === SystemRole.SUPER_ADMIN) && (
-        <div className="w-full flex items-center justify-center mb-2">
-          {/* CTA Section - Role Based */}
+        <div className="px-2 pb-2">
           <Button
-            className="w-3/4 py-3 bg-linear-to-r from-red-500 to-blue-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="w-full py-3 bg-linear-to-r from-purple-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
             onClick={navigateToAdmin}
           >
-            <Shield size={14} />
+            <Shield className="w-4 h-4" />
             Admin Console
           </Button>
         </div>
       )}
 
+      {/* CTA & Logout Section */}
       <div className="p-2 border-t border-gray-200 dark:border-gray-700 space-y-3">
         <button
           onClick={handleCTAAction}

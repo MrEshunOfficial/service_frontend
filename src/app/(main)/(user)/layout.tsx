@@ -9,11 +9,11 @@ export default function ProfileLayout({ children }: { children: ReactNode }) {
 
   // Handle post task action
   const handlePostTask = () => {
-    router.push("/");
+    router.push("/client/tasks/new");
   };
   const handleBrowseTask = () => {
     console.log("Recently posted task");
-    router.push("/tasks/recently-posted");
+    router.push("/provider/tasks/available");
   };
 
   return (

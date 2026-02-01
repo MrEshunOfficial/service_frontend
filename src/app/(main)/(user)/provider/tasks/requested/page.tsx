@@ -14,14 +14,9 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
-  Eye,
   RefreshCw,
   Check,
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
   Calendar,
-  MessageSquare,
   ExternalLink,
   ExpandIcon,
 } from "lucide-react";
@@ -74,11 +69,11 @@ const RequestedTasksList: React.FC = () => {
   };
 
   const handleViewDetails = (taskId: string) => {
-    router.push(`/tasks/requested/${taskId}`);
+    router.push(`/provider/tasks/requested/${taskId}`);
   };
 
   const handleViewBooking = (bookingId: string) => {
-    router.push(`/tasks/provider/bookings/${bookingId}`);
+    router.push(`/provider/tasks/bookings/${bookingId}`);
   };
 
   if (loading) {

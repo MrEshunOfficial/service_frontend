@@ -1,4 +1,4 @@
-// hooks/useTasksAndBookings.ts
+// hooks/useTasksAndBookings.ts - UPDATED WITH VALIDATION SUPPORT
 
 import { useState, useEffect, useCallback } from "react";
 import { APIError } from "@/lib/api/base/api-client";
@@ -35,6 +35,14 @@ interface UseBookingState {
   loading: boolean;
   error: APIError | null;
   isInitialized: boolean;
+}
+
+// ✅ NEW: Validation request type
+interface ValidateBookingData {
+  approved: boolean;
+  rating?: number;
+  review?: string;
+  disputeReason?: string;
 }
 
 // ============================================================================
@@ -290,7 +298,7 @@ export function useTask(taskId: string, autoLoad: boolean = true) {
 // ============================================================================
 
 /**
- * Hook for managing customer bookings
+ * ✅ UPDATED: Hook for managing customer bookings with validation support
  * Auto-loads bookings on mount
  */
 export function useCustomerBookings(autoLoad: boolean = true) {
@@ -342,6 +350,23 @@ export function useCustomerBookings(autoLoad: boolean = true) {
     [fetchBookings]
   );
 
+  /**
+   * ✅ NEW: Validate booking completion (approve or dispute)
+   */
+  const validateBooking = useCallback(
+    async (bookingId: string, data: ValidateBookingData) => {
+      setState((prev) => ({ ...prev, error: null }));
+      try {
+        await taskAPI.validateBooking(bookingId, data);
+        await fetchBookings();
+      } catch (error) {
+        setState((prev) => ({ ...prev, error: error as APIError }));
+        throw error;
+      }
+    },
+    [fetchBookings]
+  );
+
   const clearError = useCallback(() => {
     setState((prev) => ({ ...prev, error: null }));
   }, []);
@@ -351,12 +376,14 @@ export function useCustomerBookings(autoLoad: boolean = true) {
     fetchBookings,
     refreshBookings: fetchBookings,
     cancelBooking,
+    validateBooking, // ✅ NEW
     clearError,
   };
 }
 
 /**
- * Hook for managing a single booking (works for both customers and providers)
+ * ✅ UPDATED: Hook for managing a single booking with validation support
+ * Works for both customers and providers
  * Auto-loads booking on mount
  */
 export function useBooking(bookingId: string, autoLoad: boolean = true) {
@@ -415,11 +442,29 @@ export function useBooking(bookingId: string, autoLoad: boolean = true) {
     [bookingId, fetchBooking]
   );
 
+  /**
+   * ✅ NEW: Validate booking completion (customer only)
+   */
+  const validateBooking = useCallback(
+    async (data: ValidateBookingData) => {
+      setState((prev) => ({ ...prev, error: null }));
+      try {
+        await taskAPI.validateBooking(bookingId, data);
+        await fetchBooking();
+      } catch (error) {
+        setState((prev) => ({ ...prev, error: error as APIError }));
+        throw error;
+      }
+    },
+    [bookingId, fetchBooking]
+  );
+
   return {
     ...state,
     fetchBooking,
     refreshBooking: fetchBooking,
     cancelBooking,
+    validateBooking, // ✅ NEW
   };
 }
 
@@ -440,7 +485,7 @@ export function useProviderBooking(bookingId: string, autoLoad: boolean = true) 
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       // ✅ FIXED: Use unified endpoint (same as customer)
-      const response = await taskAPI.getBookingById(bookingId);
+      const response = await taskAPI.getBookingDetails(bookingId);
       const bookingData = response.booking || response;
       
       setState({
@@ -681,8 +726,6 @@ export function useProviderFloatingTasks(autoLoad: boolean = true) {
   };
 }
 
-// hooks/useTasksAndBookings.ts
-
 /**
  * Hook for provider's requested tasks (tasks where customer specifically requested them)
  * Auto-loads on mount
@@ -752,7 +795,9 @@ export function useProviderRequestedTasks(autoLoad: boolean = true) {
   };
 }
 
-// ✅ SAME FIX for useProviderRequestedTask
+/**
+ * ✅ SAME FIX for useProviderRequestedTask
+ */
 export function useProviderRequestedTask(taskId: string, autoLoad: boolean = true) {
   const [state, setState] = useState<UseTaskState>({
     task: null,
@@ -1077,49 +1122,6 @@ export function usePlatformStatistics(autoLoad: boolean = true) {
     refreshStatistics: fetchStatistics,
   };
 }
-
-// export function useProviderBooking(bookingId: string, autoLoad: boolean = true) {
-//   const [state, setState] = useState<UseBookingState>({
-//     booking: null,
-//     loading: autoLoad,
-//     error: null,
-//     isInitialized: false,
-//   });
-
-//   const fetchBooking = useCallback(async () => {
-//     if (!bookingId) return;
-
-//     setState((prev) => ({ ...prev, loading: true, error: null }));
-//     try {
-//       const response = await taskAPI.getBookingDetails(bookingId);
-//       setState({
-//         booking: response.booking || null,
-//         loading: false,
-//         error: null,
-//         isInitialized: true,
-//       });
-//     } catch (error) {
-//       setState({
-//         booking: null,
-//         loading: false,
-//         error: error as APIError,
-//         isInitialized: true,
-//       });
-//     }
-//   }, [bookingId]);
-
-//   useEffect(() => {
-//     if (autoLoad && bookingId && !state.isInitialized) {
-//       fetchBooking();
-//     }
-//   }, [autoLoad, bookingId, state.isInitialized, fetchBooking]);
-
-//   return {
-//     ...state,
-//     fetchBooking,
-//     refreshBooking: fetchBooking,
-//   };
-// }
 
 /**
  * Hook for funnel analysis

@@ -7,6 +7,7 @@ import { useProviderDashboard } from "@/hooks/useTasksAndBookings";
 import ProviderSetupPrompt from "./ProviderSetupPrompt";
 import ProviderStats from "./ProviderStats";
 import TaskOpportunities from "./TaskOpportunities";
+import { Button } from "../ui/button";
 
 const ProviderDashboard = () => {
   const router = useRouter();
@@ -54,20 +55,14 @@ const ProviderDashboard = () => {
         <div className="space-y-3">
           {!dashboardError && (
             <>
-              <button
-                onClick={() => router.push("/tasks/available")}
-                className="w-full py-3 bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              <Button
+                size={"sm"}
+                onClick={() => router.push("/provider/tasks/available")}
+                className="w-full bg-linear-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm"
               >
                 Browse Available Tasks
                 <ArrowRight className="w-5 h-5" />
-              </button>
-
-              <button
-                onClick={() => router.push("/provider/tasks")}
-                className="w-full py-3 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-              >
-                View My Tasks
-              </button>
+              </Button>
             </>
           )}
         </div>

@@ -196,7 +196,6 @@ export interface ProviderWithMatchedServices extends ProviderProfile {
  */
 export interface CreateProviderProfileRequest {
   // Required fields
-  profile: string; // User profile ID
   providerContactInfo: ContactDetails;
   locationData: UserLocation;
   isAlwaysAvailable: boolean;

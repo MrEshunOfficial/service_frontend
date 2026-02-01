@@ -275,7 +275,7 @@ export class ProviderProfileAPI extends APIClient {
    */
   async enrichLocation(data: LocationEnrichmentRequest): Promise<UserLocation> {
     return this.post<UserLocation>(
-      "/api/provider-profile/location/enrich",
+      "/api/provider/location/enrich",
       data
     );
   }

@@ -869,7 +869,7 @@ export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   [TaskStatus.FLOATING]: "Open to All",
   [TaskStatus.REQUESTED]: "Provider Requested",
   [TaskStatus.ACCEPTED]: "Accepted",
-  [TaskStatus.CONVERTED]: "Converted to Booking",
+  [TaskStatus.CONVERTED]: "Scheduled",
   [TaskStatus.EXPIRED]: "Expired",
   [TaskStatus.CANCELLED]: "Cancelled",
 };

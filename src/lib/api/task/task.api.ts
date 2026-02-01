@@ -1,4 +1,4 @@
-// api/tasks/task-api.ts
+// api/tasks/task-api.ts - UPDATED WITH VALIDATION
 
 import { Task, Booking, CreateTaskRequestBody, TaskWithProvidersResponse, TaskQueryParams, TaskResponse, UpdateTaskRequestBody, RequestProviderRequestBody, CancelRequest, RematchRequest, BookingQueryParams, BookingResponse, CustomerDashboard, CustomerHistory, ExpressInterestRequestBody, ProviderResponseRequestBody, CompleteBookingRequest, ProviderDashboard, PaginatedTaskResponse, TaskStatistics, PaginatedBookingResponse, BookingStatistics, PlatformStatistics, FunnelAnalysis } from "@/types/task.types";
 import { APIClient } from "../base/api-client";
@@ -37,6 +37,14 @@ interface RespondToRequestResponse {
   task: Task;
   booking?: Booking; // ✅ Included when action is "accept"
   error?: string;
+}
+
+// ✅ NEW: Request body for validating booking completion
+interface ValidateBookingRequest {
+  approved: boolean;
+  rating?: number;       // 1-5 stars (optional but recommended if approved)
+  review?: string;       // Customer review/feedback
+  disputeReason?: string; // Required if approved = false
 }
 
 /**
@@ -137,14 +145,45 @@ export class TaskAPI extends APIClient {
    * Get details of a specific booking
    */
   async getBookingById(bookingId: string): Promise<BookingResponse> {
-    return this.get<BookingResponse>(`${this.tasksEndpoint}/bookings/customer/${bookingId}`);
+    return this.get<BookingResponse>(`${this.tasksEndpoint}/bookings/${bookingId}`);
   }
 
   /**
    * Cancel a booking as a customer
    */
   async cancelBooking(bookingId: string, data: CancelRequest): Promise<BookingResponse> {
-    return this.post<BookingResponse>(`${this.tasksEndpoint}/bookings/customer/${bookingId}/cancel`, data);
+    return this.post<BookingResponse>(`${this.tasksEndpoint}/bookings/${bookingId}/cancel`, data);
+  }
+
+  /**
+   * ✅ NEW: Validate booking completion (Customer only)
+   * Called after provider marks booking as complete
+   * 
+   * @example Approve completion
+   * ```typescript
+   * await taskAPI.validateBooking(bookingId, {
+   *   approved: true,
+   *   rating: 5,
+   *   review: "Excellent service!"
+   * });
+   * ```
+   * 
+   * @example Dispute completion
+   * ```typescript
+   * await taskAPI.validateBooking(bookingId, {
+   *   approved: false,
+   *   disputeReason: "Service was not completed as requested"
+   * });
+   * ```
+   */
+  async validateBooking(
+    bookingId: string, 
+    data: ValidateBookingRequest
+  ): Promise<BookingResponse> {
+    return this.post<BookingResponse>(
+      `${this.tasksEndpoint}/bookings/${bookingId}/validate`, 
+      data
+    );
   }
 
   /**
@@ -241,21 +280,22 @@ export class TaskAPI extends APIClient {
    * Start a confirmed booking
    */
   async startBooking(bookingId: string): Promise<BookingResponse> {
-    return this.post<BookingResponse>(`${this.tasksEndpoint}/bookings/provider/${bookingId}/start`);
+    return this.post<BookingResponse>(`${this.tasksEndpoint}/bookings/${bookingId}/start`);
   }
 
   /**
    * Complete a booking with optional final price
+   * ✅ NOTE: This now moves booking to AWAITING_VALIDATION status
    */
   async completeBooking(bookingId: string, data?: CompleteBookingRequest): Promise<BookingResponse> {
-    return this.post<BookingResponse>(`${this.tasksEndpoint}/bookings/provider/${bookingId}/complete`, data);
+    return this.post<BookingResponse>(`${this.tasksEndpoint}/bookings/${bookingId}/complete`, data);
   }
 
   /**
    * Cancel a booking as a provider
    */
   async providerCancelBooking(bookingId: string, data: CancelRequest): Promise<BookingResponse> {
-    return this.post<BookingResponse>(`${this.tasksEndpoint}/bookings/provider/${bookingId}/cancel`, data);
+    return this.post<BookingResponse>(`${this.tasksEndpoint}/bookings/${bookingId}/cancel`, data);
   }
 
   /**

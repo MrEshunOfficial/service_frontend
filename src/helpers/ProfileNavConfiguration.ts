@@ -10,13 +10,15 @@ import {
   ShoppingBag,
   TrendingUp,
   Edit,
-  Shield,
   FileText,
   BarChart3,
   Wallet,
   Star,
   Package,
-  ToolCaseIcon,
+  ClipboardList,
+  CheckCircle,
+  Clock,
+  ListTodo,
 } from "lucide-react";
 import { UserRole } from "@/types/base.types";
 import { NavigationLink } from "./ProfNavigationLinksTypes";
@@ -31,14 +33,14 @@ export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
     children: [
       {
         id: "profile-view",
-        label: `${UserRole.CUSTOMER ? "Customer" : "Provider"} Profile`,
+        label: "My Profile",
         icon: User,
         href: "/profile",
         roles: [UserRole.CUSTOMER, UserRole.PROVIDER],
       },
       {
         id: "profile-edit",
-        label: `"Update" ${UserRole.CUSTOMER ? "Customer" : "Provider"} Profile`,
+        label: "Update Profile",
         icon: Edit,
         href: "/profile/edit",
         roles: [UserRole.CUSTOMER, UserRole.PROVIDER],
@@ -49,59 +51,72 @@ export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
     id: "bookings",
     label: "My Bookings",
     icon: ShoppingBag,
-    href: "/client",
+    href: "/client/bookings",
     roles: [UserRole.CUSTOMER],
     children: [
       {
         id: "client-bookings",
-        label: "My Bookings",
+        label: "Active Orders",
         icon: Package,
-        href: "/client",
+        href: "/client/bookings",
         roles: [UserRole.CUSTOMER],
       },
       {
         id: "client-history",
-        label: "History",
+        label: "Completed Orders",
         icon: FileText,
-        href: "/client/history",
+        href: "/client/bookings/history",
         roles: [UserRole.CUSTOMER],
       },
     ],
   },
-
   {
-    id: "tasks",
+    id: "tasks-customer",
     label: "Tasks",
-    icon: ToolCaseIcon,
-    href: "/tasks",
+    icon: ClipboardList,
+    href: "/client/tasks",
     roles: [UserRole.CUSTOMER],
     children: [
       {
         id: "my-tasks",
         label: "Posted",
-        icon: FileText,
+        icon: ListTodo,
         href: "/client/tasks/posted",
         roles: [UserRole.CUSTOMER],
       },
       {
         id: "tasks-history",
-        label: "Tasks",
-        icon: FileText,
+        label: "History",
+        icon: Clock,
         href: "/client/tasks/history",
         roles: [UserRole.CUSTOMER],
       },
     ],
   },
   {
+    id: "favorites",
+    label: "Favorites",
+    icon: Heart,
+    href: "/favorites",
+    roles: [UserRole.CUSTOMER],
+  },
+  {
+    id: "payment",
+    label: "Payment Methods",
+    icon: CreditCard,
+    href: "/payment",
+    roles: [UserRole.CUSTOMER],
+  },
+  {
     id: "services",
     label: "My Services",
     icon: Briefcase,
-    href: "/services",
+    href: "/provider/services",
     roles: [UserRole.PROVIDER],
     children: [
       {
         id: "services-manage",
-        label: "My Services",
+        label: "Manage Services",
         icon: Briefcase,
         href: "/provider/services",
         roles: [UserRole.PROVIDER],
@@ -116,49 +131,41 @@ export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
     ],
   },
   {
-    id: "tasks",
+    id: "tasks-provider",
     label: "Tasks",
-    icon: ToolCaseIcon,
-    href: "/tasks",
+    icon: ClipboardList,
+    href: "/provider/tasks",
     roles: [UserRole.PROVIDER],
     children: [
       {
         id: "tasks-available",
         label: "Task Pool",
-        icon: FileText,
+        icon: ListTodo,
         href: "/provider/tasks/available",
         roles: [UserRole.PROVIDER],
       },
-
       {
         id: "tasks-requested",
         label: "Requests",
-        icon: TrendingUp,
+        icon: Bell,
         href: "/provider/tasks/requested",
         roles: [UserRole.PROVIDER],
       },
       {
-        id: "tasks-recent",
-        label: "matched history",
-        icon: TrendingUp,
+        id: "tasks-matched",
+        label: "Matched History",
+        icon: CheckCircle,
         href: "/provider/tasks/matched",
         roles: [UserRole.PROVIDER],
       },
       {
         id: "booked-tasks",
-        label: "bookings",
-        icon: FileText,
+        label: "Bookings",
+        icon: Package,
         href: "/provider/bookings",
         roles: [UserRole.PROVIDER],
       },
     ],
-  },
-  {
-    id: "favorites",
-    label: "Favorites",
-    icon: Heart,
-    href: "/favorites",
-    roles: [UserRole.CUSTOMER],
   },
   {
     id: "dashboard",
@@ -191,13 +198,6 @@ export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
     ],
   },
   {
-    id: "payment",
-    label: "Payment Methods",
-    icon: CreditCard,
-    href: "/payment",
-    roles: [UserRole.CUSTOMER],
-  },
-  {
     id: "notifications",
     label: "Notifications",
     icon: Bell,
@@ -208,15 +208,8 @@ export const UNIFIED_NAVIGATION_CONFIG: NavigationLink[] = [
     id: "settings",
     label: "Settings",
     icon: Settings,
-    href: "/settings/provider",
-    roles: [UserRole.PROVIDER],
-  },
-  {
-    id: "settings",
-    label: "Settings",
-    icon: Settings,
-    href: "/settings/client",
-    roles: [UserRole.CUSTOMER],
+    href: `${UserRole.PROVIDER ? "/settings/provider" : "/settings/client"}`,
+    roles: [UserRole.CUSTOMER, UserRole.PROVIDER],
   },
   {
     id: "help",
@@ -235,4 +228,14 @@ export const getNavigationByRole = (role: UserRole): NavigationLink[] => {
     ...link,
     children: link.children?.filter((child) => child.roles.includes(role)),
   }));
+};
+
+// Helper function to get role-specific href for settings
+export const getSettingsHref = (role: UserRole): string => {
+  return role === UserRole.PROVIDER ? "/settings/provider" : "/settings/client";
+};
+
+// Helper function to get role-specific profile label
+export const getProfileLabel = (role: UserRole): string => {
+  return role === UserRole.PROVIDER ? "Provider Profile" : "Customer Profile";
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useBooking } from "@/hooks/useTasksAndBookings";
+import { useBooking, useProviderBooking } from "@/hooks/useTasksAndBookings";
 import { useProviderActiveBookings } from "@/hooks/useTasksAndBookings";
 import {
   Calendar,
@@ -30,7 +30,7 @@ const ProviderBookingDetailsPage: React.FC = () => {
   const router = useRouter();
   const bookingId = params?.id as string;
 
-  const { booking, loading, error, refreshBooking } = useBooking(
+  const { booking, loading, error, refreshBooking } = useProviderBooking(
     bookingId,
     !!bookingId,
   );
@@ -207,7 +207,7 @@ const ProviderBookingDetailsPage: React.FC = () => {
             No booking ID provided
           </p>
           <button
-            onClick={() => router.push("/tasks/provider/bookings")}
+            onClick={() => router.push("/provider/bookings")}
             className="w-full inline-flex items-center justify-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -245,7 +245,7 @@ const ProviderBookingDetailsPage: React.FC = () => {
             {error?.message || "Booking not found"}
           </p>
           <button
-            onClick={() => router.push("/tasks/provider/bookings")}
+            onClick={() => router.push("/provider/bookings")}
             className="w-full inline-flex items-center justify-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -268,7 +268,7 @@ const ProviderBookingDetailsPage: React.FC = () => {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <button
-            onClick={() => router.push("/tasks/provider/bookings")}
+            onClick={() => router.push("/provider/bookings")}
             className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -526,7 +526,7 @@ const ProviderBookingDetailsPage: React.FC = () => {
           )}
 
           {/* Completion Notes */}
-          {/* {booking.completionNotes && (
+          {/* {booking.isCompleted && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mb-6">
               <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-2">
                 Completion Notes

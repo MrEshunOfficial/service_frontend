@@ -11,7 +11,8 @@ import {
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useCompleteProfile } from "@/hooks/profiles/userProfile.hook";
-import { UserRole } from "@/types/base.types";
+import { useProviderProfile } from "@/hooks/profiles/useProviderProfile";
+import { UserRole, PopulationLevel } from "@/types/base.types";
 import {
   Home,
   ServerCrash,
@@ -32,6 +33,7 @@ import { ClientProfileDisplay } from "@/components/profiles/client/ClientProfiel
 import { Card, CardContent } from "@/components/ui/card";
 import ProviderDashboard from "@/components/profiles/provider/dashboard-ui/bussiness.profile";
 import { ClientProfileEmptyState } from "@/components/profiles/client/ClientEmptyState";
+import { ProviderProfileEmptyState } from "@/components/profiles/client/ProviderProfileEmptyState";
 
 interface ErrorConfig {
   icon: React.ComponentType<{ className?: string }>;
@@ -139,15 +141,78 @@ function PageLayout({ children }: { children: React.ReactNode }) {
 }
 
 /* ======================================================
-   Provider View
+   Provider View (FIXED - Uses correct provider-specific hook)
 ====================================================== */
 
 function ProviderProfileView() {
-  return <ProviderDashboard />;
+  const {
+    profile: providerProfile,
+    loading,
+    error,
+    fetchProfile,
+  } = useProviderProfile(true, PopulationLevel.DETAILED);
+
+  // Helper function to check if error represents "no provider profile" state
+  const isNoProviderProfileError = (err: any): boolean => {
+    if (!err) return false;
+
+    // 404 means no provider profile exists yet
+    if (err.status === 404) return true;
+
+    // Check error message patterns
+    const message = err.message?.toLowerCase() || "";
+    return (
+      message.includes("do not have a provider profile") ||
+      message.includes("no provider profile") ||
+      message.includes("provider profile not found") ||
+      message.includes("profile does not exist")
+    );
+  };
+
+  // Show loading state
+  if (loading) {
+    return <LoadingOverlay message="Loading provider dashboard..." show />;
+  }
+
+  if (isNoProviderProfileError(error)) {
+    return <ProviderProfileEmptyState />;
+  }
+
+  // Then check if no profile data AND no error
+  if (!providerProfile && !error) {
+    return <ProviderProfileEmptyState />;
+  }
+
+  // Then check for OTHER errors (network, server, etc.)
+  if (error) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="text-center text-destructive py-8">
+            Error loading provider profile: {error.message}
+            <div className="mt-4">
+              <Button onClick={() => fetchProfile()} variant="outline">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Provider profile exists and loaded successfully
+  if (providerProfile) {
+    return <ProviderDashboard />;
+  }
+
+  // Fallback
+  return <LoadingOverlay message="Loading provider dashboard..." show />;
 }
 
 /* ======================================================
-   Client View (FIXED)
+   Client View
 ====================================================== */
 
 function ClientProfileView() {
@@ -165,13 +230,38 @@ function ClientProfileView() {
 
   const { profile: completeProfile } = useCompleteClientProfile();
 
-  const isRealError = error && !("status" in error && error.status === 404);
+  // Helper function to check if error represents "no profile" state
+  const isNoProfileError = (err: any): boolean => {
+    if (!err) return false;
+
+    if (err.status === 404) return true;
+
+    const message = err.message?.toLowerCase() || "";
+    return (
+      message.includes("do not have a client profile") ||
+      message.includes("do not have a profile") ||
+      message.includes("no client profile") ||
+      message.includes("no profile") ||
+      message.includes("client profile not found") ||
+      message.includes("profile not found") ||
+      message.includes("profile does not exist")
+    );
+  };
 
   if (loading) {
     return <LoadingOverlay message="Getting dashboard ready..." show />;
   }
 
-  if (isRealError) {
+  // Check error first, even if profile exists
+  if (isNoProfileError(error)) {
+    return <ClientProfileEmptyState />;
+  }
+
+  if (!completeProfile && !error) {
+    return <ClientProfileEmptyState />;
+  }
+
+  if (error) {
     return (
       <div className="container mx-auto py-8">
         <Card>
@@ -183,24 +273,24 @@ function ClientProfileView() {
     );
   }
 
-  if (!completeProfile) {
-    return <ClientProfileEmptyState />;
+  if (completeProfile) {
+    return (
+      <div className="container mx-auto py-8">
+        <ClientProfileDisplay
+          profile={completeProfile}
+          onUpdateProfile={updateProfile}
+          onRemoveFavoriteService={removeFavoriteService}
+          onRemoveFavoriteProvider={removeFavoriteProvider}
+          onAddAddress={addAddress}
+          onRemoveAddress={removeAddress}
+          onSetDefaultAddress={setDefaultAddress}
+          onUpdateIdDetails={updateIdDetails}
+        />
+      </div>
+    );
   }
 
-  return (
-    <div className="container mx-auto py-8">
-      <ClientProfileDisplay
-        profile={completeProfile}
-        onUpdateProfile={updateProfile}
-        onRemoveFavoriteService={removeFavoriteService}
-        onRemoveFavoriteProvider={removeFavoriteProvider}
-        onAddAddress={addAddress}
-        onRemoveAddress={removeAddress}
-        onSetDefaultAddress={setDefaultAddress}
-        onUpdateIdDetails={updateIdDetails}
-      />
-    </div>
-  );
+  return <LoadingOverlay message="Getting dashboard ready..." show />;
 }
 
 /* ======================================================
@@ -211,6 +301,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
+  // This gets the BASE user profile to determine the role
   const {
     completeProfile,
     loading: profileLoading,
@@ -219,6 +310,21 @@ export default function ProfilePage() {
   } = useCompleteProfile({ autoLoad: isAuthenticated });
 
   const isLoading = authLoading || (isAuthenticated && profileLoading);
+
+  // Helper function to check if error represents "no profile" state
+  const isNoProfileError = (err: any): boolean => {
+    if (!err) return false;
+
+    if (err.status === 404) return true;
+
+    const message = err.message?.toLowerCase() || "";
+    return (
+      message.includes("do not have a") ||
+      message.includes("no profile") ||
+      message.includes("profile not found") ||
+      message.includes("profile does not exist")
+    );
+  };
 
   if (isLoading) {
     return (
@@ -246,34 +352,8 @@ export default function ProfilePage() {
     );
   }
 
-  if (profileError && profileError.status !== 404) {
-    return (
-      <PageLayout>
-        <ErrorStateDisplay
-          config={{
-            icon: ServerCrash,
-            iconBgColor: "bg-red-100",
-            iconColor: "text-red-600",
-            title: "Error Loading Profile",
-            description: profileError.message,
-            primaryAction: {
-              label: "Retry",
-              icon: RefreshCw,
-              onClick: refetch,
-            },
-          }}
-          error={{ message: profileError.message, code: profileError.code }}
-        />
-      </PageLayout>
-    );
-  }
-
-  // FIXED: Only show "No Profile Found" if we're not loading AND there's a 404 error OR explicitly no profile
-  if (
-    !profileLoading &&
-    !completeProfile &&
-    (profileError?.status === 404 || (!profileError && !completeProfile))
-  ) {
+  // Check error first
+  if (isNoProfileError(profileError)) {
     return (
       <PageLayout>
         <ErrorStateDisplay
@@ -296,18 +376,62 @@ export default function ProfilePage() {
     );
   }
 
-  // If still loading or profile is undefined but not a 404, show loading
-  if (!completeProfile) {
+  if (!completeProfile && !profileError) {
     return (
-      <LoadingOverlay message="Getting profile ready, please wait..." show />
+      <PageLayout>
+        <ErrorStateDisplay
+          config={{
+            icon: UserX,
+            iconBgColor: "bg-blue-100",
+            iconColor: "text-blue-600",
+            title: "No Profile Found",
+            description: `${
+              user?.name ?? "You"
+            } haven't created a profile yet.`,
+            primaryAction: {
+              label: "Create Profile",
+              icon: UserPlus,
+              onClick: () => router.push("/profile/create"),
+            },
+          }}
+        />
+      </PageLayout>
     );
   }
 
-  const isProvider = completeProfile.profile.role === UserRole.PROVIDER;
+  if (profileError) {
+    return (
+      <PageLayout>
+        <ErrorStateDisplay
+          config={{
+            icon: ServerCrash,
+            iconBgColor: "bg-red-100",
+            iconColor: "text-red-600",
+            title: "Error Loading Profile",
+            description: profileError.message,
+            primaryAction: {
+              label: "Retry",
+              icon: RefreshCw,
+              onClick: refetch,
+            },
+          }}
+          error={{ message: profileError.message, code: profileError.code }}
+        />
+      </PageLayout>
+    );
+  }
+
+  if (completeProfile) {
+    const isProvider = completeProfile.profile.role === UserRole.PROVIDER;
+
+    return (
+      <PageLayout>
+        {isProvider ? <ProviderProfileView /> : <ClientProfileView />}
+      </PageLayout>
+    );
+  }
 
   return (
-    <PageLayout>
-      {isProvider ? <ProviderProfileView /> : <ClientProfileView />}
-    </PageLayout>
+    <LoadingOverlay message="Getting profile ready, please wait..." show />
   );
 }

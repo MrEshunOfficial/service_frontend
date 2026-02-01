@@ -18,7 +18,6 @@ import {
   BulkOperationsRequest,
   DistanceCalculationRequest,
   GeocodeRequest,
-  LocationEnrichmentRequest,
   LocationVerificationRequest,
   NearbySearchRequest,
   NearestProvidersParams,
@@ -26,9 +25,10 @@ import {
   GetAllProvidersParams,
   NearbyServiceProvidersParams,
 } from "@/types/profiles/provider-profile.types";
-import { IdDetails, PopulationLevel, UserLocation } from "@/types/base.types";
+import { Coordinates, IdDetails, PopulationLevel, UserLocation } from "@/types/base.types";
 import { useState, useEffect, useCallback } from "react";
 import { ProviderProfileAPI } from "@/lib/api/profiles/provider.profile.api";
+import { toast } from "sonner";
 
 // Initialize the API client
 const providerAPI = new ProviderProfileAPI();
@@ -751,57 +751,79 @@ export function useProviderDistance(providerId: string) {
 // HOOK: useLocationEnrichment
 // ============================================================================
 
-interface UseLocationEnrichmentState {
-  enrichedLocation: UserLocation | null;
-  loading: boolean;
-  error: APIError | null;
+interface LocationEnrichmentParams {
+  ghanaPostGPS: string;
+  nearbyLandmark?: string;
+  coordinates?: Coordinates;
+}
+
+interface LocationEnrichmentResponse {
+  region?: string;
+  city?: string;
+  district?: string;
+  locality?: string;
+  streetName?: string;
+  houseNumber?: string;
+  gpsCoordinates?: Coordinates;
+  isAddressVerified?: boolean;
+  sourceProvider?: "openstreetmap" | "google" | "ghanapost";
 }
 
 /**
  * Hook for enriching location data
  */
 export function useLocationEnrichment() {
-  const [state, setState] = useState<UseLocationEnrichmentState>({
-    enrichedLocation: null,
-    loading: false,
-    error: null,
-  });
+  const [loading, setLoading] = useState(false);
 
-  const enrichLocation = useCallback(
-    async (data: LocationEnrichmentRequest) => {
-      setState((prev) => ({ ...prev, loading: true, error: null }));
-      try {
-        const enrichedLocation = await providerAPI.enrichLocation(data);
-        setState({
-          enrichedLocation,
-          loading: false,
-          error: null,
-        });
-      } catch (error) {
-        setState({
-          enrichedLocation: null,
-          loading: false,
-          error: error as APIError,
-        });
-        throw error;
+  const enrichLocation = async (
+    params: LocationEnrichmentParams
+  ): Promise<LocationEnrichmentResponse | null> => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/providers/location/enrich", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ghanaPostGPS: params.ghanaPostGPS,
+          nearbyLandmark: params.nearbyLandmark,
+          coordinates: params.coordinates,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to enrich location");
       }
-    },
-    []
-  );
 
-  const clearLocation = useCallback(() => {
-    setState({
-      enrichedLocation: null,
-      loading: false,
-      error: null,
-    });
-  }, []);
+      // Transform backend response to match our form structure
+      const locationData: LocationEnrichmentResponse = {
+        region: result.data.location?.region,
+        city: result.data.location?.city,
+        district: result.data.location?.district,
+        locality: result.data.location?.locality,
+        streetName: result.data.location?.streetName,
+        houseNumber: result.data.location?.houseNumber,
+        gpsCoordinates: result.data.coordinates,
+        isAddressVerified: result.data.verified,
+        sourceProvider: result.data.source,
+      };
 
-  return {
-    ...state,
-    enrichLocation,
-    clearLocation,
+      return locationData;
+    } catch (error) {
+      console.error("Location enrichment error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to enrich location"
+      );
+      return null;
+    } finally {
+      setLoading(false);
+    }
   };
+
+  return { enrichLocation, loading };
 }
 
 // ============================================================================

@@ -43,8 +43,13 @@ const THEME_CONFIG = {
   system: { icon: Monitor, label: "System" },
 };
 
-const SETTINGS_ITEMS = [
-  { href: "/settings", icon: Settings, label: "Preferences", key: "settings" },
+const getSettingsItems = (userRole?: UserRole) => [
+  {
+    href: `${userRole === UserRole.CUSTOMER ? "/settings/client" : "/settings/provider"}`,
+    icon: Settings,
+    label: "Preferences",
+    key: "settings",
+  },
   { href: "/help", icon: HelpCircle, label: "Help & Support", key: "help" },
 ];
 
@@ -117,7 +122,7 @@ const StatusIndicator: React.FC<{
       className={cn(
         "absolute w-4 h-4 rounded-full flex items-center justify-center",
         config.bg,
-        className
+        className,
       )}
     >
       <config.icon className="h-3 w-3 text-white" />
@@ -146,7 +151,7 @@ const UserAvatar: React.FC<{
       <Avatar
         className={cn(
           avatarSize,
-          "ring-2 ring-offset-1 ring-gray-200/50 dark:ring-gray-700/50"
+          "ring-2 ring-offset-1 ring-gray-200/50 dark:ring-gray-700/50",
         )}
       >
         <AvatarImage src={avatarUrl} alt={`${displayName} avatar`} />
@@ -185,7 +190,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   onProfilePictureUpdate,
 }) => {
   const [currentAvatarUrl, setCurrentAvatarUrl] = React.useState(
-    profilePictureUrl || user?.avatar
+    profilePictureUrl || user?.avatar,
   );
 
   // Update local state when props change
@@ -199,14 +204,19 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     () => [
       { href: "/profile", icon: UserIcon, label: "Profile", key: "profile" },
       {
-        href: role === UserRole.PROVIDER ? "/tasks/available" : "/tasks/posted",
+        href:
+          role === UserRole.PROVIDER
+            ? "/provider/tasks/available"
+            : "/client/tasks/posted",
         icon: BarChart3,
         label: "tasks",
         key: "dashboard",
       },
     ],
-    [role]
+    [role],
   );
+
+  const SETTINGS_ITEMS = React.useMemo(() => getSettingsItems(role), [role]);
 
   // Consolidated display values
   const display = {

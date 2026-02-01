@@ -17,6 +17,11 @@ import {
   AlertTriangle,
   Check,
   ArrowRight,
+  Phone,
+  DollarSign,
+  Navigation,
+  MessageSquare,
+  Info,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { BackgroundOverlay } from "@/components/ui/LoadingOverlay";
@@ -36,23 +41,57 @@ const RequestedTaskDetails: React.FC = () => {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Helper function to safely extract booking ID from response
+  const extractBookingId = (response: any): string | null => {
+    try {
+      if (!response) return null;
+      const booking = response.booking || response.data?.booking;
+      if (!booking) return null;
+      if (typeof booking === "string") return booking;
+      if (typeof booking === "object" && booking !== null) {
+        const id = booking._id || booking.id;
+        if (typeof id === "string") return id;
+        if (id && typeof id.toString === "function") return id.toString();
+      }
+      return null;
+    } catch (err) {
+      console.error("Error extracting booking ID:", err);
+      return null;
+    }
+  };
+
+  // Helper to get booking ID from task.convertedToBookingId
+  const getConvertedBookingId = (): string | null => {
+    if (!task?.convertedToBookingId) return null;
+    if (typeof task.convertedToBookingId === "string") {
+      return task.convertedToBookingId;
+    }
+    if (typeof task.convertedToBookingId === "object") {
+      const booking = task.convertedToBookingId as any;
+      const id = booking._id || booking.id || booking.bookingNumber;
+      if (typeof id === "string") return id;
+      if (id && typeof id.toString === "function") return id.toString();
+    }
+    return null;
+  };
+
   const handleSubmitResponse = async () => {
     setSubmitting(true);
-
     try {
       const responseData: ProviderResponseRequestBody = {
         action: responseAction,
         message: message || undefined,
       };
-
       const response = await respondToRequest(responseData);
 
-      // If accepting and a booking was created, navigate to it
-      if (responseAction === "accept" && response.booking) {
-        router.push(`/tasks/provider/bookings/${response.booking._id}`);
-      } else {
-        router.push("/tasks/requested");
+      if (responseAction === "accept") {
+        const bookingId = extractBookingId(response);
+        if (bookingId) {
+          router.push(`/provider/bookings/${bookingId}`);
+          return;
+        }
       }
+      router.push("/provider/tasks/requested");
     } catch (err) {
       console.error("Failed to respond to task:", err);
       alert("Failed to submit response. Please try again.");
@@ -66,6 +105,13 @@ const RequestedTaskDetails: React.FC = () => {
       month: "long",
       day: "numeric",
       year: "numeric",
+    });
+  };
+
+  const formatTime = (date: string | Date) => {
+    return new Date(date).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -85,7 +131,31 @@ const RequestedTaskDetails: React.FC = () => {
     return null;
   };
 
-  // ✅ Status checks
+  const getCustomerContact = () => {
+    if (!task?.customerId) return null;
+    if (typeof task.customerId === "object" && task.customerId !== null) {
+      return task.customerId.contactDetails?.primaryContact || null;
+    }
+    return null;
+  };
+
+  // Calculate time until expiration
+  const getTimeUntilExpiration = () => {
+    if (!task?.expiresAt) return null;
+    const now = new Date();
+    const expiry = new Date(task.expiresAt);
+    const diffMs = expiry.getTime() - now.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMs < 0) return "Expired";
+    if (diffDays > 0) return `${diffDays} day${diffDays > 1 ? "s" : ""} left`;
+    if (diffHours > 0)
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} left`;
+    return "Expires soon";
+  };
+
+  // Status checks
   const isAccepted = task?.status === TaskStatus.ACCEPTED;
   const isConverted = task?.status === TaskStatus.CONVERTED;
   const isCancelled = task?.status === TaskStatus.CANCELLED;
@@ -141,48 +211,291 @@ const RequestedTaskDetails: React.FC = () => {
     );
   }
 
-  // ✅ Get status badge component
-  const getStatusBadge = () => {
+  // Consolidated Status Card Component
+  const StatusCard = () => {
     if (isConverted) {
       return (
-        <span className="bg-linear-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 text-green-800 dark:text-green-200 text-xs font-bold px-3 py-1.5 rounded-full border border-green-200 dark:border-green-800 inline-flex items-center gap-2">
-          <Check className="w-3.5 h-3.5" />
-          CONVERTED TO BOOKING
-        </span>
+        <div className="bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border border-green-200 dark:border-green-800 rounded-xl p-6 mb-6 shadow-lg">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/50 rounded-xl flex items-center justify-center shrink-0">
+              <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="bg-linear-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 text-green-800 dark:text-green-200 text-xs font-bold px-3 py-1.5 rounded-full border border-green-200 dark:border-green-800">
+                  CONVERTED TO BOOKING
+                </span>
+              </div>
+              <h3 className="font-bold text-green-900 dark:text-green-100 text-lg mb-1">
+                Booking Created Successfully
+              </h3>
+              <p className="text-sm text-green-700 dark:text-green-300 mb-3">
+                This task has been converted to a booking. View the full booking
+                details to manage the service.
+              </p>
+              {getConvertedBookingId() && (
+                <div className="bg-white/50 dark:bg-gray-900/50 rounded-lg px-4 py-2 font-mono text-sm mb-3">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Booking ID:{" "}
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
+                    {getConvertedBookingId()}
+                  </span>
+                </div>
+              )}
+              <button
+                onClick={() => {
+                  const bookingId = getConvertedBookingId();
+                  if (bookingId) router.push(`/provider/bookings/${bookingId}`);
+                }}
+                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-all"
+              >
+                <ArrowRight className="w-4 h-4" />
+                View Booking Details
+              </button>
+            </div>
+          </div>
+
+          {/* Timeline */}
+          <div className="border-t border-green-200 dark:border-green-800 pt-4 space-y-3">
+            {task.requestedProvider?.requestedAt && (
+              <TimelineItem
+                icon={<User className="w-4 h-4" />}
+                label="Customer Requested"
+                date={task.requestedProvider.requestedAt}
+                theme="green"
+              />
+            )}
+            {task.acceptedProvider?.acceptedAt && (
+              <TimelineItem
+                icon={<CheckCircle className="w-4 h-4" />}
+                label="You Accepted"
+                date={task.acceptedProvider.acceptedAt}
+                message={task.acceptedProvider.providerMessage}
+                theme="green"
+              />
+            )}
+          </div>
+
+          {/* Customer Message */}
+          {task.requestedProvider?.clientMessage && (
+            <div className="border-t border-green-200 dark:border-green-800 pt-4 mt-4">
+              <p className="text-xs font-semibold text-green-900 dark:text-green-100 uppercase tracking-wide mb-2">
+                Customer's Message
+              </p>
+              <p className="text-gray-900 dark:text-gray-100 italic bg-white/50 dark:bg-gray-900/50 p-3 rounded-lg">
+                "{task.requestedProvider.clientMessage}"
+              </p>
+            </div>
+          )}
+        </div>
       );
     }
 
     if (isAccepted) {
       return (
-        <span className="bg-linear-to-r from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 text-blue-800 dark:text-blue-200 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800 inline-flex items-center gap-2">
-          <CheckCircle className="w-3.5 h-3.5" />
-          ALREADY ACCEPTED
-        </span>
+        <div className="bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-6 mb-6 shadow-lg">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center shrink-0">
+              <CheckCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="bg-linear-to-r from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 text-blue-800 dark:text-blue-200 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800">
+                  ACCEPTED
+                </span>
+              </div>
+              <h3 className="font-bold text-blue-900 dark:text-blue-100 text-lg mb-1">
+                You've Accepted This Request
+              </h3>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                The booking will be created shortly. You'll be able to manage it
+                from your bookings dashboard.
+              </p>
+            </div>
+          </div>
+
+          {/* Timeline */}
+          <div className="border-t border-blue-200 dark:border-blue-800 pt-4 space-y-3">
+            {task.requestedProvider?.requestedAt && (
+              <TimelineItem
+                icon={<User className="w-4 h-4" />}
+                label="Customer Requested"
+                date={task.requestedProvider.requestedAt}
+                theme="blue"
+              />
+            )}
+            {task.acceptedProvider?.acceptedAt && (
+              <TimelineItem
+                icon={<CheckCircle className="w-4 h-4" />}
+                label="You Accepted"
+                date={task.acceptedProvider.acceptedAt}
+                message={task.acceptedProvider.providerMessage}
+                theme="blue"
+              />
+            )}
+          </div>
+
+          {/* Customer Message */}
+          {task.requestedProvider?.clientMessage && (
+            <div className="border-t border-blue-200 dark:border-blue-800 pt-4 mt-4">
+              <p className="text-xs font-semibold text-blue-900 dark:text-blue-100 uppercase tracking-wide mb-2">
+                Customer's Message
+              </p>
+              <p className="text-gray-900 dark:text-gray-100 italic bg-white/50 dark:bg-gray-900/50 p-3 rounded-lg">
+                "{task.requestedProvider.clientMessage}"
+              </p>
+            </div>
+          )}
+        </div>
       );
     }
 
-    if (isCancelled) {
+    if (isCancelled || isExpired) {
+      const theme = isCancelled ? "red" : "gray";
+      const icon = isCancelled ? (
+        <XCircle className="w-6 h-6" />
+      ) : (
+        <Clock className="w-6 h-6" />
+      );
+      const title = isCancelled ? "Task Cancelled" : "Task Expired";
+      const description = isCancelled
+        ? "This task has been cancelled and is no longer available."
+        : "This task has expired and is no longer available for acceptance.";
+
       return (
-        <span className="bg-linear-to-r from-red-100 to-orange-100 dark:from-red-900/40 dark:to-orange-900/40 text-red-800 dark:text-red-200 text-xs font-bold px-3 py-1.5 rounded-full border border-red-200 dark:border-red-800 inline-flex items-center gap-2">
-          <XCircle className="w-3.5 h-3.5" />
-          CANCELLED
-        </span>
+        <div
+          className={`bg-linear-to-br ${theme === "red" ? "from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30 border-red-200 dark:border-red-800" : "from-gray-50 to-gray-100 dark:from-gray-950/30 dark:to-gray-900/30 border-gray-200 dark:border-gray-700"} border rounded-xl p-6 mb-6 shadow-lg`}
+        >
+          <div className="flex items-start gap-4">
+            <div
+              className={`w-12 h-12 ${theme === "red" ? "bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400" : "bg-gray-100 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400"} rounded-xl flex items-center justify-center shrink-0`}
+            >
+              {icon}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span
+                  className={`${theme === "red" ? "bg-linear-to-r from-red-100 to-orange-100 dark:from-red-900/40 dark:to-orange-900/40 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800" : "bg-linear-to-r from-gray-100 to-gray-200 dark:from-gray-900/40 dark:to-gray-800/40 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700"} text-xs font-bold px-3 py-1.5 rounded-full border`}
+                >
+                  {isCancelled ? "CANCELLED" : "EXPIRED"}
+                </span>
+              </div>
+              <h3
+                className={`font-bold ${theme === "red" ? "text-red-900 dark:text-red-100" : "text-gray-900 dark:text-gray-100"} text-lg mb-1`}
+              >
+                {title}
+              </h3>
+              <p
+                className={`text-sm ${theme === "red" ? "text-red-700 dark:text-red-300" : "text-gray-700 dark:text-gray-300"}`}
+              >
+                {description}
+              </p>
+            </div>
+          </div>
+        </div>
       );
     }
 
-    if (isExpired) {
-      return (
-        <span className="bg-linear-to-r from-gray-100 to-gray-200 dark:from-gray-900/40 dark:to-gray-800/40 text-gray-800 dark:text-gray-200 text-xs font-bold px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 inline-flex items-center gap-2">
-          <Clock className="w-3.5 h-3.5" />
-          EXPIRED
-        </span>
-      );
-    }
+    // Active request (can respond)
+    return (
+      <div className="bg-linear-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border border-orange-200 dark:border-orange-800 rounded-xl p-6 mb-6 shadow-lg">
+        <div className="flex items-start gap-4 mb-4">
+          <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/50 rounded-xl flex items-center justify-center shrink-0">
+            <Clock className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="bg-linear-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/40 dark:to-orange-900/40 text-yellow-800 dark:text-yellow-200 text-xs font-bold px-3 py-1.5 rounded-full border border-yellow-200 dark:border-yellow-800">
+                REQUESTED
+              </span>
+            </div>
+            <h3 className="font-bold text-orange-900 dark:text-orange-100 text-lg mb-1">
+              ⏰ Time Sensitive Request
+            </h3>
+            {task.expiresAt && (
+              <p className="text-sm text-orange-800 dark:text-orange-200">
+                Expires on{" "}
+                <span className="font-semibold">
+                  {formatDate(task.expiresAt)}
+                </span>{" "}
+                at{" "}
+                <span className="font-semibold">
+                  {formatTime(task.expiresAt)}
+                </span>
+                <span className="ml-2 inline-flex items-center gap-1 font-bold">
+                  ({getTimeUntilExpiration()})
+                </span>
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Timeline */}
+        {task.requestedProvider?.requestedAt && (
+          <div className="border-t border-orange-200 dark:border-orange-800 pt-4">
+            <TimelineItem
+              icon={<User className="w-4 h-4" />}
+              label="Customer Requested You"
+              date={task.requestedProvider.requestedAt}
+              theme="orange"
+            />
+          </div>
+        )}
+
+        {/* Customer Message */}
+        {task.requestedProvider?.clientMessage && (
+          <div className="border-t border-orange-200 dark:border-orange-800 pt-4 mt-4">
+            <p className="text-xs font-semibold text-orange-900 dark:text-orange-100 uppercase tracking-wide mb-2">
+              Customer's Message
+            </p>
+            <p className="text-gray-900 dark:text-gray-100 italic bg-white/50 dark:bg-gray-900/50 p-3 rounded-lg">
+              "{task.requestedProvider.clientMessage}"
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Timeline Item Component
+  const TimelineItem = ({
+    icon,
+    label,
+    date,
+    message,
+    theme = "gray",
+  }: {
+    icon: React.ReactNode;
+    label: string;
+    date: string | Date;
+    message?: string;
+    theme?: "green" | "blue" | "orange" | "gray";
+  }) => {
+    const themeColors = {
+      green: "text-green-700 dark:text-green-300",
+      blue: "text-blue-700 dark:text-blue-300",
+      orange: "text-orange-700 dark:text-orange-300",
+      gray: "text-gray-700 dark:text-gray-300",
+    };
 
     return (
-      <span className="bg-linear-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/40 dark:to-orange-900/40 text-yellow-800 dark:text-yellow-200 text-xs font-bold px-3 py-1.5 rounded-full border border-yellow-200 dark:border-yellow-800">
-        REQUESTED
-      </span>
+      <div className="flex items-start gap-3">
+        <div className={`${themeColors[theme]} mt-0.5`}>{icon}</div>
+        <div className="flex-1">
+          <p className={`text-sm font-semibold ${themeColors[theme]}`}>
+            {label}
+          </p>
+          <p className={`text-xs ${themeColors[theme]} opacity-80`}>
+            {formatDate(date)} at {formatTime(date)}
+          </p>
+          {message && (
+            <p className="text-sm text-gray-900 dark:text-gray-100 mt-2 italic bg-white/30 dark:bg-gray-900/30 p-2 rounded">
+              "{message}"
+            </p>
+          )}
+        </div>
+      </div>
     );
   };
 
@@ -198,11 +511,12 @@ const RequestedTaskDetails: React.FC = () => {
           Back to requested tasks
         </button>
 
+        {/* Consolidated Status Card */}
+        <StatusCard />
+
+        {/* Main Task Details */}
         <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 mb-6 shadow-xl">
           <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              {getStatusBadge()}
-            </div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
               {task.title}
             </h1>
@@ -211,76 +525,11 @@ const RequestedTaskDetails: React.FC = () => {
             </p>
           </div>
 
-          {/* ✅ Show status message for non-actionable tasks */}
-          {!canRespond && (
-            <div
-              className={`mb-6 p-4 rounded-lg border ${
-                isConverted
-                  ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800"
-                  : isAccepted
-                    ? "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800"
-                    : "bg-gray-50 dark:bg-gray-950/30 border-gray-200 dark:border-gray-800"
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                {isConverted ? (
-                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/50 rounded-lg flex items-center justify-center shrink-0">
-                    <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  </div>
-                ) : isAccepted ? (
-                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center shrink-0">
-                    <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                ) : (
-                  <div className="w-10 h-10 bg-gray-100 dark:bg-gray-900/50 rounded-lg flex items-center justify-center shrink-0">
-                    <AlertCircle className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <h3
-                    className={`font-semibold mb-1 ${
-                      isConverted
-                        ? "text-green-900 dark:text-green-100"
-                        : isAccepted
-                          ? "text-blue-900 dark:text-blue-100"
-                          : "text-gray-900 dark:text-gray-100"
-                    }`}
-                  >
-                    {isConverted
-                      ? "Task Converted to Booking"
-                      : isAccepted
-                        ? "Task Already Accepted"
-                        : isCancelled
-                          ? "Task Cancelled"
-                          : "Task Expired"}
-                  </h3>
-                  <p
-                    className={`text-sm ${
-                      isConverted
-                        ? "text-green-800 dark:text-green-200"
-                        : isAccepted
-                          ? "text-blue-800 dark:text-blue-200"
-                          : "text-gray-800 dark:text-gray-200"
-                    }`}
-                  >
-                    {isConverted
-                      ? "This task has been successfully converted to a booking. You can view the booking details below."
-                      : isAccepted
-                        ? "You have already accepted this task. The booking will be created shortly."
-                        : isCancelled
-                          ? "This task has been cancelled and is no longer available."
-                          : "This task has expired and is no longer available for acceptance."}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mb-6">
             <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-4">
               Customer Information
             </h2>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-linear-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-lg flex items-center justify-center shrink-0">
                   <User className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -294,6 +543,7 @@ const RequestedTaskDetails: React.FC = () => {
                   </p>
                 </div>
               </div>
+
               {getCustomerEmail() && (
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-linear-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-lg flex items-center justify-center shrink-0">
@@ -309,6 +559,25 @@ const RequestedTaskDetails: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {getCustomerContact() && (
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-linear-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 rounded-lg flex items-center justify-center shrink-0">
+                    <Phone className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+                      Contact Number
+                    </p>
+                    <a
+                      href={`tel:${getCustomerContact()}`}
+                      className="text-gray-900 dark:text-gray-100 font-medium hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                    >
+                      {getCustomerContact()}
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -321,15 +590,23 @@ const RequestedTaskDetails: React.FC = () => {
                 <div className="w-10 h-10 bg-linear-to-br from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 rounded-lg flex items-center justify-center shrink-0">
                   <MapPin className="w-5 h-5 text-red-600 dark:text-red-400" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-                    Location
+                    Service Location
                   </p>
                   <div className="text-gray-900 dark:text-gray-100">
                     {task.customerLocation.ghanaPostGPS && (
-                      <span className="block font-mono text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded mb-1">
-                        {task.customerLocation.ghanaPostGPS}
-                      </span>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-mono text-sm bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700">
+                          📍 {task.customerLocation.ghanaPostGPS}
+                        </span>
+                      </div>
+                    )}
+                    {task.customerLocation.nearbyLandmark && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        <Navigation className="w-3 h-3 inline mr-1" />
+                        {task.customerLocation.nearbyLandmark}
+                      </p>
                     )}
                     <p>
                       {task.customerLocation.locality && (
@@ -344,6 +621,22 @@ const RequestedTaskDetails: React.FC = () => {
                 </div>
               </div>
 
+              {task.category && (
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-linear-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-lg flex items-center justify-center shrink-0">
+                    <Tag className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+                      Category
+                    </p>
+                    <p className="text-gray-900 dark:text-gray-100 font-medium capitalize">
+                      {task.category}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {task.schedule?.preferredDate && (
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-linear-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg flex items-center justify-center shrink-0">
@@ -356,6 +649,12 @@ const RequestedTaskDetails: React.FC = () => {
                     <p className="text-gray-900 dark:text-gray-100 font-medium">
                       {formatDate(task.schedule.preferredDate)}
                     </p>
+                    {task.schedule.flexibleDates && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <Info className="w-3 h-3 inline mr-1" />
+                        Flexible with dates
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -392,21 +691,29 @@ const RequestedTaskDetails: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {(task as any).estimatedBudget && (
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-linear-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 rounded-lg flex items-center justify-center shrink-0">
+                    <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+                      Estimated Budget
+                    </p>
+                    <p className="text-gray-900 dark:text-gray-100 font-semibold">
+                      {(task as any).estimatedBudget.currency}{" "}
+                      {(task as any).estimatedBudget.min} -{" "}
+                      {(task as any).estimatedBudget.max}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Estimated range set by customer
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-
-          {task.requestedProvider?.clientMessage && (
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mb-6">
-              <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-4">
-                Customer's Message
-              </h2>
-              <div className="bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-5">
-                <p className="text-gray-900 dark:text-gray-100 leading-relaxed">
-                  "{task.requestedProvider.clientMessage}"
-                </p>
-              </div>
-            </div>
-          )}
 
           {task.tags && task.tags.length > 0 && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
@@ -428,7 +735,7 @@ const RequestedTaskDetails: React.FC = () => {
           )}
         </div>
 
-        {/* ✅ UPDATED: Conditional action buttons based on task status */}
+        {/* Action Buttons */}
         {canRespond && !showResponseForm ? (
           <div className="flex flex-col sm:flex-row gap-4">
             <button
@@ -529,18 +836,6 @@ const RequestedTaskDetails: React.FC = () => {
               </button>
             </div>
           </div>
-        ) : isConverted && task.convertedToBookingId ? (
-          <button
-            onClick={() =>
-              router.push(
-                `/tasks/provider/bookings/${task.convertedToBookingId}`,
-              )
-            }
-            className="w-full bg-linear-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 dark:from-green-500 dark:to-emerald-500 dark:hover:from-green-600 dark:hover:to-emerald-600 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 flex items-center justify-center gap-2"
-          >
-            <ArrowRight className="w-5 h-5" />
-            View Booking Details
-          </button>
         ) : null}
       </div>
     </div>

@@ -272,108 +272,104 @@ export default function ProviderBookingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 p-3">
       {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                My Bookings
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Manage your service schedule and earnings
-              </p>
-            </div>
-            <button
-              onClick={refreshBookings}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white rounded-lg transition shadow-sm"
-            >
-              Refresh
-            </button>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            My Bookings
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Manage your service schedule and earnings
+          </p>
+        </div>
+        <button
+          onClick={refreshBookings}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white rounded-lg transition shadow-sm"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {/* Stats Cards - the only elements with solid backgrounds */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="bg-orange-50 dark:bg-orange-950/60 p-4 rounded-lg border border-orange-200 dark:border-orange-800/70 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <CalendarDays className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+              Today
+            </p>
           </div>
+          <p className="text-2xl font-bold text-orange-900 dark:text-orange-200">
+            {stats.today}
+          </p>
+        </div>
 
-          {/* Stats Cards - the only elements with solid backgrounds */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="bg-orange-50 dark:bg-orange-950/60 p-4 rounded-lg border border-orange-200 dark:border-orange-800/70 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <CalendarDays className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">
-                  Today
-                </p>
-              </div>
-              <p className="text-2xl font-bold text-orange-900 dark:text-orange-200">
-                {stats.today}
-              </p>
-            </div>
-
-            <div className="bg-purple-50 dark:bg-purple-950/60 p-4 rounded-lg border border-purple-200 dark:border-purple-800/70 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">
-                  Upcoming
-                </p>
-              </div>
-              <p className="text-2xl font-bold text-purple-900 dark:text-purple-200">
-                {stats.upcoming}
-              </p>
-            </div>
-
-            <div className="bg-blue-50 dark:bg-blue-950/60 p-4 rounded-lg border border-blue-200 dark:border-blue-800/70 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <Briefcase className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                  Confirmed
-                </p>
-              </div>
-              <p className="text-2xl font-bold text-blue-900 dark:text-blue-200">
-                {stats.confirmed}
-              </p>
-            </div>
-
-            <div className="bg-yellow-50 dark:bg-yellow-950/60 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800/70 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <Play className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
-                  In Progress
-                </p>
-              </div>
-              <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-200">
-                {stats.inProgress}
-              </p>
-            </div>
-
-            <div className="bg-green-50 dark:bg-green-950/60 p-4 rounded-lg border border-green-200 dark:border-green-800/70 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                  Earnings
-                </p>
-              </div>
-              <p className="text-xl font-bold text-green-900 dark:text-green-200">
-                {stats.currency} {stats.totalEarnings.toFixed(0)}
-              </p>
-            </div>
-
-            <div className="bg-indigo-50 dark:bg-indigo-950/60 p-4 rounded-lg border border-indigo-200 dark:border-indigo-800/70 shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
-                  Pending
-                </p>
-              </div>
-              <p className="text-xl font-bold text-indigo-900 dark:text-indigo-200">
-                {stats.currency} {stats.pendingEarnings.toFixed(0)}
-              </p>
-            </div>
+        <div className="bg-purple-50 dark:bg-purple-950/60 p-4 rounded-lg border border-purple-200 dark:border-purple-800/70 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">
+              Upcoming
+            </p>
           </div>
+          <p className="text-2xl font-bold text-purple-900 dark:text-purple-200">
+            {stats.upcoming}
+          </p>
+        </div>
+
+        <div className="bg-blue-50 dark:bg-blue-950/60 p-4 rounded-lg border border-blue-200 dark:border-blue-800/70 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <Briefcase className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+              Confirmed
+            </p>
+          </div>
+          <p className="text-2xl font-bold text-blue-900 dark:text-blue-200">
+            {stats.confirmed}
+          </p>
+        </div>
+
+        <div className="bg-yellow-50 dark:bg-yellow-950/60 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800/70 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <Play className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+            <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+              In Progress
+            </p>
+          </div>
+          <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-200">
+            {stats.inProgress}
+          </p>
+        </div>
+
+        <div className="bg-green-50 dark:bg-green-950/60 p-4 rounded-lg border border-green-200 dark:border-green-800/70 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+              Earnings
+            </p>
+          </div>
+          <p className="text-xl font-bold text-green-900 dark:text-green-200">
+            {stats.currency} {stats.totalEarnings.toFixed(0)}
+          </p>
+        </div>
+
+        <div className="bg-indigo-50 dark:bg-indigo-950/60 p-4 rounded-lg border border-indigo-200 dark:border-indigo-800/70 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+              Pending
+            </p>
+          </div>
+          <p className="text-xl font-bold text-indigo-900 dark:text-indigo-200">
+            {stats.currency} {stats.pendingEarnings.toFixed(0)}
+          </p>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="w-full mt-8">
         {/* Filters & Search */}
-        <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-5 mb-6">
+        <div className="mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />

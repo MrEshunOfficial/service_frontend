@@ -84,7 +84,7 @@ const Calendar: React.FC<CalendarProps> = ({
     const date = new Date(
       currentMonth.getFullYear(),
       currentMonth.getMonth(),
-      day
+      day,
     );
     return disabled(date);
   };
@@ -94,20 +94,20 @@ const Calendar: React.FC<CalendarProps> = ({
     const newDate = new Date(
       currentMonth.getFullYear(),
       currentMonth.getMonth(),
-      day
+      day,
     );
     onSelect(newDate);
   };
 
   const previousMonth = () => {
     setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1)
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1),
     );
   };
 
   const nextMonth = () => {
     setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1)
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1),
     );
   };
 
@@ -151,8 +151,8 @@ const Calendar: React.FC<CalendarProps> = ({
               isSelected(day)
                 ? "bg-red-500 text-white font-semibold"
                 : isDisabled(day)
-                ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
-                : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white"
+                  ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                  : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white"
             }`}
           >
             {day}
@@ -202,7 +202,7 @@ const DateTimePicker: React.FC<DateTimePickerProps> = ({
           0,
           1,
           hour,
-          minute
+          minute,
         ).toLocaleTimeString("en-US", {
           hour: "numeric",
           minute: "2-digit",
@@ -396,7 +396,7 @@ export default function TaskForm({
 
   const { createTask, loading, error, clearError } = useCustomerTasks(
     undefined,
-    false
+    false,
   );
 
   const [formData, setFormData] = useState<TaskFormData>({
@@ -457,7 +457,7 @@ export default function TaskForm({
         switch (error.code) {
           case error.PERMISSION_DENIED:
             setLocationError(
-              "Location access denied. Please enable location permissions."
+              "Location access denied. Please enable location permissions.",
             );
             break;
           case error.POSITION_UNAVAILABLE:
@@ -468,7 +468,7 @@ export default function TaskForm({
             break;
           default:
             setLocationError(
-              "An unknown error occurred while getting location."
+              "An unknown error occurred while getting location.",
             );
         }
       },
@@ -476,7 +476,7 @@ export default function TaskForm({
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 0,
-      }
+      },
     );
   };
 
@@ -489,7 +489,7 @@ export default function TaskForm({
 
   const handleInputChange = <K extends keyof TaskFormData>(
     field: K,
-    value: TaskFormData[K]
+    value: TaskFormData[K],
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -840,7 +840,7 @@ export default function TaskForm({
                             onChange={(e) =>
                               handleInputChange(
                                 "nearbyLandmark",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             placeholder="e.g. Near the yellow house"
@@ -911,7 +911,7 @@ export default function TaskForm({
                               onChange={(e) => {
                                 handleInputChange(
                                   "flexibleDates",
-                                  e.target.checked
+                                  e.target.checked,
                                 );
                                 if (e.target.checked) {
                                   handleInputChange("preferredDate", undefined);
@@ -929,7 +929,7 @@ export default function TaskForm({
                               onChange={(e) => {
                                 handleInputChange(
                                   "flexibleTime",
-                                  e.target.checked
+                                  e.target.checked,
                                 );
                                 if (e.target.checked) {
                                   handleInputChange("startTime", "");

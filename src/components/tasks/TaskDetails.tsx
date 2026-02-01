@@ -774,8 +774,8 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({
             <button
               onClick={() => {
                 const role =
-                  userRole === UserRole.CUSTOMER ? "customer" : "provider";
-                window.location.href = `/${role}/bookings/${task.convertedToBookingId}`;
+                  userRole === UserRole.CUSTOMER ? "client" : "provider";
+                window.location.href = `/${role}/bookings/${task?._id.toString()}`;
               }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors"
             >

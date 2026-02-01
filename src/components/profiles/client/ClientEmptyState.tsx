@@ -1,13 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import {
-  UserCircle,
-  ArrowRight,
-  CheckCircle2,
-  Sparkles,
-  Clock,
-  Shield,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, Shield } from "lucide-react";
 
 export function ClientProfileEmptyState() {
   const router = useRouter();
@@ -100,7 +93,8 @@ export function ClientProfileEmptyState() {
         <Button
           size="lg"
           className="w-full sm:w-auto bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 dark:from-blue-500 dark:to-purple-500 dark:hover:from-blue-600 dark:hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-8"
-          onClick={() => router.push("/client-profile/setup")}>
+          onClick={() => router.push("/client/setup")}
+        >
           Complete Client Profile
           <ArrowRight className="w-5 h-5 ml-2" />
         </Button>
@@ -109,7 +103,8 @@ export function ClientProfileEmptyState() {
           size="lg"
           variant="outline"
           className="w-full sm:w-auto border-2"
-          onClick={() => router.push("/services")}>
+          onClick={() => router.push("/services")}
+        >
           Explore Services
         </Button>
       </div>
@@ -119,7 +114,8 @@ export function ClientProfileEmptyState() {
         Need help? Contact our support team at{" "}
         <a
           href="mailto:errandsupport@gmail.com"
-          className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+          className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+        >
           errandsupport@gmail.com
         </a>
       </p>
