@@ -352,31 +352,11 @@ export default function ProfilePage() {
     );
   }
 
-  // Check error first
-  if (isNoProfileError(profileError)) {
-    return (
-      <PageLayout>
-        <ErrorStateDisplay
-          config={{
-            icon: UserX,
-            iconBgColor: "bg-blue-100",
-            iconColor: "text-blue-600",
-            title: "No Profile Found",
-            description: `${
-              user?.name ?? "You"
-            } haven't created a profile yet.`,
-            primaryAction: {
-              label: "Create Profile",
-              icon: UserPlus,
-              onClick: () => router.push("/profile/create"),
-            },
-          }}
-        />
-      </PageLayout>
-    );
-  }
+  // Combine both "no profile" states into one check
+  const hasNoProfile =
+    isNoProfileError(profileError) || (!completeProfile && !profileError);
 
-  if (!completeProfile && !profileError) {
+  if (hasNoProfile) {
     return (
       <PageLayout>
         <ErrorStateDisplay
@@ -387,7 +367,7 @@ export default function ProfilePage() {
             title: "No Profile Found",
             description: `${
               user?.name ?? "You"
-            } haven't created a profile yet.`,
+            } haven't created a profile yet. Let's get started with your basic profile.`,
             primaryAction: {
               label: "Create Profile",
               icon: UserPlus,

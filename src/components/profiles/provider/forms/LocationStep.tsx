@@ -1,5 +1,5 @@
 import { UseFormReturn } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   FormControl,
   FormDescription,
@@ -9,11 +9,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { MapPin, Navigation, RefreshCw, Loader2 } from "lucide-react";
+import {
+  MapPin,
+  Navigation,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocationEnrichment } from "@/hooks/profiles/useProviderProfile";
 import { ProviderProfileFormData } from "./providerProfileSchema";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils/utils";
 
 interface LocationStepProps {
   form: UseFormReturn<ProviderProfileFormData>;
@@ -21,353 +29,266 @@ interface LocationStepProps {
 
 export function LocationStep({ form }: LocationStepProps) {
   const { enrichLocation, loading: enriching } = useLocationEnrichment();
-  const [fetchingCoordinates, setFetchingCoordinates] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<
+    "idle" | "verifying" | "verified" | "failed"
+  >("idle");
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-fetch GPS coordinates on component mount
+  // Auto-fetch GPS coordinates on mount
   useEffect(() => {
     const hasCoordinates = form.getValues("locationData.gpsCoordinates");
-    if (!hasCoordinates) {
-      fetchUserLocation();
+    if (!hasCoordinates && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          form.setValue("locationData.gpsCoordinates", {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          });
+        },
+        () => {}, // silently fail
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+      );
     }
   }, []);
 
-  const fetchUserLocation = async () => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser");
-      return;
-    }
+  const handleEnrich = useCallback(
+    async (gpsCode: string) => {
+      if (!gpsCode || gpsCode.length < 5) return;
 
-    setFetchingCoordinates(true);
+      setVerificationStatus("verifying");
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        form.setValue("locationData.gpsCoordinates", {
-          latitude,
-          longitude,
+      const nearbyLandmark = form.getValues("locationData.nearbyLandmark");
+      const coordinates = form.getValues("locationData.gpsCoordinates");
+
+      try {
+        const enrichedData = await enrichLocation({
+          ghanaPostGPS: gpsCode,
+          nearbyLandmark,
+          coordinates,
         });
-        toast.success("Location detected successfully");
-        setFetchingCoordinates(false);
-      },
-      (error) => {
-        console.error("Error getting location:", error);
-        toast.error(
-          "Failed to get your location. Please enable location services.",
-        );
-        setFetchingCoordinates(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      },
-    );
-  };
 
-  const handleEnrichLocation = async () => {
-    const ghanaPostGPS = form.getValues("locationData.ghanaPostGPS");
-    const nearbyLandmark = form.getValues("locationData.nearbyLandmark");
-    const coordinates = form.getValues("locationData.gpsCoordinates");
+        if (enrichedData) {
+          const fields = [
+            "region",
+            "city",
+            "district",
+            "locality",
+            "streetName",
+            "houseNumber",
+            "gpsCoordinates",
+            "isAddressVerified",
+            "sourceProvider",
+          ] as const;
 
-    if (!ghanaPostGPS) {
-      toast.error("Please enter Ghana Post GPS code");
-      return;
-    }
+          fields.forEach((key) => {
+            const val = enrichedData[key as keyof typeof enrichedData];
+            if (val !== undefined) {
+              form.setValue(`locationData.${key}` as any, val);
+            }
+          });
 
-    try {
-      const enrichedData = await enrichLocation({
-        ghanaPostGPS,
-        nearbyLandmark,
-        coordinates,
-      });
-
-      if (enrichedData) {
-        // Auto-fill all the backend-generated fields
-        if (enrichedData.region) {
-          form.setValue("locationData.region", enrichedData.region);
-        }
-        if (enrichedData.city) {
-          form.setValue("locationData.city", enrichedData.city);
-        }
-        if (enrichedData.district) {
-          form.setValue("locationData.district", enrichedData.district);
-        }
-        if (enrichedData.locality) {
-          form.setValue("locationData.locality", enrichedData.locality);
-        }
-        if (enrichedData.streetName) {
-          form.setValue("locationData.streetName", enrichedData.streetName);
-        }
-        if (enrichedData.houseNumber) {
-          form.setValue("locationData.houseNumber", enrichedData.houseNumber);
-        }
-        if (enrichedData.gpsCoordinates) {
-          form.setValue(
-            "locationData.gpsCoordinates",
-            enrichedData.gpsCoordinates,
+          setVerificationStatus("verified");
+          toast.success("Location verified and details filled in!");
+        } else {
+          setVerificationStatus("failed");
+          toast.error(
+            "Could not verify this GPS code. Please check and try again.",
           );
         }
-        if (enrichedData.isAddressVerified !== undefined) {
-          form.setValue(
-            "locationData.isAddressVerified",
-            enrichedData.isAddressVerified,
-          );
-        }
-        if (enrichedData.sourceProvider) {
-          form.setValue(
-            "locationData.sourceProvider",
-            enrichedData.sourceProvider,
-          );
-        }
-
-        toast.success("Location verified and auto-filled successfully!");
-      } else {
-        toast.error("Could not verify location. Please check your GPS code.");
+      } catch {
+        setVerificationStatus("failed");
       }
-    } catch (error) {
-      console.error("Failed to enrich location:", error);
-      toast.error("Failed to verify location. Please try again.");
+    },
+    [form, enrichLocation],
+  );
+
+  const handleGPSChange = (value: string) => {
+    const formatted = value.toUpperCase();
+
+    // Reset verification when GPS changes
+    setVerificationStatus("idle");
+    form.setValue("locationData.isAddressVerified", false);
+    [
+      "region",
+      "city",
+      "district",
+      "locality",
+      "streetName",
+      "houseNumber",
+    ].forEach((f) => form.setValue(`locationData.${f}` as any, ""));
+
+    // Debounce auto-enrich
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (formatted.length >= 8) {
+      debounceRef.current = setTimeout(() => handleEnrich(formatted), 800);
     }
   };
 
-  const coordinates = form.watch("locationData.gpsCoordinates");
   const isAddressVerified = form.watch("locationData.isAddressVerified");
+  const gpsValue = form.watch("locationData.ghanaPostGPS");
+  const showDetails = isAddressVerified && verificationStatus === "verified";
 
   return (
-    <div className="space-y-6 bg-background text-foreground">
-      <div className="border-l-4 border-blue-600 dark:border-blue-400 pl-4">
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <MapPin className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-          Location Details
-        </h2>
-        <p className="text-muted-foreground mt-1">
-          Where do you provide your services?
-        </p>
-      </div>
-
-      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 rounded-lg p-4">
-        <p className="text-sm text-blue-900 dark:text-blue-200">
-          <strong>Tip:</strong> Enter your Ghana Post GPS code and we'll
-          auto-fill your location details!
-        </p>
-      </div>
-
-      {/* GPS Coordinates Status */}
-      <div className="bg-muted border border-border rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Navigation className="w-5 h-5 text-muted-foreground" />
-            <div>
-              <p className="text-sm font-medium text-foreground">
-                Current Location
-              </p>
-              {coordinates ? (
-                <p className="text-xs text-muted-foreground">
-                  {coordinates.latitude.toFixed(6)},{" "}
-                  {coordinates.longitude.toFixed(6)}
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">Not detected</p>
-              )}
-            </div>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={fetchUserLocation}
-            disabled={fetchingCoordinates}>
-            {fetchingCoordinates ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Detecting...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh Location
-              </>
-            )}
-          </Button>
+    <div className="space-y-8">
+      {/* Section header */}
+      <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-950/50 ring-1 ring-violet-100 dark:ring-violet-900">
+          <MapPin className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            Location Details
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Where do you provide your services?
+          </p>
         </div>
       </div>
 
-      {/* User Input Fields */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Primary inputs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <FormField
           control={form.control}
-          name="locationData.ghanaPostGPS"
+          name="locationData.nearbyLandmark"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Ghana Post GPS{" "}
-                <span className="text-red-600 dark:text-red-400">*</span>
+            <FormItem className="md:col-span-2">
+              <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Nearby Landmark
               </FormLabel>
-              <div className="flex gap-2">
-                <FormControl>
-                  <Input
-                    placeholder="GA-1234-5678"
-                    {...field}
-                    className="h-12 uppercase"
-                  />
-                </FormControl>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleEnrichLocation}
-                  disabled={enriching || !field.value}
-                  className="h-12 min-w-[100px]">
-                  {enriching ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Verifying
-                    </>
-                  ) : (
-                    <>
-                      <Navigation className="w-4 h-4 mr-2" />
-                      Verify
-                    </>
-                  )}
-                </Button>
-              </div>
-              <FormDescription>
-                Format: GA-1234-5678 (e.g. GA-183-8164)
+              <FormControl>
+                <Input
+                  placeholder="e.g., Opposite Accra Mall, Near East Legon traffic light"
+                  {...field}
+                  value={field.value ?? ""}
+                  className="h-11 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-violet-500 dark:focus:border-violet-400 focus:ring-violet-500/20 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
+                />
+              </FormControl>
+              <FormDescription className="text-xs text-slate-500 dark:text-slate-400">
+                Helps customers find you easily
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
-          name="locationData.nearbyLandmark"
+          name="locationData.ghanaPostGPS"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nearby Landmark</FormLabel>
+            <FormItem className="md:col-span-2">
+              <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Ghana Post GPS Code <span className="text-rose-500">*</span>
+              </FormLabel>
               <FormControl>
-                <Input
-                  placeholder="e.g., Opposite Accra Mall"
-                  {...field}
-                  className="h-12"
-                />
+                <div className="relative">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        placeholder="GA-183-8164"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => {
+                          field.onChange(e.target.value.toUpperCase());
+                          handleGPSChange(e.target.value);
+                        }}
+                        className={cn(
+                          "h-11 pl-10 pr-10 font-mono uppercase bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-violet-500 dark:focus:border-violet-400 focus:ring-violet-500/20 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 placeholder:normal-case placeholder:font-sans",
+                          verificationStatus === "verified" &&
+                            "border-emerald-400 dark:border-emerald-600 focus:border-emerald-500",
+                          verificationStatus === "failed" &&
+                            "border-rose-400 dark:border-rose-600 focus:border-rose-500",
+                        )}
+                      />
+                      {/* Status icon inside input */}
+                      <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                        {verificationStatus === "verifying" || enriching ? (
+                          <Loader2 className="w-4 h-4 text-violet-500 animate-spin" />
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size={"icon"}
+                            onClick={() => handleEnrich(field.value)}
+                            disabled={
+                              enriching ||
+                              !field.value ||
+                              field.value.length < 5
+                            }
+                            className="p-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 whitespace-nowrap rounded-lg"
+                          >
+                            <>
+                              <RefreshCw className="w-3 h-3" />
+                            </>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </FormControl>
-              <FormDescription>Helps customers find you easily</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
 
-      {/* Address Verification Status */}
-      {isAddressVerified && (
-        <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/50 rounded-lg p-4">
-          <p className="text-sm text-green-900 dark:text-green-200 flex items-center gap-2">
-            <span className="text-green-600 dark:text-green-400">✓</span>
-            <strong>Address Verified</strong> — Location details have been
-            auto-filled
-          </p>
+      {verificationStatus === "failed" && (
+        <div className="rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-rose-800 dark:text-rose-300">
+              Verification Failed
+            </p>
+            <p className="text-xs text-rose-700 dark:text-rose-400 mt-0.5">
+              The GPS code could not be verified. Please double-check and try
+              again.
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Auto-filled Fields (Read-only display) */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-border">
-          <p className="text-sm font-medium text-muted-foreground">
-            Auto-filled Location Details
-          </p>
-          <span className="text-xs text-muted-foreground/70">
-            (Generated automatically)
-          </span>
+      {/* Auto-filled fields — only shown after verification */}
+      {showDetails && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800" />
+            <p className="text-xs font-medium text-slate-400 dark:text-slate-500 px-2 whitespace-nowrap">
+              detected Location Details
+            </p>
+            <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { name: "locationData.region", label: "Region" },
+              { name: "locationData.city", label: "City" },
+              { name: "locationData.district", label: "District" },
+              { name: "locationData.locality", label: "Locality" },
+            ].map(({ name, label }) => (
+              <FormField
+                key={name}
+                control={form.control}
+                name={name as any}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                      {label}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        readOnly
+                        className="h-10 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm cursor-default"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="locationData.region"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Region</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    className="h-12 bg-muted text-foreground"
-                    readOnly
-                    placeholder="Auto-filled after verification"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="locationData.city"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>City</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    className="h-12 bg-muted text-foreground"
-                    readOnly
-                    placeholder="Auto-filled after verification"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="locationData.district"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>District</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    className="h-12 bg-muted text-foreground"
-                    readOnly
-                    placeholder="Auto-filled after verification"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="locationData.locality"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Locality</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    className="h-12 bg-muted text-foreground"
-                    readOnly
-                    placeholder="Auto-filled after verification"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-      </div>
-
-      {/* Info Box */}
-      <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-lg p-4">
-        <p className="text-sm text-amber-900 dark:text-amber-200">
-          <strong>Note:</strong> The region, city, district, and locality fields
-          are automatically filled when you verify your Ghana Post GPS code.
-          Your current GPS coordinates are detected automatically but can be
-          refreshed using the button above.
-        </p>
-      </div>
+      )}
     </div>
   );
 }

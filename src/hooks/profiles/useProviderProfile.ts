@@ -1,7 +1,5 @@
 // hooks/useProviderProfile.ts
-
 import { APIError } from "@/lib/api/base/api-client";
-
 import {
   ProviderProfile,
   CreateProviderProfileRequest,
@@ -21,21 +19,25 @@ import {
   LocationVerificationRequest,
   NearbySearchRequest,
   NearestProvidersParams,
+  ProviderSearchParams,
   ReverseGeocodeRequest,
   GetAllProvidersParams,
   NearbyServiceProvidersParams,
+  SearchProvidersResponse,
 } from "@/types/profiles/provider-profile.types";
-import { Coordinates, IdDetails, PopulationLevel, UserLocation } from "@/types/base.types";
+import {
+  Coordinates,
+  IdDetails,
+  PopulationLevel,
+  UserLocation,
+} from "@/types/base.types";
 import { useState, useEffect, useCallback } from "react";
 import { ProviderProfileAPI } from "@/lib/api/profiles/provider.profile.api";
 import { toast } from "sonner";
 
-// Initialize the API client
 const providerAPI = new ProviderProfileAPI();
 
-// ============================================================================
-// HOOK STATE TYPES
-// ============================================================================
+// ── Shared state types ────────────────────────────────────────────────────────
 
 interface UseProviderProfileState {
   profile: ProviderProfile | PopulatedProviderProfile | null;
@@ -44,60 +46,39 @@ interface UseProviderProfileState {
   isInitialized: boolean;
 }
 
-interface UseProviderProfileReturn extends UseProviderProfileState {
-  // Profile Operations
-  fetchProfile: () => Promise<void>;
-  createProfile: (data: CreateProviderProfileRequest) => Promise<void>;
-  updateProfile: (data: UpdateProviderProfileRequest) => Promise<void>;
-  refreshProfile: () => Promise<void>;
-  deleteProfile: () => Promise<void>;
-  restoreProfile: () => Promise<void>;
-
-  // ID Details
-  updateIdDetails: (data: IdDetails) => Promise<void>;
-
-  // Utility
-  clearError: () => void;
-}
-
-interface UseProviderSearchState {
-  results: ProviderProfile[] | PopulatedProviderProfile[];
+interface UseProviderProfileByIdState {
+  profile: ProviderProfile | PopulatedProviderProfile | null;
   loading: boolean;
   error: APIError | null;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  isInitialized: boolean;
 }
-
-interface UseProviderSearchReturn {
-  results: ProviderProfile[] | PopulatedProviderProfile[];
-  loading: boolean;
-  error: APIError | null;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-  searchProviders: (params: GetAllProvidersParams) => Promise<void>;
-  clearResults: () => void;
-}
-
-// ============================================================================
-// MAIN HOOK: useProviderProfile
-// ============================================================================
 
 /**
- * Hook for managing the current user's provider profile
- * Auto-loads profile on mount
+ * Shared state shape for hooks that return a list of providers with pagination.
+ * Declared once here to avoid the duplicate identifier TS error.
+ */
+interface ProviderListState {
+  results: Array<ProviderProfile | PopulatedProviderProfile>;
+  loading: boolean;
+  error: APIError | null;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+// ── useProviderProfile ────────────────────────────────────────────────────────
+
+/**
+ * Manages the current user's provider profile.
+ * Auto-loads on mount by default.
  */
 export function useProviderProfile(
-  autoLoad: boolean = true,
+  autoLoad = true,
   populate: PopulationLevel = PopulationLevel.STANDARD
-): UseProviderProfileReturn {
+) {
   const [state, setState] = useState<UseProviderProfileState>({
     profile: null,
     loading: autoLoad,
@@ -105,17 +86,11 @@ export function useProviderProfile(
     isInitialized: false,
   });
 
-  // Fetch profile
   const fetchProfile = useCallback(async () => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const profile = await providerAPI.getMyProviderProfile(populate);
-      setState({
-        profile,
-        loading: false,
-        error: null,
-        isInitialized: true,
-      });
+      setState({ profile, loading: false, error: null, isInitialized: true });
     } catch (error) {
       setState({
         profile: null,
@@ -126,25 +101,16 @@ export function useProviderProfile(
     }
   }, [populate]);
 
-  // Auto-load on mount
   useEffect(() => {
-    if (autoLoad && !state.isInitialized) {
-      fetchProfile();
-    }
+    if (autoLoad && !state.isInitialized) fetchProfile();
   }, [autoLoad, state.isInitialized, fetchProfile]);
 
-  // Create profile
   const createProfile = useCallback(
     async (data: CreateProviderProfileRequest) => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const profile = await providerAPI.createProviderProfile(data);
-        setState({
-          profile,
-          loading: false,
-          error: null,
-          isInitialized: true,
-        });
+        setState({ profile, loading: false, error: null, isInitialized: true });
       } catch (error) {
         setState((prev) => ({
           ...prev,
@@ -157,17 +123,12 @@ export function useProviderProfile(
     []
   );
 
-  // Update profile
   const updateProfile = useCallback(
     async (data: UpdateProviderProfileRequest) => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const profile = await providerAPI.updateMyProviderProfile(data);
-        setState((prev) => ({
-          ...prev,
-          profile,
-          loading: false,
-        }));
+        setState((prev) => ({ ...prev, profile, loading: false }));
       } catch (error) {
         setState((prev) => ({
           ...prev,
@@ -180,17 +141,11 @@ export function useProviderProfile(
     []
   );
 
-  // Delete profile (soft delete)
   const deleteProfile = useCallback(async () => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       await providerAPI.deleteMyProviderProfile();
-      setState({
-        profile: null,
-        loading: false,
-        error: null,
-        isInitialized: true,
-      });
+      setState({ profile: null, loading: false, error: null, isInitialized: true });
     } catch (error) {
       setState((prev) => ({
         ...prev,
@@ -201,17 +156,11 @@ export function useProviderProfile(
     }
   }, []);
 
-  // Restore profile
   const restoreProfile = useCallback(async () => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const profile = await providerAPI.restoreMyProviderProfile();
-      setState({
-        profile,
-        loading: false,
-        error: null,
-        isInitialized: true,
-      });
+      setState({ profile, loading: false, error: null, isInitialized: true });
     } catch (error) {
       setState((prev) => ({
         ...prev,
@@ -222,16 +171,11 @@ export function useProviderProfile(
     }
   }, []);
 
-  // Update ID details
   const updateIdDetails = useCallback(async (data: IdDetails) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const profile = await providerAPI.updateMyIdDetails(data);
-      setState((prev) => ({
-        ...prev,
-        profile,
-        loading: false,
-      }));
+      setState((prev) => ({ ...prev, profile, loading: false }));
     } catch (error) {
       setState((prev) => ({
         ...prev,
@@ -242,20 +186,16 @@ export function useProviderProfile(
     }
   }, []);
 
-  // Clear error
   const clearError = useCallback(() => {
     setState((prev) => ({ ...prev, error: null }));
   }, []);
-
-  // Refresh profile (alias for fetchProfile)
-  const refreshProfile = fetchProfile;
 
   return {
     ...state,
     fetchProfile,
     createProfile,
     updateProfile,
-    refreshProfile,
+    refreshProfile: fetchProfile,
     deleteProfile,
     restoreProfile,
     updateIdDetails,
@@ -263,24 +203,15 @@ export function useProviderProfile(
   };
 }
 
-// ============================================================================
-// HOOK: useProviderProfileById
-// ============================================================================
-
-interface UseProviderProfileByIdState {
-  profile: ProviderProfile | PopulatedProviderProfile | null;
-  loading: boolean;
-  error: APIError | null;
-  isInitialized: boolean;
-}
+// ── useProviderProfileById ────────────────────────────────────────────────────
 
 /**
- * Hook for fetching a provider profile by ID
- * Auto-loads on mount
+ * Fetches a provider profile by its ID.
+ * Auto-loads when `providerId` is set.
  */
 export function useProviderProfileById(
   providerId: string,
-  autoLoad: boolean = true,
+  autoLoad = true,
   populate: PopulationLevel = PopulationLevel.STANDARD
 ) {
   const [state, setState] = useState<UseProviderProfileByIdState>({
@@ -292,19 +223,10 @@ export function useProviderProfileById(
 
   const fetchProfile = useCallback(async () => {
     if (!providerId) return;
-
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
-      const profile = await providerAPI.getProviderProfile(
-        providerId,
-        populate
-      );
-      setState({
-        profile,
-        loading: false,
-        error: null,
-        isInitialized: true,
-      });
+      const profile = await providerAPI.getProviderProfile(providerId, populate);
+      setState({ profile, loading: false, error: null, isInitialized: true });
     } catch (error) {
       setState({
         profile: null,
@@ -315,77 +237,58 @@ export function useProviderProfileById(
     }
   }, [providerId, populate]);
 
-  // Auto-load on mount or when providerId changes
   useEffect(() => {
-    if (autoLoad && providerId && !state.isInitialized) {
-      fetchProfile();
-    }
+    if (autoLoad && providerId && !state.isInitialized) fetchProfile();
   }, [autoLoad, providerId, state.isInitialized, fetchProfile]);
 
-  return {
-    ...state,
-    fetchProfile,
-    refreshProfile: fetchProfile,
-  };
+  return { ...state, fetchProfile, refreshProfile: fetchProfile };
 }
 
-// ============================================================================
-// HOOK: useProviderSearch
-// ============================================================================
-
-interface UseProviderSearchState {
-  results: ProviderProfile[] | PopulatedProviderProfile[];
-  loading: boolean;
-  error: APIError | null;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
+// ── useProviderSearch ─────────────────────────────────────────────────────────
 
 /**
- * Hook for searching and filtering providers
- * Does NOT auto-load (requires explicit search call)
+ * Searches providers with advanced filters.
+ * Requires an explicit `searchProviders()` call — does NOT auto-load.
+ *
+ * Uses `ProviderSearchParams` (not `GetAllProvidersParams`) to match the
+ * `providerAPI.searchProviders()` signature correctly.
  */
 export function useProviderSearch() {
-  const [state, setState] = useState<UseProviderSearchState>({
+  const [state, setState] = useState<ProviderListState>({
     results: [],
     loading: false,
     error: null,
-    pagination: {
-      page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 0,
-    },
+    pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
   });
 
-  const searchProviders = useCallback(async (params: GetAllProvidersParams) => {
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-    try {
-      const response = await providerAPI.searchProviders(params);
-      setState({
-        results: response.providers,
-        pagination: {
-          page: response.page,
-          limit: response.limit,
-          total: response.total,
-          totalPages: response.totalPages,
-        },
-        loading: false,
-        error: null,
-      });
-    } catch (error) {
-      setState((prev) => ({
-        ...prev,
-        results: [],
-        loading: false,
-        error: error as APIError,
-      }));
-    }
-  }, []);
+  const searchProviders = useCallback(
+    async (params: ProviderSearchParams) => {
+      setState((prev) => ({ ...prev, loading: true, error: null }));
+      try {
+        const response: SearchProvidersResponse =
+          await providerAPI.searchProviders(params);
+        setState({
+          results: response.providers,
+          pagination: {
+            page: response.page,
+            limit: response.limit,
+            total: response.total,
+            totalPages: response.totalPages,
+          },
+          loading: false,
+          error: null,
+        });
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          results: [],
+          loading: false,
+          error: error as APIError,
+        }));
+      }
+    },
+    []
+  );
 
   const clearResults = useCallback(() => {
     setState({
@@ -396,16 +299,10 @@ export function useProviderSearch() {
     });
   }, []);
 
-  return {
-    ...state,
-    searchProviders,
-    clearResults,
-  };
+  return { ...state, searchProviders, clearResults };
 }
 
-// ============================================================================
-// HOOK: useNearestProviders
-// ============================================================================
+// ── useNearestProviders ───────────────────────────────────────────────────────
 
 interface UseNearestProvidersState {
   results: ProviderWithDistance[];
@@ -414,8 +311,8 @@ interface UseNearestProvidersState {
 }
 
 /**
- * Hook for finding nearest providers by GPS coordinates
- * Does NOT auto-load (requires explicit search call)
+ * Finds the nearest providers by GPS coordinates.
+ * Requires an explicit `findNearest()` call — does NOT auto-load.
  */
 export function useNearestProviders() {
   const [state, setState] = useState<UseNearestProvidersState>({
@@ -428,38 +325,20 @@ export function useNearestProviders() {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const results = await providerAPI.findNearestProviders(params);
-      setState({
-        results,
-        loading: false,
-        error: null,
-      });
+      setState({ results, loading: false, error: null });
     } catch (error) {
-      setState({
-        results: [],
-        loading: false,
-        error: error as APIError,
-      });
+      setState({ results: [], loading: false, error: error as APIError });
     }
   }, []);
 
   const clearResults = useCallback(() => {
-    setState({
-      results: [],
-      loading: false,
-      error: null,
-    });
+    setState({ results: [], loading: false, error: null });
   }, []);
 
-  return {
-    ...state,
-    findNearest,
-    clearResults,
-  };
+  return { ...state, findNearest, clearResults };
 }
 
-// ============================================================================
-// HOOK: useProvidersByLocation
-// ============================================================================
+// ── useProvidersByLocation ────────────────────────────────────────────────────
 
 interface UseProvidersByLocationState {
   providers: ProviderProfile[];
@@ -468,12 +347,12 @@ interface UseProvidersByLocationState {
 }
 
 /**
- * Hook for finding providers by region/city
+ * Finds providers by region/city.
  */
 export function useProvidersByLocation(
   region: string,
   city?: string,
-  autoLoad: boolean = true,
+  autoLoad = true,
   populate: PopulationLevel = PopulationLevel.STANDARD
 ) {
   const [state, setState] = useState<UseProvidersByLocationState>({
@@ -484,7 +363,6 @@ export function useProvidersByLocation(
 
   const fetchProviders = useCallback(async () => {
     if (!region) return;
-
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const providers = await providerAPI.findProvidersByLocation(
@@ -492,36 +370,20 @@ export function useProvidersByLocation(
         city,
         populate
       );
-      setState({
-        providers,
-        loading: false,
-        error: null,
-      });
+      setState({ providers, loading: false, error: null });
     } catch (error) {
-      setState({
-        providers: [],
-        loading: false,
-        error: error as APIError,
-      });
+      setState({ providers: [], loading: false, error: error as APIError });
     }
   }, [region, city, populate]);
 
   useEffect(() => {
-    if (autoLoad && region) {
-      fetchProviders();
-    }
+    if (autoLoad && region) fetchProviders();
   }, [autoLoad, region, city, fetchProviders]);
 
-  return {
-    ...state,
-    fetchProviders,
-    refreshProviders: fetchProviders,
-  };
+  return { ...state, fetchProviders, refreshProviders: fetchProviders };
 }
 
-// ============================================================================
-// HOOK: useProvidersByService
-// ============================================================================
+// ── useProvidersByService ─────────────────────────────────────────────────────
 
 interface UseProvidersByServiceState {
   providers: ProviderProfile[];
@@ -530,11 +392,11 @@ interface UseProvidersByServiceState {
 }
 
 /**
- * Hook for finding providers by service ID
+ * Finds providers that offer a specific service.
  */
 export function useProvidersByService(
   serviceId: string,
-  autoLoad: boolean = true,
+  autoLoad = true,
   populate: PopulationLevel = PopulationLevel.STANDARD
 ) {
   const [state, setState] = useState<UseProvidersByServiceState>({
@@ -545,43 +407,26 @@ export function useProvidersByService(
 
   const fetchProviders = useCallback(async () => {
     if (!serviceId) return;
-
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const providers = await providerAPI.findProvidersByService(
         serviceId,
         populate
       );
-      setState({
-        providers,
-        loading: false,
-        error: null,
-      });
+      setState({ providers, loading: false, error: null });
     } catch (error) {
-      setState({
-        providers: [],
-        loading: false,
-        error: error as APIError,
-      });
+      setState({ providers: [], loading: false, error: error as APIError });
     }
   }, [serviceId, populate]);
 
   useEffect(() => {
-    if (autoLoad && serviceId) {
-      fetchProviders();
-    }
+    if (autoLoad && serviceId) fetchProviders();
   }, [autoLoad, serviceId, fetchProviders]);
 
-  return {
-    ...state,
-    fetchProviders,
-    refreshProviders: fetchProviders,
-  };
+  return { ...state, fetchProviders, refreshProviders: fetchProviders };
 }
 
-// ============================================================================
-// HOOK: useNearbyServiceProviders
-// ============================================================================
+// ── useNearbyServiceProviders ─────────────────────────────────────────────────
 
 interface UseNearbyServiceProvidersState {
   results: ProviderWithMatchedServices[];
@@ -590,8 +435,8 @@ interface UseNearbyServiceProvidersState {
 }
 
 /**
- * Hook for finding nearby providers offering specific services
- * Does NOT auto-load (requires explicit search call)
+ * Finds nearby providers offering specific services.
+ * Requires an explicit `findNearbyServices()` call — does NOT auto-load.
  */
 export function useNearbyServiceProviders() {
   const [state, setState] = useState<UseNearbyServiceProvidersState>({
@@ -605,40 +450,22 @@ export function useNearbyServiceProviders() {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const results = await providerAPI.findNearbyServiceProviders(params);
-        setState({
-          results,
-          loading: false,
-          error: null,
-        });
+        setState({ results, loading: false, error: null });
       } catch (error) {
-        setState({
-          results: [],
-          loading: false,
-          error: error as APIError,
-        });
+        setState({ results: [], loading: false, error: error as APIError });
       }
     },
     []
   );
 
   const clearResults = useCallback(() => {
-    setState({
-      results: [],
-      loading: false,
-      error: null,
-    });
+    setState({ results: [], loading: false, error: null });
   }, []);
 
-  return {
-    ...state,
-    findNearbyServices,
-    clearResults,
-  };
+  return { ...state, findNearbyServices, clearResults };
 }
 
-// ============================================================================
-// HOOK: useCompanyTrainedProviders
-// ============================================================================
+// ── useCompanyTrainedProviders ────────────────────────────────────────────────
 
 interface UseCompanyTrainedProvidersState {
   providers: ProviderProfile[];
@@ -647,11 +474,11 @@ interface UseCompanyTrainedProvidersState {
 }
 
 /**
- * Hook for finding company-trained providers
+ * Finds company-trained providers, optionally filtered by region.
  */
 export function useCompanyTrainedProviders(
   region?: string,
-  autoLoad: boolean = true,
+  autoLoad = true,
   populate: PopulationLevel = PopulationLevel.STANDARD
 ) {
   const [state, setState] = useState<UseCompanyTrainedProvidersState>({
@@ -667,36 +494,20 @@ export function useCompanyTrainedProviders(
         region,
         populate
       );
-      setState({
-        providers,
-        loading: false,
-        error: null,
-      });
+      setState({ providers, loading: false, error: null });
     } catch (error) {
-      setState({
-        providers: [],
-        loading: false,
-        error: error as APIError,
-      });
+      setState({ providers: [], loading: false, error: error as APIError });
     }
   }, [region, populate]);
 
   useEffect(() => {
-    if (autoLoad) {
-      fetchProviders();
-    }
+    if (autoLoad) fetchProviders();
   }, [autoLoad, fetchProviders]);
 
-  return {
-    ...state,
-    fetchProviders,
-    refreshProviders: fetchProviders,
-  };
+  return { ...state, fetchProviders, refreshProviders: fetchProviders };
 }
 
-// ============================================================================
-// HOOK: useProviderDistance
-// ============================================================================
+// ── useProviderDistance ───────────────────────────────────────────────────────
 
 interface UseProviderDistanceState {
   distance: DistanceCalculationResponse | null;
@@ -705,7 +516,7 @@ interface UseProviderDistanceState {
 }
 
 /**
- * Hook for calculating distance to a provider
+ * Calculates the distance from given coordinates to a specific provider.
  */
 export function useProviderDistance(providerId: string) {
   const [state, setState] = useState<UseProviderDistanceState>({
@@ -717,7 +528,6 @@ export function useProviderDistance(providerId: string) {
   const calculateDistance = useCallback(
     async (fromLatitude: number, fromLongitude: number) => {
       if (!providerId) return;
-
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const distance = await providerAPI.getDistanceToProvider(
@@ -725,31 +535,18 @@ export function useProviderDistance(providerId: string) {
           fromLatitude,
           fromLongitude
         );
-        setState({
-          distance,
-          loading: false,
-          error: null,
-        });
+        setState({ distance, loading: false, error: null });
       } catch (error) {
-        setState({
-          distance: null,
-          loading: false,
-          error: error as APIError,
-        });
+        setState({ distance: null, loading: false, error: error as APIError });
       }
     },
     [providerId]
   );
 
-  return {
-    ...state,
-    calculateDistance,
-  };
+  return { ...state, calculateDistance };
 }
 
-// ============================================================================
-// HOOK: useLocationEnrichment
-// ============================================================================
+// ── useLocationEnrichment ─────────────────────────────────────────────────────
 
 interface LocationEnrichmentParams {
   ghanaPostGPS: string;
@@ -770,7 +567,9 @@ interface LocationEnrichmentResponse {
 }
 
 /**
- * Hook for enriching location data
+ * Enriches location data from a Ghana Post GPS code.
+ * Makes a direct fetch call so it can be used both inside and outside
+ * of the providerAPI context.
  */
 export function useLocationEnrichment() {
   const [loading, setLoading] = useState(false);
@@ -782,9 +581,7 @@ export function useLocationEnrichment() {
     try {
       const response = await fetch("/api/providers/location/enrich", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ghanaPostGPS: params.ghanaPostGPS,
           nearbyLandmark: params.nearbyLandmark,
@@ -795,11 +592,10 @@ export function useLocationEnrichment() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.message || "Failed to enrich location");
+        throw new Error(result.message ?? "Failed to enrich location");
       }
 
-      // Transform backend response to match our form structure
-      const locationData: LocationEnrichmentResponse = {
+      return {
         region: result.data.location?.region,
         city: result.data.location?.city,
         district: result.data.location?.district,
@@ -810,8 +606,6 @@ export function useLocationEnrichment() {
         isAddressVerified: result.data.verified,
         sourceProvider: result.data.source,
       };
-
-      return locationData;
     } catch (error) {
       console.error("Location enrichment error:", error);
       toast.error(
@@ -826,9 +620,7 @@ export function useLocationEnrichment() {
   return { enrichLocation, loading };
 }
 
-// ============================================================================
-// HOOK: useLocationVerification
-// ============================================================================
+// ── useLocationVerification ───────────────────────────────────────────────────
 
 interface UseLocationVerificationState {
   verification: LocationVerificationResponse | null;
@@ -836,9 +628,6 @@ interface UseLocationVerificationState {
   error: APIError | null;
 }
 
-/**
- * Hook for verifying location coordinates
- */
 export function useLocationVerification() {
   const [state, setState] = useState<UseLocationVerificationState>({
     verification: null,
@@ -851,11 +640,7 @@ export function useLocationVerification() {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const verification = await providerAPI.verifyLocation(data);
-        setState({
-          verification,
-          loading: false,
-          error: null,
-        });
+        setState({ verification, loading: false, error: null });
       } catch (error) {
         setState({
           verification: null,
@@ -868,15 +653,10 @@ export function useLocationVerification() {
     []
   );
 
-  return {
-    ...state,
-    verifyLocation,
-  };
+  return { ...state, verifyLocation };
 }
 
-// ============================================================================
-// HOOK: useGeocode
-// ============================================================================
+// ── useGeocode ────────────────────────────────────────────────────────────────
 
 interface UseGeocodeState {
   result: GeocodeResponse | null;
@@ -884,9 +664,6 @@ interface UseGeocodeState {
   error: APIError | null;
 }
 
-/**
- * Hook for geocoding addresses to coordinates
- */
 export function useGeocode() {
   const [state, setState] = useState<UseGeocodeState>({
     result: null,
@@ -898,30 +675,17 @@ export function useGeocode() {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const result = await providerAPI.geocodeAddress(data);
-      setState({
-        result,
-        loading: false,
-        error: null,
-      });
+      setState({ result, loading: false, error: null });
     } catch (error) {
-      setState({
-        result: null,
-        loading: false,
-        error: error as APIError,
-      });
+      setState({ result: null, loading: false, error: error as APIError });
       throw error;
     }
   }, []);
 
-  return {
-    ...state,
-    geocode,
-  };
+  return { ...state, geocode };
 }
 
-// ============================================================================
-// HOOK: useReverseGeocode
-// ============================================================================
+// ── useReverseGeocode ─────────────────────────────────────────────────────────
 
 interface UseReverseGeocodeState {
   result: UserLocation | null;
@@ -929,9 +693,6 @@ interface UseReverseGeocodeState {
   error: APIError | null;
 }
 
-/**
- * Hook for reverse geocoding coordinates to address
- */
 export function useReverseGeocode() {
   const [state, setState] = useState<UseReverseGeocodeState>({
     result: null,
@@ -943,30 +704,17 @@ export function useReverseGeocode() {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const result = await providerAPI.reverseGeocode(data);
-      setState({
-        result,
-        loading: false,
-        error: null,
-      });
+      setState({ result, loading: false, error: null });
     } catch (error) {
-      setState({
-        result: null,
-        loading: false,
-        error: error as APIError,
-      });
+      setState({ result: null, loading: false, error: error as APIError });
       throw error;
     }
   }, []);
 
-  return {
-    ...state,
-    reverseGeocode,
-  };
+  return { ...state, reverseGeocode };
 }
 
-// ============================================================================
-// HOOK: useNearbyPlaces
-// ============================================================================
+// ── useNearbyPlaces ───────────────────────────────────────────────────────────
 
 interface UseNearbyPlacesState {
   places: NearbyPlace[];
@@ -974,9 +722,6 @@ interface UseNearbyPlacesState {
   error: APIError | null;
 }
 
-/**
- * Hook for searching nearby places
- */
 export function useNearbyPlaces() {
   const [state, setState] = useState<UseNearbyPlacesState>({
     places: [],
@@ -988,39 +733,21 @@ export function useNearbyPlaces() {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const places = await providerAPI.searchNearby(data);
-      setState({
-        places,
-        loading: false,
-        error: null,
-      });
+      setState({ places, loading: false, error: null });
     } catch (error) {
-      setState({
-        places: [],
-        loading: false,
-        error: error as APIError,
-      });
+      setState({ places: [], loading: false, error: error as APIError });
       throw error;
     }
   }, []);
 
   const clearPlaces = useCallback(() => {
-    setState({
-      places: [],
-      loading: false,
-      error: null,
-    });
+    setState({ places: [], loading: false, error: null });
   }, []);
 
-  return {
-    ...state,
-    searchNearby,
-    clearPlaces,
-  };
+  return { ...state, searchNearby, clearPlaces };
 }
 
-// ============================================================================
-// HOOK: useDistanceCalculation
-// ============================================================================
+// ── useDistanceCalculation ────────────────────────────────────────────────────
 
 interface UseDistanceCalculationState {
   result: DistanceCalculationResponse | null;
@@ -1028,9 +755,6 @@ interface UseDistanceCalculationState {
   error: APIError | null;
 }
 
-/**
- * Hook for calculating distance between two points
- */
 export function useDistanceCalculation() {
   const [state, setState] = useState<UseDistanceCalculationState>({
     result: null,
@@ -1043,32 +767,19 @@ export function useDistanceCalculation() {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const result = await providerAPI.calculateDistance(data);
-        setState({
-          result,
-          loading: false,
-          error: null,
-        });
+        setState({ result, loading: false, error: null });
       } catch (error) {
-        setState({
-          result: null,
-          loading: false,
-          error: error as APIError,
-        });
+        setState({ result: null, loading: false, error: error as APIError });
         throw error;
       }
     },
     []
   );
 
-  return {
-    ...state,
-    calculateDistance,
-  };
+  return { ...state, calculateDistance };
 }
 
-// ============================================================================
-// HOOK: useProviderStatistics
-// ============================================================================
+// ── useProviderStatistics ─────────────────────────────────────────────────────
 
 interface UseProviderStatisticsState {
   statistics: ProviderStatistics | null;
@@ -1077,11 +788,7 @@ interface UseProviderStatisticsState {
   isInitialized: boolean;
 }
 
-/**
- * Hook for fetching provider statistics
- * Auto-loads on mount
- */
-export function useProviderStatistics(autoLoad: boolean = true) {
+export function useProviderStatistics(autoLoad = true) {
   const [state, setState] = useState<UseProviderStatisticsState>({
     statistics: null,
     loading: autoLoad,
@@ -1093,12 +800,7 @@ export function useProviderStatistics(autoLoad: boolean = true) {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const statistics = await providerAPI.getStatistics();
-      setState({
-        statistics,
-        loading: false,
-        error: null,
-        isInitialized: true,
-      });
+      setState({ statistics, loading: false, error: null, isInitialized: true });
     } catch (error) {
       setState({
         statistics: null,
@@ -1110,21 +812,13 @@ export function useProviderStatistics(autoLoad: boolean = true) {
   }, []);
 
   useEffect(() => {
-    if (autoLoad && !state.isInitialized) {
-      fetchStatistics();
-    }
+    if (autoLoad && !state.isInitialized) fetchStatistics();
   }, [autoLoad, state.isInitialized, fetchStatistics]);
 
-  return {
-    ...state,
-    fetchStatistics,
-    refreshStatistics: fetchStatistics,
-  };
+  return { ...state, fetchStatistics, refreshStatistics: fetchStatistics };
 }
 
-// ============================================================================
-// HOOK: useAvailableRegions
-// ============================================================================
+// ── useAvailableRegions ───────────────────────────────────────────────────────
 
 interface UseAvailableRegionsState {
   regions: string[];
@@ -1132,11 +826,7 @@ interface UseAvailableRegionsState {
   error: APIError | null;
 }
 
-/**
- * Hook for fetching available regions
- * Auto-loads on mount
- */
-export function useAvailableRegions(autoLoad: boolean = true) {
+export function useAvailableRegions(autoLoad = true) {
   const [state, setState] = useState<UseAvailableRegionsState>({
     regions: [],
     loading: autoLoad,
@@ -1147,35 +837,20 @@ export function useAvailableRegions(autoLoad: boolean = true) {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const regions = await providerAPI.getAvailableRegions();
-      setState({
-        regions,
-        loading: false,
-        error: null,
-      });
+      setState({ regions, loading: false, error: null });
     } catch (error) {
-      setState({
-        regions: [],
-        loading: false,
-        error: error as APIError,
-      });
+      setState({ regions: [], loading: false, error: error as APIError });
     }
   }, []);
 
   useEffect(() => {
-    if (autoLoad) {
-      fetchRegions();
-    }
+    if (autoLoad) fetchRegions();
   }, [autoLoad, fetchRegions]);
 
-  return {
-    ...state,
-    fetchRegions,
-  };
+  return { ...state, fetchRegions };
 }
 
-// ============================================================================
-// HOOK: useAvailableCities
-// ============================================================================
+// ── useAvailableCities ────────────────────────────────────────────────────────
 
 interface UseAvailableCitiesState {
   cities: string[];
@@ -1183,10 +858,7 @@ interface UseAvailableCitiesState {
   error: APIError | null;
 }
 
-/**
- * Hook for fetching available cities (optionally filtered by region)
- */
-export function useAvailableCities(region?: string, autoLoad: boolean = true) {
+export function useAvailableCities(region?: string, autoLoad = true) {
   const [state, setState] = useState<UseAvailableCitiesState>({
     cities: [],
     loading: autoLoad,
@@ -1197,35 +869,20 @@ export function useAvailableCities(region?: string, autoLoad: boolean = true) {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const cities = await providerAPI.getAvailableCities(region);
-      setState({
-        cities,
-        loading: false,
-        error: null,
-      });
+      setState({ cities, loading: false, error: null });
     } catch (error) {
-      setState({
-        cities: [],
-        loading: false,
-        error: error as APIError,
-      });
+      setState({ cities: [], loading: false, error: error as APIError });
     }
   }, [region]);
 
   useEffect(() => {
-    if (autoLoad) {
-      fetchCities();
-    }
+    if (autoLoad) fetchCities();
   }, [autoLoad, region, fetchCities]);
 
-  return {
-    ...state,
-    fetchCities,
-  };
+  return { ...state, fetchCities };
 }
 
-// ============================================================================
-// HOOK: useServiceCoverage
-// ============================================================================
+// ── useServiceCoverage ────────────────────────────────────────────────────────
 
 interface UseServiceCoverageState {
   coverage: ServiceCoverage | null;
@@ -1233,13 +890,7 @@ interface UseServiceCoverageState {
   error: APIError | null;
 }
 
-/**
- * Hook for fetching service coverage data
- */
-export function useServiceCoverage(
-  serviceId: string,
-  autoLoad: boolean = true
-) {
+export function useServiceCoverage(serviceId: string, autoLoad = true) {
   const [state, setState] = useState<UseServiceCoverageState>({
     coverage: null,
     loading: autoLoad,
@@ -1248,40 +899,23 @@ export function useServiceCoverage(
 
   const fetchCoverage = useCallback(async () => {
     if (!serviceId) return;
-
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const coverage = await providerAPI.getServiceCoverage(serviceId);
-      setState({
-        coverage,
-        loading: false,
-        error: null,
-      });
+      setState({ coverage, loading: false, error: null });
     } catch (error) {
-      setState({
-        coverage: null,
-        loading: false,
-        error: error as APIError,
-      });
+      setState({ coverage: null, loading: false, error: error as APIError });
     }
   }, [serviceId]);
 
   useEffect(() => {
-    if (autoLoad && serviceId) {
-      fetchCoverage();
-    }
+    if (autoLoad && serviceId) fetchCoverage();
   }, [autoLoad, serviceId, fetchCoverage]);
 
-  return {
-    ...state,
-    fetchCoverage,
-    refreshCoverage: fetchCoverage,
-  };
+  return { ...state, fetchCoverage, refreshCoverage: fetchCoverage };
 }
 
-// ============================================================================
-// HOOK: useProviderAdmin (Admin Operations)
-// ============================================================================
+// ── useProviderAdmin ──────────────────────────────────────────────────────────
 
 interface UseProviderAdminState {
   providers: Array<ProviderProfile | PopulatedProviderProfile>;
@@ -1296,22 +930,18 @@ interface UseProviderAdminState {
 }
 
 /**
- * Hook for admin provider management operations
+ * Admin hook for provider management.
+ * `getAllProviders` uses `GetAllProvidersParams` (pagination + filtering),
+ * distinct from `ProviderSearchParams` (used in `useProviderSearch`).
  */
 export function useProviderAdmin() {
   const [state, setState] = useState<UseProviderAdminState>({
     providers: [],
     loading: false,
     error: null,
-    pagination: {
-      page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 0,
-    },
+    pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
   });
 
-  // Get all providers
   const getAllProviders = useCallback(
     async (params?: GetAllProvidersParams) => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
@@ -1339,12 +969,10 @@ export function useProviderAdmin() {
     []
   );
 
-  // Approve provider
   const approveProvider = useCallback(
     async (providerId: string) => {
       try {
         await providerAPI.approveProvider(providerId);
-        // Refresh the list
         await getAllProviders(state.pagination);
       } catch (error) {
         setState((prev) => ({ ...prev, error: error as APIError }));
@@ -1354,12 +982,10 @@ export function useProviderAdmin() {
     [getAllProviders, state.pagination]
   );
 
-  // Reject provider
   const rejectProvider = useCallback(
     async (providerId: string, reason: string) => {
       try {
         await providerAPI.rejectProvider(providerId, reason);
-        // Refresh the list
         await getAllProviders(state.pagination);
       } catch (error) {
         setState((prev) => ({ ...prev, error: error as APIError }));
@@ -1369,12 +995,10 @@ export function useProviderAdmin() {
     [getAllProviders, state.pagination]
   );
 
-  // Suspend provider
   const suspendProvider = useCallback(
     async (providerId: string, reason: string) => {
       try {
         await providerAPI.suspendProvider(providerId, reason);
-        // Refresh the list
         await getAllProviders(state.pagination);
       } catch (error) {
         setState((prev) => ({ ...prev, error: error as APIError }));
@@ -1384,28 +1008,21 @@ export function useProviderAdmin() {
     [getAllProviders, state.pagination]
   );
 
-  // Unsuspend provider
-  const unsuspendProvider = useCallback(
-    async (providerId: string) => {
-      try {
-        await providerAPI.unsuspendProvider(providerId);
-        // Refresh the list
-        await getAllProviders(state.pagination);
-      } catch (error) {
-        setState((prev) => ({ ...prev, error: error as APIError }));
-        throw error;
-      }
-    },
-    [getAllProviders, state.pagination]
-  );
+  const unsuspendProvider = useCallback(async (providerId: string) => {
+    try {
+      await providerAPI.unsuspendProvider(providerId);
+      await getAllProviders(state.pagination);
+    } catch (error) {
+      setState((prev) => ({ ...prev, error: error as APIError }));
+      throw error;
+    }
+  }, [getAllProviders, state.pagination]);
 
-  // Bulk operations
   const bulkOperations = useCallback(
     async (data: BulkOperationsRequest) => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const response = await providerAPI.bulkOperations(data);
-        // Refresh the list
         await getAllProviders(state.pagination);
         return response;
       } catch (error) {
@@ -1431,17 +1048,17 @@ export function useProviderAdmin() {
   };
 }
 
-// ============================================================================
-// HOOK: useProviderAuditLog
-// ============================================================================
+// ── useProviderAuditLog ───────────────────────────────────────────────────────
+
+interface AuditLogEntry {
+  action: string;
+  performedBy: string;
+  timestamp: string;
+  details?: Record<string, unknown>;
+}
 
 interface UseProviderAuditLogState {
-  logs: Array<{
-    action: string;
-    performedBy: string;
-    timestamp: string;
-    details?: Record<string, any>;
-  }>;
+  logs: AuditLogEntry[];
   loading: boolean;
   error: APIError | null;
   pagination: {
@@ -1451,22 +1068,15 @@ interface UseProviderAuditLogState {
   };
 }
 
-/**
- * Hook for fetching provider audit logs
- */
 export function useProviderAuditLog(
   providerId: string,
-  autoLoad: boolean = true
+  autoLoad = true
 ) {
   const [state, setState] = useState<UseProviderAuditLogState>({
     logs: [],
     loading: autoLoad,
     error: null,
-    pagination: {
-      page: 1,
-      limit: 10,
-      total: 0,
-    },
+    pagination: { page: 1, limit: 10, total: 0 },
   });
 
   const fetchLogs = useCallback(
@@ -1477,7 +1087,6 @@ export function useProviderAuditLog(
       endDate?: string;
     }) => {
       if (!providerId) return;
-
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const response = await providerAPI.getProviderAuditLog(
@@ -1507,14 +1116,8 @@ export function useProviderAuditLog(
   );
 
   useEffect(() => {
-    if (autoLoad && providerId) {
-      fetchLogs();
-    }
+    if (autoLoad && providerId) fetchLogs();
   }, [autoLoad, providerId, fetchLogs]);
 
-  return {
-    ...state,
-    fetchLogs,
-    refreshLogs: fetchLogs,
-  };
+  return { ...state, fetchLogs, refreshLogs: fetchLogs };
 }

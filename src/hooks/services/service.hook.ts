@@ -2,7 +2,23 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 import type { Service } from "@/types/service.types";
-import { ServiceFilters, serviceAPI, SearchServicesParams, AccessibilityResponse, ServiceStats, ServiceImageStatus, CreateServiceData, UpdateServiceData, UpdateCoverImageData, RejectServiceData, RepairCoverLinksData, BulkUpdateServicesData } from "@/lib/api/services/service.api";
+import {
+  ServiceFilters,
+  serviceAPI,
+  SearchServicesParams,
+  AccessibilityResponse,
+  ServiceStats,
+  ServiceImageStatus,
+  CreateServiceData,
+  UpdateServiceData,
+  UpdateCoverImageData,
+  RejectServiceData,
+  RepairCoverLinksData,
+  BulkUpdateServicesData,
+  ReassignProviderData,
+} from "@/lib/api/services/service.api";
+
+// ── State types ───────────────────────────────────────────────────────────────
 
 interface UseServicesState<T> {
   data: T | null;
@@ -20,12 +36,16 @@ interface UsePaginatedServicesState {
   error: Error | null;
 }
 
-// ============================================
-// QUERY HOOKS (Data Fetching)
-// ============================================
+interface MutationState<T> {
+  data: T | null;
+  loading: boolean;
+  error: Error | null;
+}
+
+// ── Query hooks (data fetching) ───────────────────────────────────────────────
 
 /**
- * Fixed hook to fetch public services with proper re-rendering
+ * Hook to fetch public services with optional filters
  */
 export function usePublicServices(filters?: ServiceFilters) {
   const [state, setState] = useState<UsePaginatedServicesState>({
@@ -39,31 +59,19 @@ export function usePublicServices(filters?: ServiceFilters) {
   });
 
   const fetchServices = useCallback(async () => {
-    console.log("🔄 Fetching services with filters:", filters);
-    
     setState((prev) => ({ ...prev, loading: true, error: null }));
-    
     try {
       const data = await serviceAPI.getPublicServices(filters);
-      
-      console.log("✅ Received data:", {
-        servicesCount: data.services?.length,
-        total: data.total,
-        page: data.page,
-        totalPages: data.totalPages
-      });
-      
       setState({
-        services: data.services || [],
-        total: data.total || 0,
-        page: data.page || 1,
-        limit: data.limit || 10,
-        totalPages: data.totalPages || 0,
+        services: data.services ?? [],
+        total: data.total ?? 0,
+        page: data.page ?? 1,
+        limit: data.limit ?? 10,
+        totalPages: data.totalPages ?? 0,
         loading: false,
         error: null,
       });
     } catch (err) {
-      console.error("❌ Error fetching public services:", err);
       setState({
         services: [],
         total: 0,
@@ -91,7 +99,7 @@ export function usePublicServices(filters?: ServiceFilters) {
 }
 
 /**
- * Hook to fetch a service by slug
+ * Hook to fetch a service by slug (public)
  */
 export function useServiceBySlug(slug: string) {
   const [state, setState] = useState<UseServicesState<Service>>({
@@ -117,6 +125,10 @@ export function useServiceBySlug(slug: string) {
 
   return { ...state, refetch: fetchService };
 }
+
+/**
+ * Hook to fetch a service by ID
+ */
 export function useServiceById(id: string) {
   const [state, setState] = useState<UseServicesState<Service>>({
     data: null,
@@ -143,7 +155,35 @@ export function useServiceById(id: string) {
 }
 
 /**
- * Hook to search services
+ * Hook to fetch complete service details including resolved cover image URL
+ */
+export function useCompleteService(id: string) {
+  const [state, setState] = useState<UseServicesState<Service>>({
+    data: null,
+    loading: true,
+    error: null,
+  });
+
+  const fetchService = useCallback(async () => {
+    if (!id) return;
+    setState({ data: null, loading: true, error: null });
+    try {
+      const data = await serviceAPI.getCompleteService(id);
+      setState({ data, loading: false, error: null });
+    } catch (err) {
+      setState({ data: null, loading: false, error: err as Error });
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchService();
+  }, [fetchService]);
+
+  return { ...state, refetch: fetchService };
+}
+
+/**
+ * Hook to search services with full-text search
  */
 export function useSearchServices(params: SearchServicesParams) {
   const [state, setState] = useState<UsePaginatedServicesState>({
@@ -177,23 +217,20 @@ export function useSearchServices(params: SearchServicesParams) {
         error: null,
       });
     } catch (err) {
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        error: err as Error,
-      }));
+      setState((prev) => ({ ...prev, loading: false, error: err as Error }));
     }
   }, []);
 
   useEffect(() => {
     searchServices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(params)]);
 
   return { ...state, refetch: searchServices };
 }
 
 /**
- * Hook to fetch accessible services
+ * Hook to fetch services accessible to the current user
  */
 export function useAccessibleServices(filters?: ServiceFilters) {
   const [state, setState] = useState<UsePaginatedServicesState>({
@@ -223,75 +260,23 @@ export function useAccessibleServices(filters?: ServiceFilters) {
         error: null,
       });
     } catch (err) {
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        error: err as Error,
-      }));
+      setState((prev) => ({ ...prev, loading: false, error: err as Error }));
     }
   }, []);
 
   useEffect(() => {
     fetchServices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(filters)]);
 
   return { ...state, refetch: fetchServices };
 }
 
 /**
- * Hook to fetch a service by ID
+ * Hook to fetch a single service (alias for useServiceById with a cleaner name)
  */
 export function useService(id: string) {
-  const [state, setState] = useState<UseServicesState<Service>>({
-    data: null,
-    loading: true,
-    error: null,
-  });
-
-  const fetchService = useCallback(async () => {
-    if (!id) return;
-    setState({ data: null, loading: true, error: null });
-    try {
-      const data = await serviceAPI.getServiceById(id);
-      setState({ data, loading: false, error: null });
-    } catch (err) {
-      setState({ data: null, loading: false, error: err as Error });
-    }
-  }, [id]);
-
-  useEffect(() => {
-    fetchService();
-  }, [fetchService]);
-
-  return { ...state, refetch: fetchService };
-}
-
-/**
- * Hook to fetch complete service with full details
- */
-export function useCompleteService(id: string) {
-  const [state, setState] = useState<UseServicesState<Service>>({
-    data: null,
-    loading: true,
-    error: null,
-  });
-
-  const fetchService = useCallback(async () => {
-    if (!id) return;
-    setState({ data: null, loading: true, error: null });
-    try {
-      const data = await serviceAPI.getCompleteService(id);
-      setState({ data, loading: false, error: null });
-    } catch (err) {
-      setState({ data: null, loading: false, error: err as Error });
-    }
-  }, [id]);
-
-  useEffect(() => {
-    fetchService();
-  }, [fetchService]);
-
-  return { ...state, refetch: fetchService };
+  return useServiceById(id);
 }
 
 /**
@@ -318,7 +303,10 @@ export function useServicesByCategory(
     if (!categoryId) return;
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
-      const data = await serviceAPI.getServicesByCategory(categoryId, filtersRef.current);
+      const data = await serviceAPI.getServicesByCategory(
+        categoryId,
+        filtersRef.current
+      );
       setState({
         services: data.services,
         total: data.total,
@@ -329,23 +317,21 @@ export function useServicesByCategory(
         error: null,
       });
     } catch (err) {
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        error: err as Error,
-      }));
+      setState((prev) => ({ ...prev, loading: false, error: err as Error }));
     }
   }, [categoryId]);
 
   useEffect(() => {
     fetchServices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchServices, JSON.stringify(filters)]);
 
   return { ...state, refetch: fetchServices };
 }
 
 /**
- * Hook to fetch services by provider
+ * Hook to fetch all services belonging to a single provider.
+ * A service has exactly one provider — this returns all services for that provider.
  */
 export function useServicesByProvider(
   providerId: string,
@@ -370,7 +356,10 @@ export function useServicesByProvider(
     if (!providerId) return;
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
-      const data = await serviceAPI.getServicesByProvider(providerId, filtersRef.current);
+      const data = await serviceAPI.getServicesByProvider(
+        providerId,
+        filtersRef.current
+      );
       setState({
         services: data.services,
         total: data.total,
@@ -381,23 +370,20 @@ export function useServicesByProvider(
         error: null,
       });
     } catch (err) {
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        error: err as Error,
-      }));
+      setState((prev) => ({ ...prev, loading: false, error: err as Error }));
     }
   }, [providerId]);
 
   useEffect(() => {
     fetchServices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchServices, JSON.stringify(filters)]);
 
   return { ...state, refetch: fetchServices };
 }
 
 /**
- * Hook to check service accessibility
+ * Hook to check whether the current user can access a service
  */
 export function useServiceAccessibility(id: string) {
   const [state, setState] = useState<UseServicesState<AccessibilityResponse>>({
@@ -424,12 +410,10 @@ export function useServiceAccessibility(id: string) {
   return { ...state, refetch: checkAccessibility };
 }
 
-// ============================================
-// ADMIN QUERY HOOKS
-// ============================================
+// ── Admin query hooks ─────────────────────────────────────────────────────────
 
 /**
- * Hook to fetch pending services (admin only)
+ * Hook to fetch pending services awaiting moderation (admin only)
  */
 export function usePendingServices(
   filters?: Pick<ServiceFilters, "page" | "limit" | "sortBy" | "sortOrder">
@@ -461,23 +445,20 @@ export function usePendingServices(
         error: null,
       });
     } catch (err) {
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        error: err as Error,
-      }));
+      setState((prev) => ({ ...prev, loading: false, error: err as Error }));
     }
   }, []);
 
   useEffect(() => {
     fetchServices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(filters)]);
 
   return { ...state, refetch: fetchServices };
 }
 
 /**
- * Hook to fetch all services (admin only)
+ * Hook to fetch all services (admin view)
  */
 export function useAllServices(filters?: ServiceFilters) {
   const [state, setState] = useState<UsePaginatedServicesState>({
@@ -507,16 +488,13 @@ export function useAllServices(filters?: ServiceFilters) {
         error: null,
       });
     } catch (err) {
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        error: err as Error,
-      }));
+      setState((prev) => ({ ...prev, loading: false, error: err as Error }));
     }
   }, []);
 
   useEffect(() => {
     fetchServices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(filters)]);
 
   return { ...state, refetch: fetchServices };
@@ -550,7 +528,7 @@ export function useServiceStats() {
 }
 
 /**
- * Hook to fetch service image status (admin only)
+ * Hook to fetch cover image link status for a service (admin / debugging)
  */
 export function useServiceImageStatus(id: string) {
   const [state, setState] = useState<UseServicesState<ServiceImageStatus>>({
@@ -577,18 +555,12 @@ export function useServiceImageStatus(id: string) {
   return { ...state, refetch: fetchStatus };
 }
 
-// ============================================
-// MUTATION HOOKS (Data Modification)
-// ============================================
-
-interface MutationState<T> {
-  data: T | null;
-  loading: boolean;
-  error: Error | null;
-}
+// ── Mutation hooks (data modification) ───────────────────────────────────────
 
 /**
- * Hook to create a service
+ * Hook to create a service.
+ * When `providerId` is included in `data`, the server automatically links
+ * the service to the provider's `serviceOfferings`.
  */
 export function useCreateService() {
   const [state, setState] = useState<MutationState<Service>>({
@@ -638,7 +610,37 @@ export function useUpdateService() {
 }
 
 /**
- * Hook to update service cover image
+ * Hook to reassign a service to a different provider (admin or owner).
+ * The server handles unlinking from the old provider and linking to the new one.
+ */
+export function useReassignProvider() {
+  const [state, setState] = useState<MutationState<Service>>({
+    data: null,
+    loading: false,
+    error: null,
+  });
+
+  const reassignProvider = async (
+    serviceId: string,
+    data: ReassignProviderData
+  ) => {
+    setState({ data: null, loading: true, error: null });
+    try {
+      const result = await serviceAPI.reassignProvider(serviceId, data);
+      setState({ data: result, loading: false, error: null });
+      return result;
+    } catch (err) {
+      setState({ data: null, loading: false, error: err as Error });
+      throw err;
+    }
+  };
+
+  return { ...state, reassignProvider };
+}
+
+/**
+ * Hook to update a service cover image.
+ * Pass `{ coverImageId: null }` to unlink the current image.
  */
 export function useUpdateCoverImage() {
   const [state, setState] = useState<MutationState<Service>>({
@@ -663,7 +665,7 @@ export function useUpdateCoverImage() {
 }
 
 /**
- * Hook to delete a service
+ * Hook to soft-delete a service
  */
 export function useDeleteService() {
   const [state, setState] = useState<MutationState<{ message: string }>>({
@@ -713,7 +715,7 @@ export function useApproveService() {
 }
 
 /**
- * Hook to reject a service (admin only)
+ * Hook to reject a service with a reason (admin only)
  */
 export function useRejectService() {
   const [state, setState] = useState<MutationState<Service>>({
@@ -738,7 +740,8 @@ export function useRejectService() {
 }
 
 /**
- * Hook to restore a service (admin only)
+ * Hook to restore a soft-deleted service (admin only).
+ * The server re-adds the service to its provider's serviceOfferings.
  */
 export function useRestoreService() {
   const [state, setState] = useState<MutationState<Service>>({
@@ -763,7 +766,7 @@ export function useRestoreService() {
 }
 
 /**
- * Hook to repair service cover links (admin only)
+ * Hook to repair broken cover image links (admin only)
  */
 export function useRepairServiceCoverLinks() {
   const [state, setState] = useState<
@@ -790,7 +793,7 @@ export function useRepairServiceCoverLinks() {
 }
 
 /**
- * Hook to bulk update services (admin only)
+ * Hook to bulk update multiple services (admin only)
  */
 export function useBulkUpdateServices() {
   const [state, setState] = useState<

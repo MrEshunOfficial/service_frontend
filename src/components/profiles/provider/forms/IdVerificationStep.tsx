@@ -15,13 +15,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Shield, Upload, X, AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  Shield,
+  Upload,
+  X,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { idType } from "@/types/base.types";
 import { useEffect, useState } from "react";
 import { ProviderProfileFormData } from "./providerProfileSchema";
 import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ProviderFileRecord } from "@/lib/api/file-manager/provider.file.manager";
 import { useProviderIdImages } from "@/hooks/useProviderFileManager";
 
@@ -53,30 +59,20 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
       }));
 
       setLocalFiles((prev) => {
-        // Find and clean up temp files that are being replaced
         const tempFiles = prev.filter((f) => f.id.startsWith("temp-"));
         tempFiles.forEach((tempFile) => {
           if (tempFile.url.startsWith("blob:")) {
             URL.revokeObjectURL(tempFile.url);
           }
         });
-
-        // Keep only real uploaded files (non-temp)
         const existingRealFiles = prev.filter((f) => !f.id.startsWith("temp-"));
-
-        // Get IDs of newly uploaded files
         const newFileIds = mappedFiles.map((f) => f.id);
-
-        // Keep existing real files that aren't being replaced
         const keptExisting = existingRealFiles.filter(
           (f) => !newFileIds.includes(f.id),
         );
-
-        // Combine kept existing with new uploads
         return [...keptExisting, ...mappedFiles];
       });
 
-      // Update form with file IDs
       const fileIds = files.map((f: ProviderFileRecord) => f._id.toString());
       form.setValue("IdDetails.idImages", fileIds, {
         shouldValidate: true,
@@ -86,7 +82,6 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
     }
   }, [files, form]);
 
-  // Clear upload error after showing toast
   useEffect(() => {
     if (uploadError) {
       toast.error(uploadError);
@@ -99,8 +94,6 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
     if (!selectedFiles || selectedFiles.length === 0) return;
 
     const filesArray = Array.from(selectedFiles);
-
-    // Validate files before upload
     const validation = validateFiles(filesArray);
     if (!validation.valid) {
       toast.error(validation.error || "Invalid files selected");
@@ -108,7 +101,6 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
       return;
     }
 
-    // Check if adding these files would exceed the limit
     if (localFiles.length + filesArray.length > 2) {
       toast.error(
         `You can only upload up to 2 images. Current: ${localFiles.length}`,
@@ -117,7 +109,6 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
       return;
     }
 
-    // Show preview immediately with local URLs
     const previews = filesArray.map((file) => ({
       id: `temp-${Math.random().toString(36).substr(2, 9)}`,
       name: file.name,
@@ -128,46 +119,31 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
     setLocalFiles((prev) => [...prev, ...previews]);
 
     try {
-      // Upload to server
       const uploadedFiles = await uploadMultiple(filesArray);
-
       toast.success(
         `Successfully uploaded ${uploadedFiles.length} ID image${uploadedFiles.length > 1 ? "s" : ""}`,
       );
-
-      // Note: We DON'T remove temp files here - the useEffect will handle replacing them
-      // with real uploaded files when the 'files' prop updates
     } catch (error) {
-      console.error("Upload failed:", error);
-
-      // Remove failed uploads from preview
       const tempIds = previews.map((p) => p.id);
       setLocalFiles((prev) => prev.filter((f) => !tempIds.includes(f.id)));
-
-      // Clean up preview URLs
       previews.forEach((preview) => {
         if (preview.url.startsWith("blob:")) {
           URL.revokeObjectURL(preview.url);
         }
       });
-
       toast.error("Failed to upload images. Please try again.");
     }
 
-    // Reset input
     e.target.value = "";
   };
 
   const handleRemoveFile = (fileId: string) => {
-    // Remove from local state
     const fileToRemove = localFiles.find((f) => f.id === fileId);
     if (fileToRemove?.url.startsWith("blob:")) {
       URL.revokeObjectURL(fileToRemove.url);
     }
-
     setLocalFiles((prev) => prev.filter((f) => f.id !== fileId));
 
-    // Update form values
     const currentIds = form.getValues("IdDetails.idImages") || [];
     const updatedIds = currentIds.filter((id) => id !== fileId);
     form.setValue("IdDetails.idImages", updatedIds, {
@@ -175,64 +151,55 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
       shouldDirty: true,
       shouldTouch: true,
     });
-
-    // Note: Actual deletion from server would happen on form submit or separately
-    toast.info("ID image removed from upload queue");
+    toast.info("ID image removed");
   };
 
-  const canUploadMore = localFiles.length < 2;
   const hasReachedLimit = localFiles.length >= 2;
   const hasUploadedFiles =
     localFiles.filter((f) => !f.id.startsWith("temp-")).length > 0;
 
   return (
-    <div className="space-y-6 bg-background text-foreground">
-      <div className="border-l-4 border-blue-600 dark:border-blue-400 pl-4">
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-          ID Verification
-        </h2>
-        <p className="text-muted-foreground mt-1">
-          Verify your identity to build trust with customers
-        </p>
+    <div className="space-y-8">
+      {/* Section header */}
+      <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 ring-1 ring-amber-100 dark:ring-amber-900">
+          <Shield className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            ID Verification
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Verify your identity to build trust with customers
+          </p>
+        </div>
       </div>
 
-      <Alert className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50">
-        <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-        <AlertDescription className="text-amber-900 dark:text-amber-200">
-          <strong>Security Note:</strong> Your ID information is encrypted and
-          only used for verification purposes. Upload clear photos of both the
-          front and back of your ID.
-        </AlertDescription>
-      </Alert>
+      {/* Security note */}
+      <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 p-4">
+        <div className="flex gap-3 items-start">
+          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
+            <strong>Security Note:</strong> Your ID information is encrypted and
+            only used for verification. Upload clear photos of both the front
+            and back of your ID.
+          </p>
+        </div>
+      </div>
 
-      {/* Validation Info */}
-      <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50">
-        <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-        <AlertDescription className="text-blue-900 dark:text-blue-200 text-sm">
-          <strong>Requirements:</strong>
-          <ul className="list-disc ml-5 mt-2 space-y-1">
-            <li>Maximum 2 images (front and back)</li>
-            <li>File size: Up to 5MB per image</li>
-            <li>Formats: JPG, JPEG, PNG, WebP</li>
-            <li>Images should be clear and legible</li>
-          </ul>
-        </AlertDescription>
-      </Alert>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* ID Type + Number */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <FormField
           control={form.control}
           name="IdDetails.idType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
-                ID Type{" "}
-                <span className="text-red-600 dark:text-red-400">*</span>
+              <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                ID Type <span className="text-rose-500">*</span>
               </FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select onValueChange={field.onChange} value={field.value ?? ""}>
                 <FormControl>
-                  <SelectTrigger className="h-12">
+                  <SelectTrigger className="h-11 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-slate-100">
                     <SelectValue placeholder="Select ID type" />
                   </SelectTrigger>
                 </FormControl>
@@ -259,74 +226,86 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
           name="IdDetails.idNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>
-                ID Number{" "}
-                <span className="text-red-600 dark:text-red-400">*</span>
+              <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                ID Number <span className="text-rose-500">*</span>
               </FormLabel>
               <FormControl>
+                {/* FIX: Always pass a string value to prevent uncontrolled → controlled warning */}
                 <Input
                   placeholder="Enter ID number"
                   {...field}
-                  className="h-12"
+                  value={field.value ?? ""}
+                  className="h-11 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 focus:border-amber-500 dark:focus:border-amber-400 focus:ring-amber-500/20 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                 />
               </FormControl>
-              <FormDescription>As shown on your ID</FormDescription>
+              <FormDescription className="text-xs text-slate-500">
+                As shown on your ID document
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
 
+      {/* Image Upload */}
       <FormField
         control={form.control}
         name="IdDetails.idImages"
-        render={({ field }) => (
+        render={() => (
           <FormItem>
-            <FormLabel>
-              ID Images{" "}
-              <span className="text-red-600 dark:text-red-400">*</span>
+            <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              ID Images <span className="text-rose-500">*</span>
             </FormLabel>
             <FormControl>
               <div className="space-y-4">
-                {/* Upload Area */}
+                {/* Upload zone */}
                 <div
-                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                  className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
                     hasReachedLimit
-                      ? "border-border bg-muted/50"
-                      : "border-border hover:border-blue-500 dark:hover:border-blue-400 bg-muted/20 hover:bg-muted/40"
-                  }`}>
-                  <Upload
-                    className={`w-12 h-12 mx-auto mb-4 ${
-                      hasReachedLimit
-                        ? "text-muted-foreground/50"
-                        : "text-muted-foreground"
-                    }`}
-                  />
-
+                      ? "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30"
+                      : "border-slate-200 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-600 bg-white dark:bg-slate-900 hover:bg-amber-50/30 dark:hover:bg-amber-950/10 cursor-pointer"
+                  }`}
+                  onClick={() => {
+                    if (!hasReachedLimit && !uploading) {
+                      document.getElementById("id-upload")?.click();
+                    }
+                  }}
+                >
                   {hasReachedLimit ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
-                        <CheckCircle2 className="w-5 h-5" />
-                        <p className="text-sm font-medium">
-                          Maximum files uploaded (2/2)
-                        </p>
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+                        <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Remove an image to upload a different one
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Maximum images uploaded (2/2)
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Remove an image to replace it
                       </p>
                     </div>
                   ) : (
-                    <>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Click to upload or drag and drop
-                      </p>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Upload front and back of your ID (PNG, JPG up to 5MB)
-                      </p>
-                      <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-4">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-900/30 border border-amber-100 dark:border-amber-900 flex items-center justify-center">
+                        {uploading ? (
+                          <Loader2 className="w-5 h-5 text-amber-600 dark:text-amber-400 animate-spin" />
+                        ) : (
+                          <Upload className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          {uploading
+                            ? "Uploading..."
+                            : "Click to upload ID images"}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          PNG, JPG or WebP — up to 5MB each
+                        </p>
+                      </div>
+                      <div className="text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-900">
                         {localFiles.length}/2 images uploaded
-                      </p>
-                    </>
+                      </div>
+                    </div>
                   )}
 
                   <Input
@@ -338,24 +317,9 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
                     className="hidden"
                     id="id-upload"
                   />
-
-                  <Button
-                    type="button"
-                    variant={hasReachedLimit ? "secondary" : "outline"}
-                    onClick={() =>
-                      document.getElementById("id-upload")?.click()
-                    }
-                    disabled={uploading || hasReachedLimit}
-                    className="min-w-[140px]">
-                    {uploading
-                      ? "Uploading..."
-                      : hasReachedLimit
-                        ? "Limit Reached"
-                        : "Select Files"}
-                  </Button>
                 </div>
 
-                {/* Uploaded Files Preview */}
+                {/* Preview grid */}
                 {localFiles.length > 0 && (
                   <div className="grid grid-cols-2 gap-4">
                     {localFiles.map((file, index) => {
@@ -363,41 +327,44 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
                       return (
                         <div
                           key={file.id}
-                          className="relative group border border-border rounded-lg overflow-hidden bg-background shadow-sm hover:shadow-md transition-all dark:hover:shadow-black/30">
+                          className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm"
+                        >
                           <img
                             src={file.url}
                             alt={file.name}
-                            className="w-full h-32 object-cover"
+                            className="w-full h-36 object-cover"
                           />
 
-                          {/* Overlay on hover */}
+                          {/* Overlay */}
                           {!isUploading && (
-                            <div className="absolute inset-0 bg-black/60 dark:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Button
                                 type="button"
                                 variant="destructive"
                                 size="sm"
                                 onClick={() => handleRemoveFile(file.id)}
-                                disabled={uploading}>
-                                <X className="w-4 h-4 mr-1" />
+                                disabled={uploading}
+                                className="rounded-lg"
+                              >
+                                <X className="w-3.5 h-3.5 mr-1.5" />
                                 Remove
                               </Button>
                             </div>
                           )}
 
-                          {/* File info */}
-                          <div className="p-2 bg-background border-t border-border">
-                            <p className="text-xs font-medium text-foreground truncate">
-                              {index === 0 ? "Front" : "Back"} - {file.name}
+                          {/* File label */}
+                          <div className="px-3 py-2 border-t border-slate-100 dark:border-slate-800">
+                            <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
+                              {index === 0 ? "📄 Front" : "📄 Back"} —{" "}
+                              {file.name}
                             </p>
-                            {isUploading && (
-                              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
-                                <span className="inline-block w-3 h-3 border-2 border-amber-600 dark:border-amber-400 border-t-transparent rounded-full animate-spin"></span>
+                            {isUploading ? (
+                              <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5 flex items-center gap-1">
+                                <Loader2 className="w-3 h-3 animate-spin" />
                                 Uploading...
                               </p>
-                            )}
-                            {!isUploading && (
-                              <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
+                            ) : (
+                              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1">
                                 <CheckCircle2 className="w-3 h-3" />
                                 Uploaded
                               </p>
@@ -410,9 +377,9 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
                 )}
               </div>
             </FormControl>
-            <FormDescription className="text-muted-foreground">
+            <FormDescription className="text-xs text-slate-500 dark:text-slate-400">
               {localFiles.length === 0
-                ? "Upload clear photos of both sides of your ID"
+                ? "Upload clear photos of both the front and back of your ID"
                 : localFiles.length === 1
                   ? "Upload one more image (back side of ID)"
                   : hasUploadedFiles
@@ -424,15 +391,28 @@ export function IdVerificationStep({ form }: IdVerificationStepProps) {
         )}
       />
 
-      {/* Upload Status */}
-      {uploading && (
-        <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50">
-          <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 animate-pulse" />
-          <AlertDescription className="text-blue-900 dark:text-blue-200">
-            Uploading ID images... Please wait.
-          </AlertDescription>
-        </Alert>
-      )}
+      {/* Requirements */}
+      <div className="rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 p-4">
+        <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+          Requirements
+        </p>
+        <ul className="space-y-1.5">
+          {[
+            "Maximum 2 images (front and back)",
+            "File size up to 5MB per image",
+            "Formats: JPG, JPEG, PNG, WebP",
+            "Images must be clear and legible",
+          ].map((req) => (
+            <li
+              key={req}
+              className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2"
+            >
+              <div className="w-1 h-1 rounded-full bg-slate-400 flex-shrink-0" />
+              {req}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

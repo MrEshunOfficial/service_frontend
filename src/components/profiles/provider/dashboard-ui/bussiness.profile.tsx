@@ -43,6 +43,8 @@ const ProviderDashboard = () => {
     refreshProfile,
   } = useProviderProfile(true, PopulationLevel.DETAILED);
 
+  console.log("Raw profile data:", rawProfile);
+
   // Extract profile from response wrapper if needed
   const profile = React.useMemo(() => {
     if (!rawProfile) return null;
@@ -161,12 +163,12 @@ const ProviderDashboard = () => {
         ((typeof service === "object" &&
           service.servicePricing?.providerEarnings) ||
           0),
-      0
+      0,
     ) || 0;
 
   const activeServices =
     profile.serviceOfferings?.filter(
-      (service) => typeof service === "object" && service.isActive
+      (service) => typeof service === "object" && service.isActive,
     ).length || 0;
 
   const stats = [

@@ -1,9 +1,9 @@
 // api/service.api.ts
-
-import { Service } from "@/types/service.types";
+import type { Service } from "@/types/service.types";
 import { APIClient } from "../base/api-client";
 
-// Request/Response types
+// ── Request / Response types ──────────────────────────────────────────────────
+
 export interface ServiceFilters {
   categoryId?: string;
   providerId?: string;
@@ -35,6 +35,11 @@ export interface CreateServiceData {
   categoryId: string;
   tags?: string[];
   coverImage?: string;
+  /**
+   * The provider creating this service.
+   * A single provider ID string — NOT an array.
+   * Omit for admin-created catalog/system services.
+   */
   providerId?: string;
   servicePricing?: {
     serviceBasePrice: number;
@@ -64,7 +69,13 @@ export interface UpdateServiceData {
   isPrivate?: boolean;
 }
 
+export interface ReassignProviderData {
+  /** The ID of the new provider to assign this service to */
+  newProviderId: string;
+}
+
 export interface UpdateCoverImageData {
+  /** Pass null to unlink the existing cover image */
   coverImageId: string | null;
 }
 
@@ -114,16 +125,15 @@ export interface AccessibilityResponse {
   reason?: string;
 }
 
+// ── API Client ────────────────────────────────────────────────────────────────
+
 class ServiceAPI extends APIClient {
   private readonly endpoint = "/api/services";
 
-  // ============================================
-  // PUBLIC METHODS (No authentication required)
-  // ============================================
+  // ── Public (no auth required) ─────────────────────────────────────────────
 
   /**
    * Get public services
-   * @param filters - Optional filters for services
    */
   async getPublicServices(
     filters?: ServiceFilters
@@ -136,19 +146,15 @@ class ServiceAPI extends APIClient {
 
   /**
    * Get service by slug (public)
-   * @param slug - Service slug
    */
   async getServiceBySlug(slug: string): Promise<Service> {
     return this.get<Service>(`${this.endpoint}/slug/${slug}`);
   }
 
-  // ============================================
-  // AUTHENTICATED METHODS
-  // ============================================
+  // ── Authenticated ─────────────────────────────────────────────────────────
 
   /**
-   * Search services
-   * @param params - Search parameters
+   * Full-text search across services
    */
   async searchServices(
     params: SearchServicesParams
@@ -160,8 +166,7 @@ class ServiceAPI extends APIClient {
   }
 
   /**
-   * Get accessible services based on user access level
-   * @param filters - Optional filters for services
+   * Get services visible to the current user based on access level
    */
   async getAccessibleServices(
     filters?: ServiceFilters
@@ -174,15 +179,13 @@ class ServiceAPI extends APIClient {
 
   /**
    * Get service by ID
-   * @param id - Service ID
    */
   async getServiceById(id: string): Promise<Service> {
     return this.get<Service>(`${this.endpoint}/${id}`);
   }
 
   /**
-   * Get complete service with full details including cover image
-   * @param id - Service ID
+   * Get complete service with full details including cover image URL
    */
   async getCompleteService(id: string): Promise<Service> {
     return this.get<Service>(`${this.endpoint}/${id}/complete`);
@@ -190,8 +193,6 @@ class ServiceAPI extends APIClient {
 
   /**
    * Get services by category
-   * @param categoryId - Category ID
-   * @param filters - Optional pagination and sorting filters
    */
   async getServicesByCategory(
     categoryId: string,
@@ -204,9 +205,8 @@ class ServiceAPI extends APIClient {
   }
 
   /**
-   * Get services by provider
-   * @param providerId - Provider ID
-   * @param filters - Optional filters including includeInactive (admin only)
+   * Get services belonging to a single provider.
+   * `providerId` is a scalar string — one service belongs to one provider.
    */
   async getServicesByProvider(
     providerId: string,
@@ -222,36 +222,42 @@ class ServiceAPI extends APIClient {
   }
 
   /**
-   * Check if service is accessible for current user
-   * @param id - Service ID
+   * Check whether the current user can access this service
    */
   async checkServiceAccessibility(id: string): Promise<AccessibilityResponse> {
-    return this.get<AccessibilityResponse>(
-      `${this.endpoint}/${id}/accessible`
-    );
+    return this.get<AccessibilityResponse>(`${this.endpoint}/${id}/accessible`);
   }
 
   /**
-   * Create a new service
-   * @param data - Service data
+   * Create a new service.
+   * When `providerId` is supplied the service is automatically linked to that
+   * provider's `serviceOfferings` on the server side.
    */
   async createService(data: CreateServiceData): Promise<Service> {
     return this.post<Service>(this.endpoint, data);
   }
 
   /**
-   * Update service
-   * @param id - Service ID
-   * @param data - Updated service data
+   * Update service fields
    */
   async updateService(id: string, data: UpdateServiceData): Promise<Service> {
     return this.put<Service>(`${this.endpoint}/${id}`, data);
   }
 
   /**
-   * Update service cover image
-   * @param id - Service ID
-   * @param data - Cover image data
+   * Reassign a service to a different provider (admin or owner).
+   * Automatically unlinks from the old provider and links to the new one.
+   */
+  async reassignProvider(
+    id: string,
+    data: ReassignProviderData
+  ): Promise<Service> {
+    return this.patch<Service>(`${this.endpoint}/${id}/reassign-provider`, data);
+  }
+
+  /**
+   * Update the service cover image.
+   * Pass `{ coverImageId: null }` to unlink the existing image.
    */
   async updateCoverImage(
     id: string,
@@ -261,20 +267,17 @@ class ServiceAPI extends APIClient {
   }
 
   /**
-   * Delete service (soft delete)
-   * @param id - Service ID
+   * Soft-delete a service.
+   * Also removes the service from its provider's serviceOfferings.
    */
   async deleteService(id: string): Promise<{ message: string }> {
     return this.delete<{ message: string }>(`${this.endpoint}/${id}`);
   }
 
-  // ============================================
-  // ADMIN ONLY METHODS
-  // ============================================
+  // ── Admin only ────────────────────────────────────────────────────────────
 
   /**
-   * Get pending services for moderation
-   * @param filters - Optional pagination and sorting filters
+   * Get pending services awaiting moderation
    */
   async getPendingServices(
     filters?: Pick<ServiceFilters, "page" | "limit" | "sortBy" | "sortOrder">
@@ -286,27 +289,26 @@ class ServiceAPI extends APIClient {
   }
 
   /**
-   * Get all services (admin view)
-   * @param filters - Optional filters for services
+   * Get all services (admin view, includes inactive/deleted)
    */
   async getAllServices(
     filters?: ServiceFilters
   ): Promise<PaginatedResponse<Service>> {
     return this.get<PaginatedResponse<Service>>(
-  `${this.endpoint}/admin/all`,
-  filters as Record<string, string | number | boolean | undefined>
-);}
+      `${this.endpoint}/admin/all`,
+      filters as Record<string, string | number | boolean | undefined>
+    );
+  }
 
   /**
-   * Get service statistics
+   * Get service statistics (admin)
    */
   async getServiceStats(): Promise<ServiceStats> {
     return this.get<ServiceStats>(`${this.endpoint}/admin/stats`);
   }
 
   /**
-   * Get service image status (for debugging)
-   * @param id - Service ID
+   * Get cover image status for a service (admin / debugging)
    */
   async getServiceImageStatus(id: string): Promise<ServiceImageStatus> {
     return this.get<ServiceImageStatus>(
@@ -315,33 +317,29 @@ class ServiceAPI extends APIClient {
   }
 
   /**
-   * Approve service
-   * @param id - Service ID
+   * Approve a service (admin)
    */
   async approveService(id: string): Promise<Service> {
     return this.post<Service>(`${this.endpoint}/${id}/approve`);
   }
 
   /**
-   * Reject service
-   * @param id - Service ID
-   * @param data - Rejection reason
+   * Reject a service with a reason (admin)
    */
   async rejectService(id: string, data: RejectServiceData): Promise<Service> {
     return this.post<Service>(`${this.endpoint}/${id}/reject`, data);
   }
 
   /**
-   * Restore soft-deleted service
-   * @param id - Service ID
+   * Restore a soft-deleted service (admin).
+   * Also re-adds the service to its provider's serviceOfferings.
    */
   async restoreService(id: string): Promise<Service> {
     return this.post<Service>(`${this.endpoint}/${id}/restore`);
   }
 
   /**
-   * Repair service cover image links
-   * @param data - Optional service ID to repair specific service
+   * Repair broken cover image links (admin)
    */
   async repairServiceCoverLinks(
     data?: RepairCoverLinksData
@@ -353,8 +351,7 @@ class ServiceAPI extends APIClient {
   }
 
   /**
-   * Bulk update services
-   * @param data - Service IDs and update object
+   * Bulk update multiple services (admin)
    */
   async bulkUpdateServices(
     data: BulkUpdateServicesData

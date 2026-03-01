@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader2, ChevronRight, ChevronLeft } from "lucide-react";
+import { Loader2, ChevronRight, ChevronLeft, CheckCircle2 } from "lucide-react";
 import type { CreateProviderProfileRequest } from "@/types/profiles/provider-profile.types";
 import { toast } from "sonner";
 import { useProviderProfile } from "@/hooks/profiles/useProviderProfile";
@@ -16,7 +16,6 @@ import { IdVerificationStep } from "./IdVerificationStep";
 import { LocationStep } from "./LocationStep";
 import { PaymentSettingsStep } from "./PaymentSettingsStep";
 import { providerProfileSchema } from "./providerProfileSchema";
-import { ServiceSelectionStep } from "./ServiceSelectionStep";
 import { useRouter } from "next/navigation";
 
 type ProviderProfileFormData = z.infer<typeof providerProfileSchema>;
@@ -41,15 +40,14 @@ const FORM_STEPS = [
     component: IdVerificationStep,
     required: false,
   },
-  { id: 5, title: "Services", component: ServiceSelectionStep, required: true },
   {
-    id: 6,
+    id: 5,
     title: "Availability",
     component: AvailabilityStep,
     required: false,
   },
   {
-    id: 7,
+    id: 6,
     title: "Payment Settings",
     component: PaymentSettingsStep,
     required: false,
@@ -87,8 +85,7 @@ export function CreateProviderProfileForm() {
         isAddressVerified: false,
         sourceProvider: undefined,
       },
-      IdDetails: undefined, // Start as undefined - completely optional
-      serviceOfferings: [],
+      IdDetails: undefined,
       isAlwaysAvailable: true,
       workingHours: {},
       requireInitialDeposit: false,
@@ -97,15 +94,15 @@ export function CreateProviderProfileForm() {
     },
   });
 
+  // ── Submission ────────────────────────────────────────────────────────────
+
   const onSubmit = async (data: ProviderProfileFormData) => {
     try {
-      // Transform form data to API format
       const requestData: CreateProviderProfileRequest = {
         businessName: data.businessName,
-        isCompanyTrained: data.isCompanyTrained,
+        isCompanyTrained: false, // handled at admin level
         providerContactInfo: data.providerContactInfo,
         locationData: data.locationData,
-        // Only include ID details if they actually have data
         IdDetails:
           data.IdDetails?.idType &&
           data.IdDetails?.idNumber &&
@@ -116,70 +113,55 @@ export function CreateProviderProfileForm() {
                 fileImage: data.IdDetails.idImages as any,
               }
             : undefined,
-        serviceOfferings: data.serviceOfferings,
-        BusinessGalleryImages: data.BusinessGalleryImages || [],
+        serviceOfferings: [],
+        BusinessGalleryImages: data.BusinessGalleryImages ?? [],
         isAlwaysAvailable: data.isAlwaysAvailable,
-        // Only include working hours if not always available
         workingHours: !data.isAlwaysAvailable ? data.workingHours : undefined,
         requireInitialDeposit: data.requireInitialDeposit,
-        // Only include deposit percentage if deposits are required
         percentageDeposit: data.requireInitialDeposit
           ? data.percentageDeposit
           : undefined,
       };
 
       await createProfile(requestData);
-
-      toast.success("Provider profile created successfully!");
+      toast.success("Provider profile created!");
       router.push("/profile");
     } catch (error) {
       toast.error(
-        `Failed to create provider profile: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `Failed to create provider profile: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
       );
     }
   };
 
+  // ── Step validation ───────────────────────────────────────────────────────
+
   const getFieldsForStep = (step: number): string[] => {
     const fieldMap: Record<number, string[]> = {
-      1: ["businessName", "isCompanyTrained"],
+      1: ["businessName"],
       2: ["providerContactInfo.primaryContact"],
       3: ["locationData.ghanaPostGPS"],
-      4: [], // ID verification is completely optional
-      5: ["serviceOfferings"],
-      6: [], // Availability fields are conditionally validated
-      7: [], // Payment fields are conditionally validated
+      4: [],
+      5: [],
+      6: [],
     };
-    return fieldMap[step] || [];
+    return fieldMap[step] ?? [];
   };
 
-  const isStepRequired = (step: number): boolean => {
-    return FORM_STEPS[step - 1]?.required ?? false;
-  };
-
-  const canSkipStep = (step: number): boolean => {
-    return !isStepRequired(step);
-  };
+  const isStepRequired = (step: number) =>
+    FORM_STEPS[step - 1]?.required ?? false;
+  const canSkipStep = (step: number) => !isStepRequired(step);
 
   const validateCurrentStep = async (): Promise<boolean> => {
-    // For optional steps that are skipped, we don't validate at all
-    if (skippedSteps.has(currentStep) && canSkipStep(currentStep)) {
-      return true;
-    }
+    if (skippedSteps.has(currentStep) && canSkipStep(currentStep)) return true;
+    if (currentStep === 4) return true;
 
-    const fields = getFieldsForStep(currentStep);
-
-    // Step 4: ID Verification - completely optional, no validation unless user wants to provide it
-    if (currentStep === 4) {
-      // Simply allow proceeding - backend handles profile association
-      return true;
-    }
-
-    // Step 6: Availability - only validate if user chose NOT to be always available
-    if (currentStep === 6) {
+    if (currentStep === 5) {
       const isAlwaysAvailable = form.getValues("isAlwaysAvailable");
       if (!isAlwaysAvailable) {
-        const workingHoursValid = await form.trigger("workingHours");
-        if (!workingHoursValid) {
+        const valid = await form.trigger("workingHours");
+        if (!valid) {
           toast.error(
             "Please set your working hours or mark yourself as always available",
           );
@@ -189,12 +171,11 @@ export function CreateProviderProfileForm() {
       return true;
     }
 
-    // Step 7: Payment Settings - only validate if user requires deposit
-    if (currentStep === 7) {
+    if (currentStep === 6) {
       const requireDeposit = form.getValues("requireInitialDeposit");
       if (requireDeposit) {
-        const depositValid = await form.trigger("percentageDeposit");
-        if (!depositValid) {
+        const valid = await form.trigger("percentageDeposit");
+        if (!valid) {
           toast.error("Please set the deposit percentage");
           return false;
         }
@@ -202,13 +183,10 @@ export function CreateProviderProfileForm() {
       return true;
     }
 
-    // For required steps, validate all required fields
+    const fields = getFieldsForStep(currentStep);
     if (isStepRequired(currentStep) && fields.length > 0) {
       const isValid = await form.trigger(fields as any);
-
       if (!isValid) {
-        const errors = form.formState.errors;
-        console.log("Validation errors for step", currentStep, ":", errors);
         toast.error("Please fill in all required fields");
         return false;
       }
@@ -217,209 +195,209 @@ export function CreateProviderProfileForm() {
     return true;
   };
 
+  // ── Navigation ────────────────────────────────────────────────────────────
+
   const handleNext = async () => {
     const isValid = await validateCurrentStep();
+    if (!isValid) return;
 
-    if (isValid) {
-      // Remove current step from skipped steps if it was previously skipped
-      setSkippedSteps((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(currentStep);
-        return newSet;
-      });
+    setSkippedSteps((prev) => {
+      const next = new Set(prev);
+      next.delete(currentStep);
+      return next;
+    });
 
-      if (currentStep < FORM_STEPS.length) {
-        setCurrentStep(currentStep + 1);
-      } else {
-        // Final submission
-        const formValid = await form.trigger();
-        console.log("Form validation result:", formValid);
-        console.log("Form errors:", form.formState.errors);
-
-        if (formValid) {
-          form.handleSubmit(onSubmit)();
-        } else {
-          toast.error("Please review and complete all required fields");
-
-          // Find first step with errors and navigate to it
-          const errors = form.formState.errors;
-
-          if (errors.businessName || errors.isCompanyTrained) {
-            setCurrentStep(1);
-          } else if (errors.providerContactInfo) {
-            setCurrentStep(2);
-          } else if (errors.locationData) {
-            setCurrentStep(3);
-          } else if (errors.serviceOfferings) {
-            setCurrentStep(5);
-          } else if (errors.workingHours) {
-            setCurrentStep(6);
-          } else if (errors.percentageDeposit) {
-            setCurrentStep(7);
-          }
-        }
-      }
+    if (currentStep < FORM_STEPS.length) {
+      setCurrentStep((s) => s + 1);
+      return;
     }
+
+    const formValid = await form.trigger();
+    if (!formValid) {
+      toast.error("Please review and complete all required fields");
+      const errors = form.formState.errors;
+      if (errors.businessName) setCurrentStep(1);
+      else if (errors.providerContactInfo) setCurrentStep(2);
+      else if (errors.locationData) setCurrentStep(3);
+      else if (errors.workingHours) setCurrentStep(5);
+      else if (errors.percentageDeposit) setCurrentStep(6);
+      return;
+    }
+
+    form.handleSubmit(onSubmit)();
   };
 
   const handleSkip = () => {
-    if (canSkipStep(currentStep)) {
-      // Mark step as skipped
-      setSkippedSteps((prev) => new Set(prev).add(currentStep));
-
-      // Clear any validation errors for this step
-      const fields = getFieldsForStep(currentStep);
-      fields.forEach((field) => {
-        form.clearErrors(field as any);
-      });
-
-      // For ID verification step, also clear the entire IdDetails object
-      if (currentStep === 4) {
-        form.setValue("IdDetails", undefined);
-      }
-
-      if (currentStep < FORM_STEPS.length) {
-        setCurrentStep(currentStep + 1);
-      }
-
-      toast.info(
-        `${FORM_STEPS[currentStep - 1].title} skipped - you can complete it later`,
-      );
-    } else {
-      toast.error("This step is required and cannot be skipped");
+    if (!canSkipStep(currentStep)) {
+      toast.error("This step is required");
+      return;
     }
+
+    setSkippedSteps((prev) => new Set(prev).add(currentStep));
+    getFieldsForStep(currentStep).forEach((field) => {
+      form.clearErrors(field as any);
+    });
+    if (currentStep === 4) form.setValue("IdDetails", undefined);
+
+    if (currentStep < FORM_STEPS.length) {
+      setCurrentStep((s) => s + 1);
+    }
+
+    toast.info(
+      `${FORM_STEPS[currentStep - 1].title} skipped — you can complete it later`,
+    );
   };
 
   const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep > 1) setCurrentStep((s) => s - 1);
   };
 
-  const handleStepClick = (stepNumber: number) => {
-    setCurrentStep(stepNumber);
-  };
+  // ── Render ────────────────────────────────────────────────────────────────
 
   const CurrentStepComponent = FORM_STEPS[currentStep - 1].component;
   const currentStepSkipped = skippedSteps.has(currentStep);
+  const isLastStep = currentStep === FORM_STEPS.length;
 
   return (
-    <div className="min-h-screen py-12 px-4 bg-background text-foreground">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
+    <div className="min-h-screen bg-linear-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 py-10 px-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white mb-4 shadow-lg shadow-blue-200 dark:shadow-blue-900/50">
+            <CheckCircle2 className="w-7 h-7" />
+          </div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
             Create Provider Profile
           </h1>
-          <p className="text-muted-foreground">
-            Complete all required steps to start offering your services
+          <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">
+            Complete the required steps to start offering your services
           </p>
 
           {skippedSteps.size > 0 && (
-            <div className="mt-4 inline-block px-4 py-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-lg">
-              <p className="text-sm text-amber-800 dark:text-amber-200">
-                ⚠️ You have {skippedSteps.size} skipped optional step
-                {skippedSteps.size > 1 ? "s" : ""}
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                {skippedSteps.size}
+                {skippedSteps.size > 1 ? "s" : ""} skipped
               </p>
             </div>
           )}
         </div>
 
-        <FormProgress
-          currentStep={currentStep}
-          totalSteps={FORM_STEPS.length}
-          steps={FORM_STEPS}
-          skippedSteps={skippedSteps}
-          onStepClick={handleStepClick}
-        />
+        {/* Progress */}
+        <div className="mb-8">
+          <FormProgress
+            currentStep={currentStep}
+            totalSteps={FORM_STEPS.length}
+            steps={FORM_STEPS}
+            skippedSteps={skippedSteps}
+            onStepClick={setCurrentStep}
+          />
+        </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-2xl dark:shadow-black/30 p-8 mt-8 border border-slate-200 dark:border-slate-800">
-          {/* Step Header */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-2xl font-bold text-foreground">
+        {/* Card */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm dark:shadow-none border border-slate-200 dark:border-slate-800 overflow-hidden">
+          {/* Card header strip */}
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Step {currentStep} of {FORM_STEPS.length}
+              </span>
+              <span className="text-slate-200 dark:text-slate-700">·</span>
+              <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                 {FORM_STEPS[currentStep - 1].title}
-              </h2>
-              {!isStepRequired(currentStep) && (
-                <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                  Optional
-                </span>
-              )}
+              </span>
             </div>
-
-            {currentStepSkipped && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-lg">
-                <p className="text-sm text-amber-800 dark:text-amber-200">
-                  ⚠️ This step was previously skipped. Complete it now or skip
-                  again to continue.
-                </p>
-              </div>
+            {!isStepRequired(currentStep) && (
+              <span className="text-xs font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
+                Optional
+              </span>
             )}
           </div>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <CurrentStepComponent form={form} />
+          {/* Skipped notice */}
+          {currentStepSkipped && (
+            <div className="mx-6 mt-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 px-4 py-3">
+              <p className="text-xs text-amber-800 dark:text-amber-300">
+                ⚠️ This step was previously skipped. Complete it now or skip
+                again to continue.
+              </p>
+            </div>
+          )}
 
-              <div className="flex justify-between pt-6 border-t border-border gap-4">
-                {/* Previous Button */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handlePrevious}
-                  disabled={currentStep === 1 || loading}
-                  className="min-w-[120px]">
-                  <ChevronLeft className="w-4 h-4 mr-2" />
-                  Previous
-                </Button>
+          {/* Step content */}
+          <div className="p-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <CurrentStepComponent form={form} />
 
-                <div className="flex gap-3">
-                  {/* Skip Button - Only show for optional steps */}
-                  {canSkipStep(currentStep) &&
-                    currentStep < FORM_STEPS.length && (
+                {/* Navigation */}
+                <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handlePrevious}
+                    disabled={currentStep === 1 || loading}
+                    className="h-10 px-4 min-w-[100px] border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg"
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1.5" />
+                    Back
+                  </Button>
+
+                  <div className="flex items-center gap-2">
+                    {canSkipStep(currentStep) && !isLastStep && (
                       <Button
                         type="button"
                         variant="ghost"
                         onClick={handleSkip}
                         disabled={loading}
-                        className="min-w-[120px] text-muted-foreground hover:text-foreground">
+                        className="h-10 px-4 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg text-sm"
+                      >
                         Skip for now
                       </Button>
                     )}
 
-                  {/* Next/Submit Button */}
-                  <Button
-                    type="button"
-                    onClick={handleNext}
-                    disabled={loading}
-                    className="min-w-[120px]">
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : currentStep === FORM_STEPS.length ? (
-                      "Submit"
-                    ) : (
-                      <>
-                        Next
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
+                    <Button
+                      type="button"
+                      onClick={handleNext}
+                      disabled={loading}
+                      className="h-10 px-5 min-w-[110px] bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm shadow-blue-200 dark:shadow-blue-900/30 font-medium"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                          Processing...
+                        </>
+                      ) : isLastStep ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                          Submit
+                        </>
+                      ) : (
+                        <>
+                          Continue
+                          <ChevronRight className="w-4 h-4 ml-1.5" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </form>
-          </Form>
+              </form>
+            </Form>
+          </div>
         </div>
 
-        {/* Progress Summary */}
-        <div className="mt-6 text-center text-sm text-muted-foreground">
-          <p>
-            Step {currentStep} of {FORM_STEPS.length} •{" "}
-            {FORM_STEPS.filter((s) => s.required).length} required steps •{" "}
-            {FORM_STEPS.filter((s) => !s.required).length} optional steps
-          </p>
-        </div>
+        {/* Footer */}
+        <p className="text-center text-xs text-slate-400 dark:text-slate-600 mt-6">
+          {FORM_STEPS.filter((s) => s.required).length} required ·{" "}
+          {FORM_STEPS.filter((s) => !s.required).length} optional
+          {isLastStep && (
+            <span className="block mt-1">
+              After creating your profile, you can add services from your
+              dashboard.
+            </span>
+          )}
+        </p>
       </div>
     </div>
   );
